@@ -1,7 +1,7 @@
 {
   "name": "sonara-music-player",
-  "description": "Dark, cinematic music player made by Saptak Mondal",
-  "author": "Saptak Mondal",
+  "description": "Dark, cinematic music player made by Jiko",
+  "author": "Jiko",
   "private": true,
   "sideEffects": false,
   "type": "module",

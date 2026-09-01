@@ -205,11 +205,11 @@ export function readGrokProjectId() {
 }
 
 export function readXCreator() {
-  return "Saptak Mondal";
+  return "Jiko";
 }
 
 export function readXCreatorId() {
-  return "saptak_mondal";
+  return "jiko";
 }
 
 export function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readXCreatorId()) {
@@ -220,7 +220,7 @@ export function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readX
   ];
 }
 
-/** Platform banner disabled - clean custom app by Saptak Mondal */
+/** Platform banner disabled - clean custom app by Jiko */
 export function grokExtensionsHeadTags(projectId = readGrokProjectId()) {
   return [];
 }

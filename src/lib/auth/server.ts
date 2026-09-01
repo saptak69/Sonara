@@ -148,11 +148,28 @@ const database = databaseUrl
 /** Session token cookie name — also read by the live-preview popup completion page. */
 export const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
 
+// Google Direct OAuth credentials (from Vercel / environment)
+const googleClientId =
+  env("GOOGLE_CLIENT_ID") ||
+  env("GOOGLE_OAUTH_CLIENT_ID") ||
+  env("AUTH_GOOGLE_ID") ||
+  env("VITE_GOOGLE_CLIENT_ID");
+
+const googleClientSecret =
+  env("GOOGLE_CLIENT_SECRET") ||
+  env("GOOGLE_OAUTH_CLIENT_SECRET") ||
+  env("AUTH_GOOGLE_SECRET");
+
+const hasDirectGoogleAuth = Boolean(googleClientId && googleClientSecret);
+
 // Built separately so the `betterAuth({...})` call stays easy to edit without
 // breaking brackets (models often trip on the conditional plugin spread).
+// When direct Google OAuth is configured, exclude grok-google so it never redirects to xAI broker.
 const grokOAuthPlugin = authConfigured
   ? genericOAuth({
-      config: GROK_PROVIDERS.map(({ providerId, idp }) => ({
+      config: GROK_PROVIDERS.filter(
+        (p) => !hasDirectGoogleAuth || p.providerId !== "grok-google"
+      ).map(({ providerId, idp }) => ({
         providerId,
         clientId: grokClientId as string,
         clientSecret: grokClientSecret as string,
@@ -162,11 +179,6 @@ const grokOAuthPlugin = authConfigured
         tokenUrl: grokTokenUrl,
         userInfoUrl: grokUserInfoUrl,
         scopes: ["openid", "profile", "email"],
-        // `prompt: "login"` forces the broker to re-authenticate against the
-        // upstream on every sign-in instead of silently reusing an existing
-        // broker session. Combined with the broker sending Google
-        // `prompt=select_account`, the user always gets the account chooser
-        // and can pick (or switch) which account to sign in with.
         authorizationUrlParams: { idp, prompt: "login" },
       })),
     })
@@ -185,16 +197,13 @@ export const auth = betterAuth({
   trustedOrigins,
 
   // Encrypt broker-issued OAuth tokens at rest, and treat the broker's upstreams
-  // as trusted first-party identities. The broker owns identity and X emails are
-  // synthetic/unverified, so WITHOUT this a login can fail with
-  // `account_not_linked` (Better Auth refuses to attach an untrusted, unverified
-  // identity to an existing user). Google and X carry DISTINCT emails, so this
-  // never merges them into one user — they stay separate identities.
+  // as trusted first-party identities.
   account: {
     encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
       trustedProviders: [
+        "google",
         ...GROK_PROVIDERS.map((p) => p.providerId),
         GATE_PROVIDER_ID,
       ],
@@ -206,17 +215,16 @@ export const auth = betterAuth({
 
   // Cache the session in the short-lived signed `session_data` cookie so reads
   // (incl. the client's `/get-session`) skip the DB — this shrinks the "loading"
-  // window and reduces auth flicker. See the `auth` skill for the full
-  // flicker-prevention guidance (gate on `isPending`; SSR the session).
+  // window and reduces auth flicker.
   session: { cookieCache: { enabled: true, maxAge: 300 } },
 
   // Direct Google social provider support when GOOGLE_CLIENT_ID is provided
   socialProviders: {
-    ...(env("GOOGLE_CLIENT_ID") && env("GOOGLE_CLIENT_SECRET")
+    ...(hasDirectGoogleAuth
       ? {
           google: {
-            clientId: env("GOOGLE_CLIENT_ID")!,
-            clientSecret: env("GOOGLE_CLIENT_SECRET")!,
+            clientId: googleClientId!,
+            clientSecret: googleClientSecret!,
           },
         }
       : {}),

@@ -53,7 +53,7 @@ type AudiusPlaylist = {
   tracks?: AudiusTrack[];
 };
 
-// High-fidelity fallback music catalog curated for Sonara by Saptak Mondal
+// High-fidelity fallback music catalog curated for Sonara by Jiko
 export const CURATED_TRACKS: Track[] = [
   {
     id: "curated_midnight_drive",
@@ -354,13 +354,13 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
   return [
     {
       id: "curated_pl_chill",
-      name: "Saptak's Chill Vibes",
+      name: "Jiko's Chill Vibes",
       description: "Atmospheric beats, late night lo-fi and deep melodic chill.",
       artwork: CURATED_TRACKS[1].artwork,
       artworkLg: CURATED_TRACKS[1].artworkLg,
       trackCount: CURATED_TRACKS.length,
       isAlbum: false,
-      owner: "Saptak Mondal",
+      owner: "Jiko",
       tracks: CURATED_TRACKS,
     },
     {
@@ -371,7 +371,7 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
       artworkLg: CURATED_TRACKS[0].artworkLg,
       trackCount: CURATED_TRACKS.length,
       isAlbum: false,
-      owner: "Saptak Mondal",
+      owner: "Jiko",
       tracks: CURATED_TRACKS,
     },
   ];
@@ -425,9 +425,9 @@ export async function searchArtists(query: string, limit = 12): Promise<Artist[]
   }
   return [
     {
-      id: "curated_artist_saptak",
-      name: "Saptak Mondal",
-      handle: "saptak",
+      id: "curated_artist_jiko",
+      name: "Jiko",
+      handle: "jiko",
       bio: "Creator and sound curator of Sonara Music Player.",
       artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
       artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
@@ -462,11 +462,11 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
 }
 
 export async function fetchArtist(id: string): Promise<Artist | null> {
-  if (id === "curated_artist_saptak") {
+  if (id === "curated_artist_jiko" || id === "curated_artist_saptak") {
     return {
-      id: "curated_artist_saptak",
-      name: "Saptak Mondal",
-      handle: "saptak",
+      id: "curated_artist_jiko",
+      name: "Jiko",
+      handle: "jiko",
       bio: "Creator and sound curator of Sonara Music Player.",
       artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
       artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",

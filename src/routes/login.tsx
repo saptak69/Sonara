@@ -287,7 +287,7 @@ function LoginPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Saptak Mondal"
+                  placeholder="e.g. Jiko"
                   className="h-11 w-full rounded-xl bg-black/60 pr-4 pl-10 text-xs sm:text-sm text-fg outline-none ring-accent/50 focus:ring-2 border border-white/15 backdrop-blur-xl transition-all"
                 />
               </div>
