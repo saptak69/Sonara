@@ -1,0 +1,225 @@
+import { n as createMiddleware } from "./ssr.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/middleware-QvGm5jd5.js
+var _0001_auth_default = "-- Better Auth schema (identity + sessions).\ncreate table if not exists \"user\" (\n  \"id\" text not null primary key,\n  \"name\" text not null,\n  \"email\" text not null unique,\n  \"emailVerified\" boolean not null,\n  \"image\" text,\n  \"createdAt\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"updatedAt\" timestamptz default CURRENT_TIMESTAMP not null\n);\n\ncreate table if not exists \"session\" (\n  \"id\" text not null primary key,\n  \"expiresAt\" timestamptz not null,\n  \"token\" text not null unique,\n  \"createdAt\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"updatedAt\" timestamptz not null,\n  \"ipAddress\" text,\n  \"userAgent\" text,\n  \"userId\" text not null references \"user\" (\"id\") on delete cascade\n);\n\ncreate table if not exists \"account\" (\n  \"id\" text not null primary key,\n  \"accountId\" text not null,\n  \"providerId\" text not null,\n  \"userId\" text not null references \"user\" (\"id\") on delete cascade,\n  \"accessToken\" text,\n  \"refreshToken\" text,\n  \"idToken\" text,\n  \"accessTokenExpiresAt\" timestamptz,\n  \"refreshTokenExpiresAt\" timestamptz,\n  \"scope\" text,\n  \"password\" text,\n  \"createdAt\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"updatedAt\" timestamptz not null\n);\n\ncreate table if not exists \"verification\" (\n  \"id\" text not null primary key,\n  \"identifier\" text not null,\n  \"value\" text not null,\n  \"expiresAt\" timestamptz not null,\n  \"createdAt\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"updatedAt\" timestamptz default CURRENT_TIMESTAMP not null\n);\n\ncreate index if not exists \"session_userId_idx\" on \"session\" (\"userId\");\ncreate index if not exists \"account_userId_idx\" on \"account\" (\"userId\");\ncreate index if not exists \"verification_identifier_idx\" on \"verification\" (\"identifier\");\n";
+var _0002_artist_platform_default = "-- Artist Profile, Uploaded Tracks Catalog, and Anti-Spam Play Metrics\n\ncreate table if not exists \"artist_profile\" (\n  \"id\" text not null primary key,\n  \"user_id\" text not null references \"user\" (\"id\") on delete cascade,\n  \"display_name\" text not null,\n  \"handle\" text not null unique,\n  \"bio\" text,\n  \"avatar_url\" text,\n  \"banner_url\" text,\n  \"verified\" boolean default false not null,\n  \"created_at\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"updated_at\" timestamptz default CURRENT_TIMESTAMP not null\n);\n\ncreate table if not exists \"uploaded_tracks\" (\n  \"id\" text not null primary key,\n  \"artist_id\" text not null references \"artist_profile\" (\"id\") on delete cascade,\n  \"user_id\" text not null references \"user\" (\"id\") on delete cascade,\n  \"title\" text not null,\n  \"genre\" text,\n  \"mood\" text,\n  \"description\" text,\n  \"lyrics\" text,\n  \"cover_art_url\" text,\n  \"audio_url\" text not null,\n  \"storage_key\" text not null,\n  \"duration\" integer default 0 not null,\n  \"file_size\" integer default 0 not null,\n  \"mime_type\" text,\n  \"play_count\" integer default 0 not null,\n  \"status\" text default 'published' not null,\n  \"rights_confirmed_at\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"rights_confirmation_version\" text default 'v1' not null,\n  \"created_at\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"published_at\" timestamptz default CURRENT_TIMESTAMP,\n  \"updated_at\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"deleted_at\" timestamptz\n);\n\ncreate table if not exists \"track_plays\" (\n  \"id\" text not null primary key,\n  \"track_id\" text not null references \"uploaded_tracks\" (\"id\") on delete cascade,\n  \"user_id\" text references \"user\" (\"id\") on delete set null,\n  \"session_id\" text not null,\n  \"played_at\" timestamptz default CURRENT_TIMESTAMP not null,\n  \"duration_played\" integer not null\n);\n\ncreate index if not exists \"artist_profile_user_id_idx\" on \"artist_profile\" (\"user_id\");\ncreate index if not exists \"artist_profile_handle_idx\" on \"artist_profile\" (\"handle\");\ncreate index if not exists \"uploaded_tracks_artist_id_idx\" on \"uploaded_tracks\" (\"artist_id\");\ncreate index if not exists \"uploaded_tracks_user_id_idx\" on \"uploaded_tracks\" (\"user_id\");\ncreate index if not exists \"uploaded_tracks_status_idx\" on \"uploaded_tracks\" (\"status\");\ncreate index if not exists \"uploaded_tracks_created_at_idx\" on \"uploaded_tracks\" (\"created_at\" desc);\ncreate index if not exists \"track_plays_track_session_idx\" on \"track_plays\" (\"track_id\", \"session_id\");\n";
+/**
+* Migration bookkeeping shared by the two appliers — `scripts/migrate.mjs`
+* (deploy, `readdir`) and `src/lib/db.ts` (PGLite preview, `import.meta.glob`).
+*
+* Applied files are keyed by BASENAME, so the same file applies once no matter
+* which directory it is globbed from. That is what makes the auth schema safe to
+* copy from `migrations/auth/` into `migrations/` when an app turns sign-in on:
+* a database that already has `0001_auth.sql` will not re-run it.
+*
+* Neither applier descends into subdirectories, so `migrations/auth/*.sql` is
+* out of scope for both until it is copied up.
+*/
+/**
+* The `_migrations` key for a migration path (or bare filename).
+* @param {string} path
+* @returns {string}
+*/
+function migrationName(path) {
+	return path.split("/").pop() ?? path;
+}
+/**
+* @param {string} path
+* @returns {boolean}
+*/
+function isMigrationFile(path) {
+	return path.endsWith(".sql");
+}
+/**
+* Migrations in `paths` that are not yet in `applied`, in apply order.
+* Non-`.sql` entries (a `readdir` also yields `migrations/auth/`) are dropped.
+* @param {Iterable<string>} paths
+* @param {Iterable<string>} applied
+* @returns {Array<{ name: string, path: string }>}
+*/
+function pendingMigrations(paths, applied) {
+	const done = new Set(applied);
+	return [...paths].filter(isMigrationFile).map((path) => ({
+		name: migrationName(path),
+		path
+	})).sort((a, b) => a.name.localeCompare(b.name)).filter(({ name }) => !done.has(name));
+}
+var rawDatabaseUrl = typeof process !== "undefined" ? process.env.DATABASE_URL : void 0;
+var databaseUrl = rawDatabaseUrl && rawDatabaseUrl.trim() ? rawDatabaseUrl : void 0;
+/**
+* Active backend: real **Neon** when `DATABASE_URL` is set (deployed / configured
+* sandbox), otherwise a local embedded **PGLite** (Postgres compiled to WASM) so
+* the app has a working database even with nothing configured — the live preview
+* included. Swap in Neon later by just setting `DATABASE_URL`; no code changes.
+*/
+var dbSource = databaseUrl ? "neon" : "pglite";
+/**
+* Init state lives on globalThis as promises: dev HMR creates new instances of
+* this module, and two instances racing module-level state would open a second
+* pool or run two concurrent PGLite migration passes (whose duplicate
+* `_migrations` insert rejects — and would get memoized, poisoning every later
+* `getSql()`). A failed init clears its slot so the next call retries.
+*/
+var globalRef = globalThis;
+/**
+* Result-type parity: Postgres sends every value as text plus a type OID — the
+* JS value is the DRIVER's parsing choice, and pg and PGLite disagree (pg:
+* int8 -> string, date -> local-midnight Date; PGLite: int8 -> BigInt, which
+* JSON.stringify rejects, date -> UTC Date). Normalize both so preview and
+* production return identical, JSON-safe shapes:
+*   int8/bigint (incl. count(*)) -> number (past 2^53 loses precision — cast
+*                                   `::text` if you ever need huge integers)
+*   date                         -> 'YYYY-MM-DD' string
+*   interval                     -> Postgres interval text
+* numeric already comes back as a string on both (arbitrary precision).
+*/
+var OID_INT8 = 20;
+var OID_DATE = 1082;
+var OID_INTERVAL = 1186;
+var identity = (v) => v;
+/** Wrap a query runner in the tagged-template + `.query()` `Sql` surface. */
+function toSql(run) {
+	const sql = (async (strings, ...values) => {
+		let text = strings[0];
+		for (let i = 0; i < values.length; i += 1) text += `$${i + 1}${strings[i + 1]}`;
+		return run(text, values);
+	});
+	sql.query = (text, params = []) => run(text, params);
+	return sql;
+}
+function createNeonSql() {
+	globalRef.__pgSqlPromise__ ??= (async () => {
+		const { Pool, types } = await import("../_libs/pg.mjs").then((n) => n.n);
+		types.setTypeParser(OID_INT8, Number);
+		types.setTypeParser(OID_DATE, identity);
+		types.setTypeParser(OID_INTERVAL, identity);
+		const pool = new Pool({ connectionString: databaseUrl });
+		return toSql(async (text, params) => {
+			return (await pool.query(text, params)).rows;
+		});
+	})().catch((err) => {
+		globalRef.__pgSqlPromise__ = void 0;
+		throw err;
+	});
+	return globalRef.__pgSqlPromise__;
+}
+async function createPgliteSql() {
+	globalRef.__pgliteInstance__ ??= (async () => {
+		const { PGlite } = await import("../_libs/electric-sql__pglite.mjs").then((n) => n.t);
+		const pg = new PGlite({ parsers: {
+			[OID_INT8]: Number,
+			[OID_DATE]: identity,
+			[OID_INTERVAL]: identity
+		} });
+		await pg.waitReady;
+		await pg.exec("create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())");
+		return pg;
+	})().catch((err) => {
+		globalRef.__pgliteInstance__ = void 0;
+		throw err;
+	});
+	const pg = await globalRef.__pgliteInstance__;
+	const migrate = async () => {
+		const migrations = /* #__PURE__ */ Object.assign({
+			"/migrations/0001_auth.sql": _0001_auth_default,
+			"/migrations/0002_artist_platform.sql": _0002_artist_platform_default
+		});
+		const done = (await pg.query("select name from _migrations")).rows.map((r) => r.name);
+		for (const { name, path } of pendingMigrations(Object.keys(migrations), done)) await pg.transaction(async (tx) => {
+			await tx.exec(migrations[path]);
+			await tx.query("insert into _migrations (name) values ($1)", [name]);
+		});
+	};
+	const pass = (globalRef.__pgliteMigrateChain__ ?? Promise.resolve()).catch(() => void 0).then(migrate);
+	globalRef.__pgliteMigrateChain__ = pass;
+	await pass;
+	return toSql(async (text, params) => {
+		return (await pg.query(text, params)).rows;
+	});
+}
+var sqlPromise = null;
+async function createSql() {
+	if (typeof window !== "undefined") throw new Error("@/lib/db is server-only — call getSql() from a createServerFn handler or a server route loader, never from client code.");
+	return dbSource === "neon" ? createNeonSql() : createPgliteSql();
+}
+/**
+* Get the shared, **server-only** SQL client. Neon when `DATABASE_URL` is set,
+* otherwise the local PGLite fallback. Memoized — safe to call per request.
+*
+* Schema comes from `migrations/*.sql`, auto-applied before the first query on
+* both backends — define tables there, never inline in server functions.
+*/
+function getSql() {
+	sqlPromise ??= createSql().catch((err) => {
+		sqlPromise = null;
+		throw err;
+	});
+	return sqlPromise;
+}
+/**
+* The shared PGLite instance (preview only), with `migrations/*.sql` applied.
+* Lets Better Auth persist to the SAME embedded DB as app data in preview (via a
+* Kysely dialect). Throws when `DATABASE_URL` is set (that path uses Neon).
+*/
+async function getPglite() {
+	if (dbSource !== "pglite") throw new Error("getPglite() is only available on the PGLite fallback (no DATABASE_URL)");
+	await getSql();
+	const pg = await globalRef.__pgliteInstance__;
+	if (!pg) throw new Error("PGLite instance failed to initialize");
+	return pg;
+}
+/**
+* Finish DB bootstrap before the server handles traffic.
+*
+* - **PGLite** (preview / no `DATABASE_URL`): open the in-memory DB and apply
+*   `migrations/*.sql`. Idempotent — concurrent callers share one promise.
+* - **Neon**: no-op (pool is created lazily on first query).
+*
+* Vite `configureServer` awaits this at dev startup; production imports of this
+* module kick it off immediately (see bottom of file).
+*/
+function ensureDbReady() {
+	if (dbSource !== "pglite") return Promise.resolve();
+	return getSql().then(() => void 0);
+}
+var globalBoot = globalThis;
+if (typeof window === "undefined" && dbSource === "pglite") globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
+	globalBoot.__pgBootstrapPromise__ = void 0;
+	console.error("[db] PGLite bootstrap failed:", err);
+	throw err;
+});
+/**
+* Auth middleware for server functions — the standard way to get the caller's
+* verified user id. When deployed the session cookie is same-origin and rides
+* along automatically. In the live preview the client also forwards the bearer
+* token (partitioned cookies) via the `.client` hook below — call sites do not
+* thread it themselves.
+*
+*   import { createServerFn } from "@tanstack/react-start";
+*   import { getSql } from "@/lib/db";
+*   import { authMiddleware } from "@/lib/auth/middleware";
+*
+*   export const listTodos = createServerFn({ method: "GET" })
+*     .middleware([authMiddleware])
+*     .handler(async ({ context }) => {
+*       const sql = await getSql();
+*       return sql`select * from todos where user_id = ${context.userId}`;
+*     });
+*
+* Signed out with auth on (live preview included) -> throws `UnauthorizedError`
+* (see `verify.server.ts`). With auth disabled (`VITE_AUTH_ENABLED=false`, the
+* shipped default) it resolves the shared dev user — but throws instead when a
+* `DATABASE_URL` is also set, so an app without sign-in must not use this at
+* all. On the auth-on path, use it on every server function that touches
+* per-user data and scope every query by `context.userId`.
+*/
+var authMiddleware = createMiddleware({ type: "function" }).client(async ({ next }) => {
+	const { getBearerToken } = await import("./client-B40BzJxt.mjs").then((n) => n.n);
+	return next({ sendContext: { bearerToken: getBearerToken() ?? void 0 } });
+}).server(async ({ next, context }) => {
+	const { assertSameSiteRequest } = await import("./isolation.server-CGNg1r0B.mjs");
+	const { requireUserId } = await import("./verify.server-CqzEG6nD.mjs");
+	assertSameSiteRequest();
+	return next({ context: { userId: await requireUserId(context.bearerToken) } });
+});
+//#endregion
+export { getSql as i, ensureDbReady as n, getPglite as r, authMiddleware as t };
