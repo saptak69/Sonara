@@ -1,1 +1,0 @@
-import{i as e,l as t}from"./button-C8M4UhPs.js";var n=t();function r({className:t}){return(0,n.jsx)(`div`,{className:e(`skeleton rounded-md`,t)})}export{r as t};
