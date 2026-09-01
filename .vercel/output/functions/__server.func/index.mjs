@@ -143,17 +143,17 @@ function readGrokProjectId() {
 	return "";
 }
 function readXCreator() {
-	return "Saptak Mondal";
+	return "Jiko";
 }
 function readXCreatorId() {
-	return "saptak_mondal";
+	return "jiko";
 }
 function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readXCreatorId()) {
 	const name = String(creator ?? "").trim();
 	if (!name) return [];
 	return [`<meta property="x:creator" content="${escapeHtml(name)}">`];
 }
-/** Platform banner disabled - clean custom app by Saptak Mondal */
+/** Platform banner disabled - clean custom app by Jiko */
 function grokExtensionsHeadTags(projectId = readGrokProjectId()) {
 	return [];
 }

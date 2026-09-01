@@ -118,7 +118,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-DU_pSFo6.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-B02xgIrI.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -140,39 +140,39 @@ async function getStartManifest(matchedRoutes) {
 var manifest = {
 	"0aa5139c56de2d1d73dee54876bce24d19afac5d63f334e8b49bbbe3708c107d": {
 		functionName: "recordStreamServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"110b24a38fd13c76017a39eab3c958d525d9c2fd2a511b2df4f2ac2971a669bf": {
 		functionName: "getOrCreateArtistProfileServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"42dac2dccdec93e92959663d68778ff535f8d26e9cdf520f746e1a71440d85cd": {
 		functionName: "getCommunityReleasesServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"53510ff073fd7ac4bd69b7b9642f75e3cf472b6d3db5c7ce7e37bbaf85e58aee": {
 		functionName: "getPublicArtistTracksServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"53fb449ee8d964496d3909ccf7392cdba74c41b03878ae4fa2998be061dde6fe": {
 		functionName: "getMyArtistTracksServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"61732241fa850e89215188ca09463c74f76ab8d3d1c3c05e1b1b1ed827d250d6": {
 		functionName: "deleteArtistTrackServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"78015c7d8b65490bb75e007d6d76449dd3e2719b397a0e9e86ec6f4865c064a7": {
 		functionName: "getPublicArtistProfileServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"c4b4f878a61d581db13f310d02fba378db874717fcc5da8a1bdd9945e9e00b46": {
 		functionName: "publishTrackServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	},
 	"d65f7f0255fb13f56baa0d5b1a33f91155fa1b89c23246b7d4e87874642c0892": {
 		functionName: "updateArtistProfileServerFn_createServerFn_handler",
-		importer: () => import("./artist-studio-EWZEP9pW.mjs")
+		importer: () => import("./artist-studio-C3YvQ0fV.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1442,7 +1442,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-B0lYCnsa.mjs").then((n) => n.t),
+		import("./router--X2oxkDG.mjs").then((n) => n.t),
 		import("./start-5Z2QO8AU.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);
