@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Logo } from "@/components/logo";
@@ -46,11 +46,12 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // If already authenticated, redirect to /studio
-  if (!isPending && user && !user.isDevFallback) {
-    void navigate({ to: "/studio" });
-    return null;
-  }
+  // If already authenticated, redirect to /studio on client mount
+  useEffect(() => {
+    if (!isPending && user && !user.isDevFallback) {
+      void navigate({ to: "/studio" });
+    }
+  }, [isPending, user, navigate]);
 
   // Handle Continue with Google (Real Google OAuth)
   const handleGoogleClick = async () => {
