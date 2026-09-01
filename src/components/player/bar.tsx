@@ -84,7 +84,7 @@ export function PlayerBar() {
   }
 
   return (
-    <div className="border-t border-white/10 bg-black/60 backdrop-blur-3xl shadow-2xl">
+    <div className="mx-2.5 mb-1.5 rounded-2xl border border-white/[0.12] bg-black/85 backdrop-blur-2xl shadow-[0_10px_35px_rgba(0,0,0,0.85)] overflow-hidden transition-all md:mx-0 md:mb-0 md:rounded-none md:border-t md:border-x-0 md:border-b-0 md:border-white/10 md:bg-black/60 md:shadow-2xl">
       {/* Mobile slim track progress line */}
       {!live && duration > 0 ? (
         <div className="h-0.5 w-full bg-white/10 md:hidden">
@@ -94,7 +94,7 @@ export function PlayerBar() {
           />
         </div>
       ) : null}
-      <div className="flex h-player items-center gap-2.5 px-3 md:gap-6 md:px-6">
+      <div className="flex h-14 md:h-player items-center gap-2 px-2.5 md:gap-6 md:px-6">
         <button
           type="button"
           className="flex min-w-0 flex-1 items-center gap-2.5 text-left md:max-w-xs lg:max-w-sm active:scale-98 transition-transform"
@@ -104,7 +104,7 @@ export function PlayerBar() {
             src={track.artwork}
             alt={track.title}
             title={track.title}
-            className="size-11 md:size-12 shrink-0 rounded-lg shadow-sm"
+            className="size-9.5 md:size-12 shrink-0 rounded-lg shadow-sm"
           />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-xs md:text-sm font-semibold text-fg">
@@ -148,20 +148,20 @@ export function PlayerBar() {
             >
               <Shuffle className="size-4" />
             </Button>
-            <Button variant="icon" size="iconSm" aria-label="Previous" onClick={prev}>
-              <SkipBack className="size-5 fill-current" />
+            <Button variant="icon" size="iconSm" aria-label="Previous" className="hidden sm:grid" onClick={prev}>
+              <SkipBack className="size-4.5 md:size-5 fill-current" />
             </Button>
             <Button
               variant="solid"
               size="icon"
               aria-label={isPlaying ? "Pause" : "Play"}
-              className="size-10"
+              className="size-9 md:size-10 rounded-full"
               onClick={toggle}
             >
               <IconSwap on={isPlaying} OnIcon={Pause} OffIcon={Play} />
             </Button>
             <Button variant="icon" size="iconSm" aria-label="Next" onClick={next}>
-              <SkipForward className="size-5 fill-current" />
+              <SkipForward className="size-4.5 md:size-5 fill-current" />
             </Button>
             <Button
               variant="icon"
