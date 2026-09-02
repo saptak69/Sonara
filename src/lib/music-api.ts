@@ -74,110 +74,6 @@ type AudiusPlaylist = {
 // High-fidelity fallback music catalog curated for Sonara by Jiko
 export const CURATED_TRACKS: Track[] = [
   {
-    id: "curated_midnight_drive",
-    title: "Midnight City Lights",
-    artist: "Neon Skyline",
-    artwork: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1000&h=1000&fit=crop&q=85",
-    duration: 214,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=midnight-forest-184304.mp3",
-    genre: "Synthwave",
-    mood: "Chill",
-    playCount: 148200,
-    kind: "track",
-  },
-  {
-    id: "curated_lofi_rain",
-    title: "Late Night Rain Beats",
-    artist: "Aura Chill",
-    artwork: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1000&h=1000&fit=crop&q=85",
-    duration: 185,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=lofi-study-112191.mp3",
-    genre: "Lo-Fi",
-    mood: "Relaxed",
-    playCount: 239400,
-    kind: "track",
-  },
-  {
-    id: "curated_cyber_drift",
-    title: "Neon Cyber Drift",
-    artist: "RetroWave Echo",
-    artwork: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1000&h=1000&fit=crop&q=85",
-    duration: 230,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=the-cradle-of-your-soul-15700.mp3",
-    genre: "Electronic",
-    mood: "Energetic",
-    playCount: 195000,
-    kind: "track",
-  },
-  {
-    id: "curated_cozy_coffee",
-    title: "Sunday Coffee & Vinyl",
-    artist: "Komorebi Duo",
-    artwork: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=1000&h=1000&fit=crop&q=85",
-    duration: 198,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=smoke-143172.mp3",
-    genre: "Jazz / Chill",
-    mood: "Peaceful",
-    playCount: 312000,
-    kind: "track",
-  },
-  {
-    id: "curated_stellar_pulse",
-    title: "Stellar Journey",
-    artist: "Cosmic Odyssey",
-    artwork: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1000&h=1000&fit=crop&q=85",
-    duration: 245,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c3527e30de.mp3?filename=space-atmosphere-10612.mp3",
-    genre: "Ambient",
-    mood: "Dreamy",
-    playCount: 88400,
-    kind: "track",
-  },
-  {
-    id: "curated_urban_groove",
-    title: "Sunset Boulevard",
-    artist: "Velvet Groove",
-    artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
-    duration: 210,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630d7a3f.mp3?filename=watr-fluid-10149.mp3",
-    genre: "Pop / R&B",
-    mood: "Upbeat",
-    playCount: 420000,
-    kind: "track",
-  },
-  {
-    id: "curated_tokyo_drift",
-    title: "Tokyo Shinjuku Nights",
-    artist: "Shibuya Beats",
-    artwork: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=1000&h=1000&fit=crop&q=85",
-    duration: 178,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/01/26/audio_d0c6ff1101.mp3?filename=electronic-future-beats-117997.mp3",
-    genre: "Electronic",
-    mood: "Focus",
-    playCount: 275000,
-    kind: "track",
-  },
-  {
-    id: "curated_golden_hour",
-    title: "Golden Hour Glow",
-    artist: "Solstice Breeze",
-    artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
-    duration: 202,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/11/06/audio_c896e382b6.mp3?filename=warm-breeze-126298.mp3",
-    genre: "Acoustic / Indie",
-    mood: "Warm",
-    playCount: 164000,
-    kind: "track",
-  },
-  {
     id: "curated_ekla_cholo",
     title: "Ekla Cholo Re",
     artist: "Rabindra Sangeet · Kishore Kumar",
@@ -227,6 +123,71 @@ export const CURATED_TRACKS: Track[] = [
     genre: "Bengali Folk",
     mood: "Soulful",
     playCount: 290000,
+    kind: "track",
+  },
+  {
+    id: "curated_midnight_drive",
+    title: "Midnight City Lights",
+    artist: "Neon Skyline",
+    artwork: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1000&h=1000&fit=crop&q=85",
+    duration: 214,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=midnight-forest-184304.mp3",
+    genre: "Synthwave",
+    mood: "Chill",
+    playCount: 148200,
+    kind: "track",
+  },
+  {
+    id: "curated_lofi_rain",
+    title: "Late Night Rain Beats",
+    artist: "Aura Chill",
+    artwork: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1000&h=1000&fit=crop&q=85",
+    duration: 185,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=lofi-study-112191.mp3",
+    genre: "Lo-Fi",
+    mood: "Relaxed",
+    playCount: 239400,
+    kind: "track",
+  },
+  {
+    id: "curated_cyber_drift",
+    title: "Neon Cyber Drift",
+    artist: "RetroWave Echo",
+    artwork: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1000&h=1000&fit=crop&q=85",
+    duration: 230,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=the-cradle-of-your-soul-15700.mp3",
+    genre: "Electronic",
+    mood: "Energetic",
+    playCount: 195000,
+    kind: "track",
+  },
+  {
+    id: "curated_urban_groove",
+    title: "Sunset Boulevard",
+    artist: "Velvet Groove",
+    artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
+    duration: 210,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630d7a3f.mp3?filename=watr-fluid-10149.mp3",
+    genre: "Pop / R&B",
+    mood: "Upbeat",
+    playCount: 420000,
+    kind: "track",
+  },
+  {
+    id: "curated_golden_hour",
+    title: "Golden Hour Glow",
+    artist: "Solstice Breeze",
+    artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
+    duration: 202,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2022/11/06/audio_c896e382b6.mp3?filename=warm-breeze-126298.mp3",
+    genre: "Acoustic / Indie",
+    mood: "Warm",
+    playCount: 164000,
     kind: "track",
   },
 ];
@@ -439,25 +400,54 @@ export function mapArtist(u: AudiusUser): Artist | null {
   };
 }
 
-export async function fetchTrending(limit = 20, genre?: string): Promise<Track[]> {
+export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]> {
   try {
-    const params: Record<string, string> = { limit: String(limit) };
-    if (genre) params.genre = genre;
-    const raw = await fetchFromAudius<AudiusTrack[]>("/tracks/trending", params);
-    const mapped = (raw ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-    if (mapped.length >= 4) {
-      if (!genre) {
-        // Interleave curated Bengali & classics seamlessly into the trending list
-        const curatedMix = CURATED_TRACKS.slice(0, 6);
-        const merged = [...curatedMix, ...mapped];
-        const seen = new Set<string>();
-        return merged.filter((t) => {
-          if (seen.has(t.id)) return false;
-          seen.add(t.id);
-          return true;
-        }).slice(0, limit);
-      }
-      return mapped;
+    if (genre) {
+      const saavnTracks = await searchSaavnTracksServerFn({ data: { query: `${genre} hits`, limit } });
+      if (saavnTracks.length >= 6) return saavnTracks;
+      const audius = await fetchFromAudius<AudiusTrack[]>("/tracks/trending", { limit: String(limit), genre });
+      const mapped = (audius ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
+      const combined = [...saavnTracks, ...mapped];
+      return combined.slice(0, limit);
+    }
+
+    // Homepage Listen Now: Real chart hits across Bengali, Bollywood, Progressive Rock, and Pop
+    const [bengaliRes, bollywoodRes, rockRes, popRes, audiusRes] = await Promise.allSettled([
+      searchSaavnTracksServerFn({ data: { query: "Arijit Singh Bengali", limit: 8 } }),
+      searchSaavnTracksServerFn({ data: { query: "Bollywood Trending", limit: 8 } }),
+      searchSaavnTracksServerFn({ data: { query: "Dream Theater Pink Floyd", limit: 8 } }),
+      searchSaavnTracksServerFn({ data: { query: "The Weeknd Daft Punk", limit: 8 } }),
+      fetchFromAudius<AudiusTrack[]>("/tracks/trending", { limit: "8" }),
+    ]);
+
+    const bengali = bengaliRes.status === "fulfilled" ? bengaliRes.value : [];
+    const bollywood = bollywoodRes.status === "fulfilled" ? bollywoodRes.value : [];
+    const rock = rockRes.status === "fulfilled" ? rockRes.value : [];
+    const pop = popRes.status === "fulfilled" ? popRes.value : [];
+    const audius =
+      audiusRes.status === "fulfilled" && audiusRes.value
+        ? audiusRes.value.map(mapTrack).filter((x): x is Track => Boolean(x))
+        : [];
+
+    const interleaved: Track[] = [];
+    const maxLen = Math.max(bengali.length, bollywood.length, rock.length, pop.length, audius.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (bengali[i]) interleaved.push(bengali[i]);
+      if (bollywood[i]) interleaved.push(bollywood[i]);
+      if (rock[i]) interleaved.push(rock[i]);
+      if (pop[i]) interleaved.push(pop[i]);
+      if (audius[i]) interleaved.push(audius[i]);
+    }
+
+    if (interleaved.length) {
+      const seen = new Set<string>();
+      const deduped = interleaved.filter((t) => {
+        const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (deduped.length >= 4) return deduped.slice(0, limit);
     }
   } catch {
     // fallback
@@ -480,36 +470,87 @@ export async function fetchUnderground(limit = 16): Promise<Track[]> {
 
 export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
   try {
-    const raw = await fetchFromAudius<AudiusPlaylist[]>("/playlists/trending", {
-      limit: String(limit),
-    });
-    const mapped = (raw ?? []).map(mapPlaylist).filter((x): x is Playlist => Boolean(x));
-    if (mapped.length >= 2) return mapped;
+    const [saavnPlaylistsRes, audiusPlaylistsRes] = await Promise.allSettled([
+      searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Bengali Rock", limit: 8 } }),
+      fetchFromAudius<AudiusPlaylist[]>("/playlists/trending", { limit: String(limit) }),
+    ]);
+
+    const saavnPlaylists = saavnPlaylistsRes.status === "fulfilled" ? saavnPlaylistsRes.value : [];
+    const audiusPlaylists =
+      audiusPlaylistsRes.status === "fulfilled" && audiusPlaylistsRes.value
+        ? audiusPlaylistsRes.value.map(mapPlaylist).filter((x): x is Playlist => Boolean(x))
+        : [];
+
+    const curatedPlaylists: Playlist[] = [
+      {
+        id: "curated_pl_bengali",
+        name: "Bengali Golden Treasures",
+        description: "Rabindra Sangeet, modern Bengali melodies & timeless classics.",
+        artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
+        artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
+        trackCount: 30,
+        isAlbum: false,
+        owner: "Sonara Curators",
+      },
+      {
+        id: "curated_pl_rock",
+        name: "Progressive Rock & Metal Anthems",
+        description: "Dream Theater, Pink Floyd, Queen, Metallica & classic epic solos.",
+        artwork: "/genres/rock.jpg",
+        artworkLg: "/genres/rock.jpg",
+        trackCount: 45,
+        isAlbum: false,
+        owner: "Sonara Rock",
+      },
+      {
+        id: "curated_pl_bollywood",
+        name: "Bollywood Superhits & Romance",
+        description: "Arijit Singh, Shreya Ghoshal, Pritam & blockbuster chartbusters.",
+        artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
+        artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
+        trackCount: 50,
+        isAlbum: false,
+        owner: "Bollywood Mix",
+      },
+      {
+        id: "curated_pl_chill",
+        name: "Jiko's Chill & Lo-Fi Lounge",
+        description: "Atmospheric beats, late night lo-fi and deep melodic chill.",
+        artwork: CURATED_TRACKS[1].artwork,
+        artworkLg: CURATED_TRACKS[1].artworkLg,
+        trackCount: CURATED_TRACKS.length,
+        isAlbum: false,
+        owner: "Jiko",
+        tracks: CURATED_TRACKS,
+      },
+      {
+        id: "curated_pl_synth",
+        name: "Cyber & Synthwave Anthems",
+        description: "High octane synth and retrofuturistic night rhythms.",
+        artwork: CURATED_TRACKS[0].artwork,
+        artworkLg: CURATED_TRACKS[0].artworkLg,
+        trackCount: CURATED_TRACKS.length,
+        isAlbum: false,
+        owner: "Jiko",
+        tracks: CURATED_TRACKS,
+      },
+    ];
+
+    const merged = [...curatedPlaylists, ...saavnPlaylists, ...audiusPlaylists];
+    if (merged.length) return merged.slice(0, limit);
   } catch {
     // fallback
   }
   return [
     {
-      id: "curated_pl_chill",
-      name: "Jiko's Chill Vibes",
-      description: "Atmospheric beats, late night lo-fi and deep melodic chill.",
-      artwork: CURATED_TRACKS[1].artwork,
-      artworkLg: CURATED_TRACKS[1].artworkLg,
-      trackCount: CURATED_TRACKS.length,
+      id: "curated_pl_bengali",
+      name: "Bengali Golden Treasures",
+      description: "Rabindra Sangeet, modern Bengali melodies & timeless classics.",
+      artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
+      artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
+      trackCount: 30,
       isAlbum: false,
-      owner: "Jiko",
-      tracks: CURATED_TRACKS,
-    },
-    {
-      id: "curated_pl_synth",
-      name: "Cyber & Synthwave Anthems",
-      description: "High octane synth and retrofuturistic night rhythms.",
-      artwork: CURATED_TRACKS[0].artwork,
-      artworkLg: CURATED_TRACKS[0].artworkLg,
-      trackCount: CURATED_TRACKS.length,
-      isAlbum: false,
-      owner: "Jiko",
-      tracks: CURATED_TRACKS,
+      owner: "Sonara Curators",
     },
   ];
 }
