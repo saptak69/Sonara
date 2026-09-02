@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { usePlayer } from "@/lib/player-store";
 import { recordStreamServerFn } from "@/lib/artist-studio";
+import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
 import { toast } from "sonner";
 
 export function PlayerEngine() {
@@ -124,6 +125,40 @@ export function PlayerEngine() {
       audio.pause();
     }
   }, [current?.id, current?.streamUrl, isPlaying, setPlaying]);
+
+  // Seamlessly auto-upgrade preview streams (30s previews) to full-length 320kbps master streams
+  useEffect(() => {
+    if (!current?.id || !current?.title) return;
+    const isPreview = current.streamUrl?.includes("dzcdn.net") || (current.duration && current.duration <= 35);
+    if (!isPreview) return;
+
+    let cancelled = false;
+    void resolveFullTrackStreamServerFn({
+      data: { title: current.title, artist: current.artist },
+    })
+      .then((full) => {
+        if (cancelled || !full?.streamUrl) return;
+        const audio = audioRef.current;
+        if (!audio || currentTrackIdRef.current !== current.id) return;
+        const pos = audio.currentTime;
+        const wasPlaying = !audio.paused;
+        audio.src = full.streamUrl;
+        try {
+          audio.currentTime = pos;
+        } catch {
+          /* ignore */
+        }
+        if (wasPlaying) {
+          audio.play().catch(() => {});
+        }
+        setDuration(full.duration);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id, current?.title, current?.artist, current?.streamUrl, current?.duration, setDuration]);
 
   // Volume, Muted, and Playback Rate
   useEffect(() => {

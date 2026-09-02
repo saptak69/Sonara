@@ -146,11 +146,18 @@ export function mapSaavnArtist(a: RawSaavnArtist): Artist | null {
 }
 
 const SAAVN_HEADERS = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  Accept: "application/json",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+  Accept: "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9,hi;q=0.8,bn;q=0.7",
+  "X-Forwarded-For": "106.51.72.10",
+  "X-Real-IP": "106.51.72.10",
+  "Client-IP": "106.51.72.10",
+  "CF-Connecting-IP": "106.51.72.10",
+  Cookie: "L=english%2Chindi%2Cbengali; geo=IN;",
 };
 
-async function fetchSaavnJson<T>(params: Record<string, string>, timeoutMs = 5500): Promise<T | null> {
+async function fetchSaavnJson<T>(params: Record<string, string>, timeoutMs = 6000): Promise<T | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -171,6 +178,40 @@ async function fetchSaavnJson<T>(params: Record<string, string>, timeoutMs = 550
     clearTimeout(timer);
   }
 }
+
+/**
+ * Server Function: Resolve Full-Length 320kbps Stream for Any Song (Taylor Swift, Rock, Pop, etc.)
+ */
+export const resolveFullTrackStreamServerFn = createServerFn({ method: "GET" })
+  .validator((data: { title: string; artist?: string }) => {
+    return z.object({ title: z.string(), artist: z.string().optional() }).parse(data);
+  })
+  .handler(async ({ data }) => {
+    try {
+      const q = `${data.title} ${data.artist || ""}`.trim();
+      const json = await fetchSaavnJson<{ results?: RawSaavnSong[] }>({
+        __call: "search.getResults",
+        q,
+        n: "5",
+        p: "1",
+      });
+
+      const songs = json?.results ?? [];
+      for (const s of songs) {
+        const streamUrl = decryptSaavnMediaUrl(s.encrypted_media_url);
+        if (streamUrl) {
+          const duration = Math.round(Number(s.duration) || 200);
+          return {
+            streamUrl,
+            duration,
+          };
+        }
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
 
 /**
  * Server Function: Search Full Length Songs with 320kbps Audio

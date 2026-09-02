@@ -16,6 +16,7 @@ import {
   getSaavnPlaylistServerFn,
   getSaavnArtistServerFn,
   getSaavnArtistTracksServerFn,
+  resolveFullTrackStreamServerFn,
 } from "./saavn-api";
 
 const APP = "sonara_music";
@@ -813,7 +814,24 @@ export async function fetchTrack(id: string): Promise<Track | null> {
   }
 
   if (id.startsWith("deezer_")) {
-    return getDeezerTrackServerFn({ data: { id } });
+    const track = await getDeezerTrackServerFn({ data: { id } });
+    if (track) {
+      try {
+        const full = await resolveFullTrackStreamServerFn({
+          data: { title: track.title, artist: track.artist },
+        });
+        if (full?.streamUrl) {
+          return {
+            ...track,
+            streamUrl: full.streamUrl,
+            duration: full.duration,
+          };
+        }
+      } catch {
+        // use base track
+      }
+    }
+    return track;
   }
 
   if (id.startsWith("archive_")) {
