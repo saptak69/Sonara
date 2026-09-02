@@ -20,10 +20,17 @@ function GenrePage() {
   const query = useQuery({
     queryKey: ["genre", slug],
     queryFn: async () => {
-      if (!genre) return searchTracks(slug, 24);
-      const trending = await fetchTrending(24, genre.api);
-      if (trending.length) return trending;
-      return searchTracks(genre.label, 24);
+      if (!genre) return searchTracks(slug, 28);
+      const fullSongs = await searchTracks(`${genre.label} hits`, 28);
+      if (fullSongs.length >= 8) return fullSongs;
+      const trending = await fetchTrending(28, genre.api);
+      const combined = [...fullSongs, ...trending];
+      const seen = new Set<string>();
+      return combined.filter((t) => {
+        if (seen.has(t.id)) return false;
+        seen.add(t.id);
+        return true;
+      }).slice(0, 28);
     },
   });
 

@@ -80,27 +80,50 @@ export function PlayerEngine() {
     return () => clearInterval(interval);
   }, [sleepTimer, setPlaying, setSleepTimer]);
 
-  // Source assignment
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !current) return;
-    if (audio.src !== current.streamUrl) {
-      audio.src = current.streamUrl;
-      audio.load();
-    }
-  }, [current?.id, current?.streamUrl]);
+  const currentTrackIdRef = useRef<string | null>(null);
 
-  // Play / Pause handling
+  // Synchronous, atomic track switching and playback management
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    if (!current) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+      currentTrackIdRef.current = null;
+      return;
+    }
+
+    const isNewTrack = currentTrackIdRef.current !== current.id || audio.src !== current.streamUrl;
+    if (isNewTrack) {
+      currentTrackIdRef.current = current.id;
+      // 1. Immediately pause and flush the previous track/stream
+      audio.pause();
+      try {
+        audio.currentTime = 0;
+      } catch {
+        /* live streams may reject seek */
+      }
+      // 2. Assign new stream URL and load
+      audio.src = current.streamUrl;
+      audio.load();
+    }
+
+    // 3. Play or Pause deterministically
     if (isPlaying) {
-      const play = audio.play();
-      if (play) play.catch(() => setPlaying(false));
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          if (err.name !== "AbortError") {
+            setPlaying(false);
+          }
+        });
+      }
     } else {
       audio.pause();
     }
-  }, [isPlaying, current?.id, setPlaying]);
+  }, [current?.id, current?.streamUrl, isPlaying, setPlaying]);
 
   // Volume, Muted, and Playback Rate
   useEffect(() => {

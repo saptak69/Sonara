@@ -182,7 +182,6 @@ export const usePlayer = create<PlayerState>()(
           likedIds: liked
             ? get().likedIds.filter((id) => id !== track.id)
             : [track.id, ...get().likedIds],
-          recents: remember(get().recents, track),
         });
         if (!liked) {
           const likes = get().playlists.find((p) => p.id === "likes");

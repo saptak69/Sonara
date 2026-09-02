@@ -1,4 +1,22 @@
 import type { Artist, Playlist, RadioStation, Track } from "./types";
+import {
+  searchDeezerTracksServerFn,
+  searchDeezerPlaylistsServerFn,
+  searchDeezerArtistsServerFn,
+  getDeezerTrackServerFn,
+  getDeezerPlaylistServerFn,
+  getDeezerArtistServerFn,
+  getDeezerArtistTracksServerFn,
+} from "./deezer-api";
+import {
+  searchSaavnTracksServerFn,
+  searchSaavnPlaylistsServerFn,
+  searchSaavnArtistsServerFn,
+  getSaavnTrackServerFn,
+  getSaavnPlaylistServerFn,
+  getSaavnArtistServerFn,
+  getSaavnArtistTracksServerFn,
+} from "./saavn-api";
 
 const APP = "sonara_music";
 
@@ -167,7 +185,7 @@ export const CURATED_TRACKS: Track[] = [
     artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
     duration: 215,
     streamUrl: "https://archive.org/download/EklaCholoRe/EklaCholoRe-KishoreKumar.mp3",
-    genre: "Bengali Classical",
+    genre: "Rabindra Sangeet",
     mood: "Soulful",
     playCount: 520000,
     kind: "track",
@@ -183,6 +201,32 @@ export const CURATED_TRACKS: Track[] = [
     genre: "Rabindra Sangeet",
     mood: "Poetic",
     playCount: 380000,
+    kind: "track",
+  },
+  {
+    id: "curated_mayabono_biharini",
+    title: "Mayabono Biharini Horini",
+    artist: "Rabindra Sangeet · Somlata Acharyya",
+    artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
+    duration: 248,
+    streamUrl: "https://archive.org/download/SomlataRabindraSangeet/MayabonoBiharini.mp3",
+    genre: "Bengali Contemporary",
+    mood: "Melodic",
+    playCount: 460000,
+    kind: "track",
+  },
+  {
+    id: "curated_tumi_roshik_re",
+    title: "Tumi Roshik Re (Baul Folk)",
+    artist: "Bengali Folk Traditions",
+    artwork: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1000&h=1000&fit=crop&q=85",
+    duration: 210,
+    streamUrl: "https://archive.org/download/BanglaFolkBaulSongs/TumiRoshikRe.mp3",
+    genre: "Bengali Folk",
+    mood: "Soulful",
+    playCount: 290000,
     kind: "track",
   },
 ];
@@ -401,7 +445,20 @@ export async function fetchTrending(limit = 20, genre?: string): Promise<Track[]
     if (genre) params.genre = genre;
     const raw = await fetchFromAudius<AudiusTrack[]>("/tracks/trending", params);
     const mapped = (raw ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-    if (mapped.length >= 4) return mapped;
+    if (mapped.length >= 4) {
+      if (!genre) {
+        // Interleave curated Bengali & classics seamlessly into the trending list
+        const curatedMix = CURATED_TRACKS.slice(0, 6);
+        const merged = [...curatedMix, ...mapped];
+        const seen = new Set<string>();
+        return merged.filter((t) => {
+          if (seen.has(t.id)) return false;
+          seen.add(t.id);
+          return true;
+        }).slice(0, limit);
+      }
+      return mapped;
+    }
   } catch {
     // fallback
   }
@@ -511,10 +568,18 @@ async function fetchArchiveOrgTracks(query: string, limit = 12): Promise<Track[]
 }
 
 export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
-  const [audiusRes, archiveRes] = await Promise.allSettled([
+  const [saavnRes, deezerRes, audiusRes, archiveRes] = await Promise.allSettled([
+    searchSaavnTracksServerFn({ data: { query, limit: Math.min(20, limit) } }),
+    searchDeezerTracksServerFn({ data: { query, limit: Math.min(12, limit) } }),
     fetchFromAudius<AudiusTrack[]>("/tracks/search", { query, limit: String(limit) }),
-    fetchArchiveOrgTracks(query, Math.min(8, limit)),
+    fetchArchiveOrgTracks(query, Math.min(6, limit)),
   ]);
+
+  const saavnTracks =
+    saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
+
+  const deezerTracks =
+    deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
 
   const audiusTracks =
     audiusRes.status === "fulfilled" && audiusRes.value
@@ -524,7 +589,8 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
   const archiveTracks =
     archiveRes.status === "fulfilled" && archiveRes.value ? archiveRes.value : [];
 
-  const combined = [...audiusTracks, ...archiveTracks];
+  // Priority: Full-length 320kbps tracks first, then Deezer, Audius, and Archive
+  const combined = [...saavnTracks, ...deezerTracks, ...audiusTracks, ...archiveTracks];
 
   if (combined.length) {
     const seen = new Set<string>();
@@ -548,12 +614,28 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
 
 export async function searchPlaylists(query: string, limit = 12): Promise<Playlist[]> {
   try {
-    const raw = await fetchFromAudius<AudiusPlaylist[]>("/playlists/search", {
-      query,
-      limit: String(limit),
-    });
-    const mapped = (raw ?? []).map(mapPlaylist).filter((x): x is Playlist => Boolean(x));
-    if (mapped.length) return mapped;
+    const [saavnRes, deezerRes, audiusRes] = await Promise.allSettled([
+      searchSaavnPlaylistsServerFn({ data: { query, limit } }),
+      searchDeezerPlaylistsServerFn({ data: { query, limit } }),
+      fetchFromAudius<AudiusPlaylist[]>("/playlists/search", {
+        query,
+        limit: String(limit),
+      }),
+    ]);
+
+    const saavnPlaylists =
+      saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
+
+    const deezerPlaylists =
+      deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
+
+    const audiusPlaylists =
+      audiusRes.status === "fulfilled" && audiusRes.value
+        ? audiusRes.value.map(mapPlaylist).filter((x): x is Playlist => Boolean(x))
+        : [];
+
+    const merged = [...saavnPlaylists, ...deezerPlaylists, ...audiusPlaylists];
+    if (merged.length) return merged.slice(0, limit);
   } catch {
     // fallback
   }
@@ -562,12 +644,28 @@ export async function searchPlaylists(query: string, limit = 12): Promise<Playli
 
 export async function searchArtists(query: string, limit = 12): Promise<Artist[]> {
   try {
-    const raw = await fetchFromAudius<AudiusUser[]>("/users/search", {
-      query,
-      limit: String(limit),
-    });
-    const mapped = (raw ?? []).map(mapArtist).filter((x): x is Artist => Boolean(x));
-    if (mapped.length) return mapped;
+    const [saavnRes, deezerRes, audiusRes] = await Promise.allSettled([
+      searchSaavnArtistsServerFn({ data: { query, limit } }),
+      searchDeezerArtistsServerFn({ data: { query, limit } }),
+      fetchFromAudius<AudiusUser[]>("/users/search", {
+        query,
+        limit: String(limit),
+      }),
+    ]);
+
+    const saavnArtists =
+      saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
+
+    const deezerArtists =
+      deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
+
+    const audiusArtists =
+      audiusRes.status === "fulfilled" && audiusRes.value
+        ? audiusRes.value.map(mapArtist).filter((x): x is Artist => Boolean(x))
+        : [];
+
+    const merged = [...saavnArtists, ...deezerArtists, ...audiusArtists];
+    if (merged.length) return merged.slice(0, limit);
   } catch {
     // fallback
   }
@@ -600,6 +698,12 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
     const playlists = await fetchTrendingPlaylists(10);
     return playlists.find((p) => p.id === id) || playlists[0] || null;
   }
+  if (id.startsWith("saavn_pl_")) {
+    return getSaavnPlaylistServerFn({ data: { id } });
+  }
+  if (id.startsWith("deezer_pl_")) {
+    return getDeezerPlaylistServerFn({ data: { id } });
+  }
   try {
     const raw = await fetchFromAudius<AudiusPlaylist | AudiusPlaylist[]>(`/playlists/${encodeURIComponent(id)}`);
     const data = Array.isArray(raw) ? raw[0] : raw;
@@ -622,6 +726,12 @@ export async function fetchArtist(id: string): Promise<Artist | null> {
       trackCount: CURATED_TRACKS.length,
     };
   }
+  if (id.startsWith("saavn_artist_")) {
+    return getSaavnArtistServerFn({ data: { id } });
+  }
+  if (id.startsWith("deezer_artist_")) {
+    return getDeezerArtistServerFn({ data: { id } });
+  }
   try {
     const raw = await fetchFromAudius<AudiusUser | AudiusUser[]>(`/users/${encodeURIComponent(id)}`);
     const data = Array.isArray(raw) ? raw[0] : raw;
@@ -634,6 +744,12 @@ export async function fetchArtist(id: string): Promise<Artist | null> {
 export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]> {
   if (id.startsWith("curated_")) {
     return CURATED_TRACKS;
+  }
+  if (id.startsWith("saavn_artist_")) {
+    return getSaavnArtistTracksServerFn({ data: { id, limit } });
+  }
+  if (id.startsWith("deezer_artist_")) {
+    return getDeezerArtistTracksServerFn({ data: { id, limit } });
   }
   try {
     const raw = await fetchFromAudius<AudiusTrack[]>(`/users/${encodeURIComponent(id)}/tracks`, {
@@ -650,6 +766,14 @@ export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]
 export async function fetchTrack(id: string): Promise<Track | null> {
   const curated = CURATED_TRACKS.find((t) => t.id === id);
   if (curated) return curated;
+
+  if (id.startsWith("saavn_")) {
+    return getSaavnTrackServerFn({ data: { id } });
+  }
+
+  if (id.startsWith("deezer_")) {
+    return getDeezerTrackServerFn({ data: { id } });
+  }
 
   if (id.startsWith("archive_")) {
     const identifier = id.replace("archive_", "");
@@ -729,6 +853,10 @@ export function radioToTrack(station: RadioStation): Track {
 }
 
 export async function fetchRadioStations(limit = 32, tag?: string): Promise<RadioStation[]> {
+  const curatedMatches = tag
+    ? CURATED_RADIO.filter((r) => r.tags.toLowerCase().includes(tag.toLowerCase()))
+    : CURATED_RADIO;
+
   for (const node of RADIO_NODES) {
     try {
       const url = new URL(`${node}/stations/search`);
@@ -742,7 +870,7 @@ export async function fetchRadioStations(limit = 32, tag?: string): Promise<Radi
         getJson<Parameters<typeof mapRadio>[0][]>(url.toString(), 3500),
         !tag
           ? getJson<Parameters<typeof mapRadio>[0][]>(
-              `${node}/stations/bylanguage/bengali?limit=12&hidebroken=true`,
+              `${node}/stations/bylanguage/bengali?limit=16&hidebroken=true`,
               3500,
             )
           : Promise.resolve([]),
@@ -751,38 +879,46 @@ export async function fetchRadioStations(limit = 32, tag?: string): Promise<Radi
       const general = (generalRes.status === "fulfilled" ? generalRes.value : []) ?? [];
       const regional = (regionalRes.status === "fulfilled" ? regionalRes.value : []) ?? [];
 
-      const combined = [...regional, ...general];
-      const mapped = combined.map(mapRadio).filter((x): x is RadioStation => Boolean(x));
+      const combined = [
+        ...curatedMatches,
+        ...regional.map(mapRadio).filter((x): x is RadioStation => Boolean(x)),
+        ...general.map(mapRadio).filter((x): x is RadioStation => Boolean(x)),
+      ];
 
-      if (mapped.length >= 3) {
-        const seen = new Set<string>();
-        return mapped.filter((s) => {
-          const key = s.name.toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }).slice(0, limit);
+      const seen = new Set<string>();
+      const deduped = combined.filter((s) => {
+        const key = s.name.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      if (deduped.length >= 3) {
+        return deduped.slice(0, limit);
       }
     } catch {
       // try next radio node
     }
   }
 
-  if (tag) {
-    const q = tag.toLowerCase();
-    const filtered = CURATED_RADIO.filter((r) => r.tags.toLowerCase().includes(q));
-    if (filtered.length) return filtered;
-  }
-  return CURATED_RADIO.slice(0, limit);
+  return curatedMatches.slice(0, limit);
 }
 
 export async function searchRadio(query: string, limit = 20): Promise<RadioStation[]> {
   const cleanQ = query.trim();
-  if (!cleanQ) return CURATED_RADIO.slice(0, limit);
+  if (!cleanQ) return fetchRadioStations(limit);
+
+  const q = cleanQ.toLowerCase();
+  const curatedMatches = CURATED_RADIO.filter(
+    (s) =>
+      s.name.toLowerCase().includes(q) ||
+      s.tags.toLowerCase().includes(q) ||
+      s.country.toLowerCase().includes(q),
+  );
 
   for (const node of RADIO_NODES) {
     try {
-      const [byNameRes, byTagRes] = await Promise.allSettled([
+      const [byNameRes, byTagRes, byLangRes] = await Promise.allSettled([
         getJson<Parameters<typeof mapRadio>[0][]>(
           `${node}/stations/search?name=${encodeURIComponent(cleanQ)}&limit=${limit}&hidebroken=true&order=clickcount&reverse=true`,
           3500,
@@ -791,11 +927,20 @@ export async function searchRadio(query: string, limit = 20): Promise<RadioStati
           `${node}/stations/search?tag=${encodeURIComponent(cleanQ)}&limit=${limit}&hidebroken=true&order=clickcount&reverse=true`,
           3500,
         ),
+        getJson<Parameters<typeof mapRadio>[0][]>(
+          `${node}/stations/bylanguage/${encodeURIComponent(cleanQ)}?limit=${limit}&hidebroken=true`,
+          3500,
+        ),
       ]);
 
       const list1 = (byNameRes.status === "fulfilled" ? byNameRes.value : []) ?? [];
       const list2 = (byTagRes.status === "fulfilled" ? byTagRes.value : []) ?? [];
-      const merged = [...list1, ...list2].map(mapRadio).filter((x): x is RadioStation => Boolean(x));
+      const list3 = (byLangRes.status === "fulfilled" ? byLangRes.value : []) ?? [];
+
+      const merged = [
+        ...curatedMatches,
+        ...[...list1, ...list2, ...list3].map(mapRadio).filter((x): x is RadioStation => Boolean(x)),
+      ];
 
       if (merged.length) {
         const seen = new Set<string>();
@@ -811,14 +956,7 @@ export async function searchRadio(query: string, limit = 20): Promise<RadioStati
     }
   }
 
-  const q = cleanQ.toLowerCase();
-  const matched = CURATED_RADIO.filter(
-    (s) =>
-      s.name.toLowerCase().includes(q) ||
-      s.tags.toLowerCase().includes(q) ||
-      s.country.toLowerCase().includes(q),
-  );
-  return matched.length ? matched : CURATED_RADIO.slice(0, limit);
+  return curatedMatches.length ? curatedMatches : CURATED_RADIO.slice(0, limit);
 }
 
 export type Lyrics = {

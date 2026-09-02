@@ -110,28 +110,65 @@ function SearchPage() {
     enabled: q.length > 1,
   });
 
+  const TRENDING_SEARCHES = [
+    { label: "Dream Theater", tag: "Progressive Rock" },
+    { label: "Arijit Singh", tag: "Bollywood & Bengali" },
+    { label: "Rabindra Sangeet", tag: "Bengali Classics" },
+    { label: "The Weeknd", tag: "Global Pop" },
+    { label: "Pink Floyd", tag: "Classic Rock" },
+    { label: "AIR FM Gold Kolkata", tag: "Live Radio" },
+    { label: "Daft Punk", tag: "Electronic" },
+    { label: "Kishore Kumar", tag: "Timeless Master" },
+    { label: "Lo-Fi Rain Study", tag: "Chill" },
+  ];
+
   if (!q) {
     return (
-      <div className="px-4 py-8 md:px-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Search</h1>
-        <p className="mt-2 text-sm text-muted">Find songs, artists, playlists, and radio.</p>
+      <div className="stagger-in px-4 py-8 md:px-8 space-y-8">
+        <header>
+          <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Explore Everything</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Search</h1>
+          <p className="mt-1.5 text-sm text-muted">
+            Find millions of full-length songs, rock bands, Bengali hits, playlists, and live radio.
+          </p>
+        </header>
+
+        {/* Trending culture & rock searches */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Trending & Featured</h2>
+          <div className="flex flex-wrap gap-2.5">
+            {TRENDING_SEARCHES.map((item) => (
+              <Link
+                key={item.label}
+                to="/search"
+                search={{ q: item.label }}
+                className="group inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/60 hover:bg-white/10 px-3.5 py-2 text-sm transition-all duration-200 active:scale-95 shadow-sm"
+                onClick={() => rememberSearch(item.label)}
+              >
+                <span className="font-medium text-fg group-hover:text-accent transition-colors">{item.label}</span>
+                <span className="text-[11px] text-muted/70 bg-white/5 px-2 py-0.5 rounded-md">{item.tag}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {recents.length ? (
-          <div className="mt-8">
-            <h2 className="text-sm font-medium text-muted">Recent</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Recent Searches</h2>
+            <div className="flex flex-wrap gap-2">
               {recents.map((s) => (
                 <Link
                   key={s}
                   to="/search"
                   search={{ q: s }}
-                  className="rounded-pill bg-chip px-4 py-2 text-sm hover:bg-hover"
+                  className="rounded-full bg-white/5 border border-white/10 px-3.5 py-1.5 text-xs text-fg/80 hover:text-white hover:bg-white/15 transition-all"
                   onClick={() => rememberSearch(s)}
                 >
                   {s}
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         ) : null}
       </div>
     );
