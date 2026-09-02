@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
 import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Compass, Heart, History, ListMusic, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/library")({ component: LibraryPage });
 
@@ -18,6 +20,7 @@ function LibraryPage() {
   const playTracks = usePlayer((s) => s.playTracks);
   const createPlaylist = usePlayer((s) => s.createPlaylist);
   const deletePlaylist = usePlayer((s) => s.deletePlaylist);
+  const clearRecents = usePlayer((s) => s.clearRecents);
   const [tab, setTab] = useState<"recents" | "likes" | "playlists">("recents");
 
   const likedTracks = useMemo(() => {
@@ -54,8 +57,13 @@ function LibraryPage() {
         <Button
           variant="chip"
           size="sm"
-          onClick={() => createPlaylist(`Playlist ${playlists.length + 1}`)}
+          onClick={() => {
+            const name = `Playlist ${playlists.length + 1}`;
+            createPlaylist(name);
+            toast.success(`Created "${name}"`);
+          }}
         >
+          <Plus className="size-4 mr-1.5" />
           New playlist
         </Button>
       </header>
@@ -63,36 +71,61 @@ function LibraryPage() {
       <div className="flex gap-2 border-b border-border/40 pb-3 overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0">
         {(
           [
-            ["recents", "Recents"],
-            ["likes", "Liked"],
-            ["playlists", "Playlists"],
+            ["recents", "Recents", recents.length],
+            ["likes", "Liked Songs", likedTracks.length],
+            ["playlists", "Playlists", userPlaylists.length],
           ] as const
-        ).map(([id, label]) => (
+        ).map(([id, label, count]) => (
           <button
             key={id}
             type="button"
             className={cn(
-              "rounded-full px-4 py-2 text-xs md:text-sm font-semibold transition-all duration-150 active:scale-95 shrink-0",
+              "rounded-full px-4 py-2 text-xs md:text-sm font-semibold transition-all duration-150 active:scale-95 shrink-0 flex items-center gap-2",
               tab === id
-                ? "bg-elevated/90 text-fg border border-border/60 shadow-sm"
-                : "bg-chip/60 text-muted hover:bg-chip hover:text-fg",
+                ? "bg-white/15 text-fg border border-white/20 shadow-sm backdrop-blur-md"
+                : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg",
             )}
             onClick={() => setTab(id)}
           >
-            {label}
+            <span>{label}</span>
+            {count > 0 ? (
+              <span className="text-[10px] opacity-60 font-mono">({count})</span>
+            ) : null}
           </button>
         ))}
       </div>
 
       {tab === "recents" ? (
         recents.length ? (
-          <Rail title="Recently played">
-            {recents.map((t) => (
-              <AlbumCard key={t.id} track={t} queue={recents} />
-            ))}
-          </Rail>
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted">{recents.length} recently played tracks</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted hover:text-red-400"
+                onClick={() => {
+                  clearRecents();
+                  toast("Listening history cleared");
+                }}
+              >
+                <Trash2 className="size-3.5 mr-1" />
+                Clear history
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {recents.map((t) => (
+                <AlbumCard key={t.id} track={t} queue={recents} />
+              ))}
+            </div>
+          </div>
         ) : (
-          <Empty text="Play something and it will land here." />
+          <Empty
+            icon={History}
+            title="No listening history yet"
+            text="Songs and live stations you play will automatically appear here."
+            action={{ label: "Explore trending tracks", to: "/explore" }}
+          />
         )
       ) : null}
 
@@ -100,7 +133,7 @@ function LibraryPage() {
         likedTracks.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted">{likedTracks.length} tracks</p>
+              <p className="text-sm text-muted">{likedTracks.length} favorite tracks</p>
               <Button variant="solid" size="sm" onClick={() => playTracks(likedTracks, 0)}>
                 Play all
               </Button>
@@ -110,7 +143,12 @@ function LibraryPage() {
             ))}
           </div>
         ) : (
-          <Empty text="Tap the heart on a track to save it." />
+          <Empty
+            icon={Heart}
+            title="No liked songs yet"
+            text="Tap the heart on any track across Sonara to build your personal favorites collection."
+            action={{ label: "Discover new music", to: "/" }}
+          />
         )
       ) : null}
 
@@ -120,7 +158,7 @@ function LibraryPage() {
             {playlists
               .filter((p) => p.id !== "likes")
               .map((p) => (
-                <div key={p.id} className="group">
+                <div key={p.id} className="group relative flex flex-col justify-between p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-all">
                   <button
                     type="button"
                     className="w-full text-left"
@@ -130,33 +168,69 @@ function LibraryPage() {
                       src={p.tracks[0]?.artworkLg || p.tracks[0]?.artwork}
                       alt={p.name}
                       title={p.name}
-                      className="aspect-square w-full"
+                      className="aspect-square w-full rounded-xl shadow-md"
                     />
-                    <p className="mt-2 truncate text-sm font-medium">{p.name}</p>
+                    <p className="mt-2.5 truncate text-sm font-semibold text-fg">{p.name}</p>
                     <p className="text-xs text-muted">{p.tracks.length} tracks</p>
                   </button>
-                  <button
-                    type="button"
-                    className="mt-1 text-xs text-subtle hover:text-fg"
-                    onClick={() => deletePlaylist(p.id)}
-                  >
-                    Remove
-                  </button>
+                  <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-[11px] text-subtle">Personal</span>
+                    <button
+                      type="button"
+                      className="text-xs text-muted hover:text-red-400 transition-colors p-1"
+                      onClick={() => {
+                        deletePlaylist(p.id);
+                        toast(`Deleted ${p.name}`);
+                      }}
+                      title="Delete playlist"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
           </div>
         ) : (
-          <Empty text="Create a playlist from any track menu." />
+          <Empty
+            icon={ListMusic}
+            title="No playlists created"
+            text="Organize your sound by creating playlists from any track menu or using the button above."
+            action={{ label: "Browse Music", to: "/explore" }}
+          />
         )
       ) : null}
     </div>
   );
 }
 
-function Empty({ text }: { text: string }) {
+function Empty({
+  icon: Icon = Compass,
+  title = "Nothing here yet",
+  text,
+  action,
+}: {
+  icon?: typeof Compass;
+  title?: string;
+  text: string;
+  action?: { label: string; to: string };
+}) {
   return (
-    <div className="rounded-xl bg-elevated px-6 py-16 text-center">
-      <p className="text-sm text-muted">{text}</p>
+    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] px-6 py-14 text-center backdrop-blur-xl">
+      <div className="inline-grid size-12 place-items-center rounded-full bg-white/5 border border-white/10 text-muted mb-3">
+        <Icon className="size-6" />
+      </div>
+      <p className="text-base font-semibold text-fg">{title}</p>
+      <p className="mt-1 text-xs text-muted max-w-sm mx-auto">{text}</p>
+      {action ? (
+        <div className="mt-5">
+          <Link
+            to={action.to}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 text-fg text-xs font-semibold border border-white/15 transition-all active:scale-95"
+          >
+            {action.label}
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

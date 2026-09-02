@@ -29,6 +29,7 @@ import {
   Pause,
   Play,
   Plus,
+  Share2,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -357,7 +358,23 @@ function ArtistStudioPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            {/* Share Profile Button */}
+            <Button
+              variant="ghost"
+              className="flex-1 sm:flex-none rounded-xl gap-2 text-xs border border-white/15 bg-white/5 hover:bg-white/10"
+              onClick={() => {
+                const url = window.location.origin + (profile?.id ? `/artist/${profile.id}` : "/studio");
+                if (navigator.clipboard) {
+                  void navigator.clipboard.writeText(url);
+                  toast.success("Artist profile link copied to clipboard!");
+                }
+              }}
+            >
+              <Share2 className="size-3.5" />
+              Share Profile
+            </Button>
+
             {/* Edit Profile Dialog */}
             <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
               <DialogTrigger asChild>

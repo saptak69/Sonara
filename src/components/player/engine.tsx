@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { usePlayer } from "@/lib/player-store";
 import { recordStreamServerFn } from "@/lib/artist-studio";
+import { toast } from "sonner";
 
 export function PlayerEngine() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -8,10 +9,13 @@ export function PlayerEngine() {
   const isPlaying = usePlayer((s) => s.isPlaying);
   const volume = usePlayer((s) => s.volume);
   const muted = usePlayer((s) => s.muted);
+  const playbackRate = usePlayer((s) => s.playbackRate);
+  const sleepTimer = usePlayer((s) => s.sleepTimer);
   const pendingSeek = usePlayer((s) => s.pendingSeek);
   const setCurrentTime = usePlayer((s) => s.setCurrentTime);
   const setDuration = usePlayer((s) => s.setDuration);
   const setPlaying = usePlayer((s) => s.setPlaying);
+  const setSleepTimer = usePlayer((s) => s.setSleepTimer);
   const next = usePlayer((s) => s.next);
   const prev = usePlayer((s) => s.prev);
   const toggle = usePlayer((s) => s.toggle);
@@ -30,10 +34,12 @@ export function PlayerEngine() {
   const countedTracksRef = useRef<Set<string>>(new Set());
   const playTimeRef = useRef<number>(0);
 
+  // Reset play time counter when track changes
   useEffect(() => {
     playTimeRef.current = 0;
   }, [current?.id]);
 
+  // Telemetry stream recording
   useEffect(() => {
     if (!isPlaying || !current?.id) return;
     const interval = setInterval(() => {
@@ -58,6 +64,23 @@ export function PlayerEngine() {
     return () => clearInterval(interval);
   }, [isPlaying, current?.id]);
 
+  // Sleep Timer execution
+  useEffect(() => {
+    if (!sleepTimer) return;
+    const interval = setInterval(() => {
+      if (Date.now() >= sleepTimer) {
+        setPlaying(false);
+        setSleepTimer(null);
+        toast.info("Sleep timer ended", {
+          description: "Audio playback has been paused.",
+          duration: 4000,
+        });
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sleepTimer, setPlaying, setSleepTimer]);
+
+  // Source assignment
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !current) return;
@@ -67,6 +90,7 @@ export function PlayerEngine() {
     }
   }, [current?.id, current?.streamUrl]);
 
+  // Play / Pause handling
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -78,13 +102,16 @@ export function PlayerEngine() {
     }
   }, [isPlaying, current?.id, setPlaying]);
 
+  // Volume, Muted, and Playback Rate
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = volume;
     audio.muted = muted;
-  }, [volume, muted]);
+    audio.playbackRate = playbackRate || 1.0;
+  }, [volume, muted, playbackRate]);
 
+  // Seeking
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || pendingSeek == null) return;
@@ -96,6 +123,7 @@ export function PlayerEngine() {
     clearPendingSeek();
   }, [pendingSeek, clearPendingSeek]);
 
+  // MediaSession integration
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !current) return;
@@ -115,26 +143,28 @@ export function PlayerEngine() {
     }
   }, [current, isPlaying, next, prev, setPlaying]);
 
+  // Clean standard keyboard listener (Space for toggle, Escape for closing overlays)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) {
         return;
       }
+
       if (e.code === "Space") {
         e.preventDefault();
         toggle();
-      } else if (e.code === "ArrowRight") {
-        next();
-      } else if (e.code === "ArrowLeft") {
-        prev();
-      } else if (e.code === "KeyM") {
-        usePlayer.getState().toggleMute();
+      } else if (e.code === "Escape") {
+        const s = usePlayer.getState();
+        if (s.lyricsOpen) s.setLyricsOpen(false);
+        else if (s.queueOpen) s.setQueueOpen(false);
+        else if (s.expanded) s.setExpanded(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, toggle]);
+  }, [toggle]);
 
   const lastErrorRef = useRef<number>(0);
 
@@ -148,7 +178,7 @@ export function PlayerEngine() {
       onPlay={() => setPlaying(true)}
       onPause={() => {
         if (usePlayer.getState().isPlaying) {
-          /* user paused via external control */
+          /* paused externally */
         }
       }}
       onError={() => {

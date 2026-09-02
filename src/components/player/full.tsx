@@ -1,25 +1,46 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import {
   ChevronDown,
+  Gauge,
   Heart,
   ListMusic,
   Mic2,
+  Moon,
   Pause,
   Play,
   Repeat,
   Repeat1,
+  Share2,
   Shuffle,
   SkipBack,
   SkipForward,
+  Timer,
 } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { LyricsPanel } from "@/components/player/lyrics";
 import { Visualizer } from "@/components/player/visualizer";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { extractAccent } from "@/lib/color";
 import { formatTime } from "@/lib/format";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+const SPEED_OPTIONS = [0.8, 1.0, 1.25, 1.5, 2.0];
+const SLEEP_OPTIONS = [
+  { label: "Off", minutes: null },
+  { label: "15 minutes", minutes: 15 },
+  { label: "30 minutes", minutes: 30 },
+  { label: "45 minutes", minutes: 45 },
+  { label: "1 hour", minutes: 60 },
+];
 
 export function FullPlayer() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -29,6 +50,8 @@ export function FullPlayer() {
   const duration = usePlayer((s) => s.duration);
   const shuffle = usePlayer((s) => s.shuffle);
   const repeat = usePlayer((s) => s.repeat);
+  const playbackRate = usePlayer((s) => s.playbackRate);
+  const sleepTimer = usePlayer((s) => s.sleepTimer);
   const likedIds = usePlayer((s) => s.likedIds);
   const liked = Boolean(track && likedIds.includes(track.id));
   const lyricsOpen = usePlayer((s) => s.lyricsOpen);
@@ -42,6 +65,8 @@ export function FullPlayer() {
   const setExpanded = usePlayer((s) => s.setExpanded);
   const setQueueOpen = usePlayer((s) => s.setQueueOpen);
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
+  const setPlaybackRate = usePlayer((s) => s.setPlaybackRate);
+  const setSleepTimer = usePlayer((s) => s.setSleepTimer);
   const [glow, setGlow] = useState<string>("rgba(255,42,61,0.4)");
 
   useEffect(() => {
@@ -59,6 +84,21 @@ export function FullPlayer() {
   const live = track?.kind === "radio";
   const progress =
     live || !duration || !Number.isFinite(duration) ? 0 : (currentTime / duration) * 100;
+
+  const handleShare = () => {
+    if (!track) return;
+    const shareData = {
+      title: track.title,
+      text: `Listen to "${track.title}" by ${track.artist} on Sonara`,
+      url: window.location.href,
+    };
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      void navigator.share(shareData).catch(() => {});
+    } else if (navigator.clipboard) {
+      void navigator.clipboard.writeText(window.location.href);
+      toast.success("Track link copied to clipboard!");
+    }
+  };
 
   return (
     <div
@@ -98,14 +138,25 @@ export function FullPlayer() {
             <p className="text-[11px] font-medium tracking-[0.18em] text-muted uppercase">
               {live ? "Live radio" : "Now playing"}
             </p>
-            <Button
-              variant="icon"
-              size="icon"
-              aria-label="Queue"
-              onClick={() => setQueueOpen(true)}
-            >
-              <ListMusic className="size-5" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="icon"
+                size="iconSm"
+                aria-label="Share"
+                className="text-muted hover:text-fg"
+                onClick={handleShare}
+              >
+                <Share2 className="size-4.5" />
+              </Button>
+              <Button
+                variant="icon"
+                size="icon"
+                aria-label="Queue"
+                onClick={() => setQueueOpen(true)}
+              >
+                <ListMusic className="size-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="relative flex-1 overflow-y-auto px-4 pb-8 flex flex-col items-center justify-between min-h-0 [scrollbar-width:none]">
@@ -214,16 +265,75 @@ export function FullPlayer() {
                 </Button>
               </div>
 
-              <div className="mt-4 flex items-center gap-2">
+              {/* Polish Features Row: Lyrics, Sleep Timer, Playback Speed */}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                 <Button
                   variant={lyricsOpen ? "chip" : "ghost"}
                   size="sm"
-                  className="rounded-full px-4 text-xs font-medium border border-border/40"
+                  className="rounded-full px-3.5 text-xs font-medium border border-border/40"
                   onClick={() => setLyricsOpen(!lyricsOpen)}
                 >
                   <Mic2 className="size-3.5 mr-1.5" />
                   Lyrics
                 </Button>
+
+                {/* Sleep Timer Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={sleepTimer ? "chip" : "ghost"}
+                      size="sm"
+                      className={cn(
+                        "rounded-full px-3 text-xs font-medium border border-border/40",
+                        sleepTimer && "border-accent/50 text-accent",
+                      )}
+                    >
+                      <Moon className="size-3.5 mr-1.5" />
+                      {sleepTimer ? "Timer on" : "Sleep"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    {SLEEP_OPTIONS.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.label}
+                        onSelect={() => {
+                          setSleepTimer(opt.minutes);
+                          toast(opt.minutes ? `Sleep timer set for ${opt.label}` : "Sleep timer turned off");
+                        }}
+                      >
+                        <Timer className="size-3.5 text-muted mr-2" />
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Playback Speed Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={playbackRate !== 1 ? "chip" : "ghost"}
+                      size="sm"
+                      className="rounded-full px-3 text-xs font-medium border border-border/40"
+                    >
+                      <Gauge className="size-3.5 mr-1.5" />
+                      {playbackRate}x
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    {SPEED_OPTIONS.map((rate) => (
+                      <DropdownMenuItem
+                        key={rate}
+                        onSelect={() => {
+                          setPlaybackRate(rate);
+                          toast(`Speed: ${rate}x`);
+                        }}
+                      >
+                        {rate}x {rate === 1 ? "(Normal)" : ""}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <LyricsPanel />

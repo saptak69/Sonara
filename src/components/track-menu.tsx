@@ -1,4 +1,4 @@
-import { ListMusic, ListPlus, ListEnd, Radio, UserRound, Heart } from "lucide-react";
+import { ListMusic, ListPlus, ListEnd, Radio, UserRound, Heart, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -106,6 +106,25 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             Go to artist
           </DropdownMenuItem>
         ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={() => {
+            const shareData = {
+              title: track.title,
+              text: `Listen to "${track.title}" by ${track.artist} on Sonara`,
+              url: window.location.href,
+            };
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+              void navigator.share(shareData).catch(() => {});
+            } else if (navigator.clipboard) {
+              void navigator.clipboard.writeText(window.location.href);
+              toast.success("Track link copied to clipboard!");
+            }
+          }}
+        >
+          <Share2 className="size-4 text-muted" />
+          Share track
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

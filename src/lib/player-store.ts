@@ -16,6 +16,8 @@ type PlayerState = {
   expanded: boolean;
   queueOpen: boolean;
   lyricsOpen: boolean;
+  sleepTimer: number | null;
+  playbackRate: number;
   likedIds: string[];
   recents: Track[];
   playlists: UserPlaylist[];
@@ -45,6 +47,8 @@ type PlayerState = {
   setExpanded: (v: boolean) => void;
   setQueueOpen: (v: boolean) => void;
   setLyricsOpen: (v: boolean) => void;
+  setSleepTimer: (minutes: number | null) => void;
+  setPlaybackRate: (rate: number) => void;
   createPlaylist: (name: string, tracks?: Track[]) => string;
   addToPlaylist: (id: string, track: Track) => void;
   removeFromPlaylist: (id: string, trackId: string) => void;
@@ -90,6 +94,8 @@ export const usePlayer = create<PlayerState>()(
       expanded: false,
       queueOpen: false,
       lyricsOpen: false,
+      sleepTimer: null,
+      playbackRate: 1.0,
       likedIds: [],
       recents: [],
       playlists: [],
@@ -235,6 +241,10 @@ export const usePlayer = create<PlayerState>()(
       setExpanded: (v) => set({ expanded: v, queueOpen: v ? get().queueOpen : false }),
       setQueueOpen: (v) => set({ queueOpen: v }),
       setLyricsOpen: (v) => set({ lyricsOpen: v }),
+      setSleepTimer: (minutes) => {
+        set({ sleepTimer: minutes ? Date.now() + minutes * 60 * 1000 : null });
+      },
+      setPlaybackRate: (rate) => set({ playbackRate: Math.max(0.5, Math.min(3, rate)) }),
       createPlaylist: (name, tracks = []) => {
         const id =
           typeof crypto !== "undefined" && crypto.randomUUID
