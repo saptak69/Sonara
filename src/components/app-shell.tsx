@@ -329,7 +329,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <PlayerBar />
-        <nav className="flex h-[60px] items-center justify-around border-t border-white/[0.08] bg-black/75 backdrop-blur-2xl px-2 pb-[calc(env(safe-area-inset-bottom,0px)+2px)] shadow-[0_-10px_30px_rgba(0,0,0,0.8)] md:hidden">
+        <nav className="flex h-16 items-center justify-around border-t border-white/[0.08] bg-black/85 backdrop-blur-2xl px-2 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-10px_30px_rgba(0,0,0,0.8)] md:hidden">
           {NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
@@ -338,42 +338,31 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "group relative flex flex-1 flex-col items-center justify-center py-1 transition-all duration-200 active:scale-90 select-none",
-                  active ? "text-white" : "text-white/40 hover:text-white/70",
+                  "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-150 active:scale-95 select-none",
+                  active ? "text-accent" : "text-white/40 hover:text-white/70",
                 )}
               >
                 <div className="relative flex items-center justify-center">
                   <Icon
                     className={cn(
-                      "size-[21px] transition-all duration-200",
+                      "size-[19px] transition-all duration-150",
                       active
-                        ? "text-accent scale-110 drop-shadow-[0_0_8px_rgba(255,42,61,0.55)]"
+                        ? "text-accent drop-shadow-[0_0_8px_rgba(255,42,61,0.5)]"
                         : "text-white/45 group-hover:text-white/75",
                     )}
-                    strokeWidth={active ? 2.3 : 1.75}
+                    strokeWidth={active ? 2.2 : 1.75}
                   />
-                  {active && (
-                    <span className="absolute -inset-1.5 -z-10 rounded-full bg-accent/15 blur-sm" />
-                  )}
                 </div>
                 <span
                   className={cn(
-                    "mt-1 text-[10px] tracking-tight transition-all duration-200 leading-none",
+                    "mt-1 text-[10px] tracking-tight transition-all duration-150 leading-none",
                     active
-                      ? "font-semibold text-white"
-                      : "font-normal text-white/40 group-hover:text-white/70",
+                      ? "font-semibold text-accent"
+                      : "font-normal text-white/45 group-hover:text-white/75",
                   )}
                 >
                   {item.label}
                 </span>
-                <span
-                  className={cn(
-                    "mt-0.5 size-1 rounded-full transition-all duration-300",
-                    active
-                      ? "bg-accent scale-100 opacity-100 shadow-[0_0_6px_rgba(255,42,61,0.8)]"
-                      : "bg-transparent scale-0 opacity-0",
-                  )}
-                />
               </Link>
             );
           })}

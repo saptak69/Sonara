@@ -26,8 +26,8 @@ export const GENRES: GenreDef[] = [
     slug: "hip-hop",
     api: "Hip-Hop/Rap",
     label: "Hip-Hop",
-    hint: "Bars and boom-bap",
-    image: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
+    hint: "Bars, beats, and flow",
+    image: "/genres/hip-hop.jpg",
   },
   {
     slug: "rnb",

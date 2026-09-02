@@ -158,10 +158,90 @@ export const CURATED_TRACKS: Track[] = [
     mood: "Warm",
     playCount: 164000,
     kind: "track",
-  }
+  },
+  {
+    id: "curated_ekla_cholo",
+    title: "Ekla Cholo Re",
+    artist: "Rabindra Sangeet · Kishore Kumar",
+    artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
+    duration: 215,
+    streamUrl: "https://archive.org/download/EklaCholoRe/EklaCholoRe-KishoreKumar.mp3",
+    genre: "Bengali Classical",
+    mood: "Soulful",
+    playCount: 520000,
+    kind: "track",
+  },
+  {
+    id: "curated_rabindra_boshonto",
+    title: "Aha Aji E Boshonto",
+    artist: "Rabindranath Tagore",
+    artwork: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1000&h=1000&fit=crop&q=85",
+    duration: 232,
+    streamUrl: "https://archive.org/download/RabindraSangeet/01.AhaAjiEBoshanto.mp3",
+    genre: "Rabindra Sangeet",
+    mood: "Poetic",
+    playCount: 380000,
+    kind: "track",
+  },
 ];
 
 export const CURATED_RADIO: RadioStation[] = [
+  {
+    id: "air_fm_gold_kolkata",
+    name: "AIR FM Gold Kolkata",
+    artwork: "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=480&h=480&fit=crop&q=80",
+    streamUrl: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio057/hlspbaudio05764kbps.m3u8",
+    tags: "kolkata,bengali,all india radio,west bengal",
+    country: "India",
+    bitrate: 64,
+  },
+  {
+    id: "air_kolkata_geetanjali",
+    name: "Akashvani Kolkata Geetanjali",
+    artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
+    streamUrl: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio055/hlspbaudio05564kbps.m3u8",
+    tags: "kolkata,bengali,classical,west bengal",
+    country: "India",
+    bitrate: 64,
+  },
+  {
+    id: "air_rainbow_kolkata",
+    name: "Akashvani FM Rainbow Kolkata",
+    artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
+    streamUrl: "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio058/hlspbaudio05864kbps.m3u8",
+    tags: "kolkata,bengali,pop,hits,west bengal",
+    country: "India",
+    bitrate: 64,
+  },
+  {
+    id: "radio_robichhaya",
+    name: "Radio BongOnet Robichhaya (Rabindra Sangeet)",
+    artwork: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=480&h=480&fit=crop&q=80",
+    streamUrl: "https://stream.radiotreetal.com/listen",
+    tags: "rabindrasangeet,bengali,kolkata,west bengal",
+    country: "India",
+    bitrate: 128,
+  },
+  {
+    id: "ankora_radio_wb",
+    name: "Ankora Radio West Bengal",
+    artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
+    streamUrl: "https://stream-153.zeno.fm/xush70b1cbruv",
+    tags: "bengali,kolkata,indie,west bengal",
+    country: "India",
+    bitrate: 128,
+  },
+  {
+    id: "radio_quarantine_kolkata",
+    name: "Radio Quarantine Kolkata",
+    artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
+    streamUrl: "https://stream-173.zeno.fm/krk4kw830tzuv",
+    tags: "kolkata,bengali,indie,west bengal",
+    country: "India",
+    bitrate: 128,
+  },
   {
     id: "somafm_groovesalad",
     name: "SomaFM Groove Salad",
@@ -377,17 +457,85 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
   ];
 }
 
-export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
+async function fetchArchiveOrgTracks(query: string, limit = 12): Promise<Track[]> {
   try {
-    const raw = await fetchFromAudius<AudiusTrack[]>("/tracks/search", {
-      query,
-      limit: String(limit),
-    });
-    const mapped = (raw ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-    if (mapped.length) return mapped;
+    const cleanQuery = query.trim().replace(/[^\w\s-]/g, "");
+    if (!cleanQuery) return [];
+    const q = `(${cleanQuery}) AND mediatype:(audio) AND (format:(MP3) OR format:(VBR MP3))`;
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,year,description&sort[]=downloads+desc&rows=${limit}&page=1&output=json`;
+    const data = await getJson<{
+      response?: {
+        docs?: Array<{ identifier: string; title?: string; creator?: string; year?: string }>;
+      };
+    }>(url, 3500);
+
+    const docs = data?.response?.docs ?? [];
+    const tracks: Track[] = [];
+
+    await Promise.allSettled(
+      docs.slice(0, 8).map(async (doc) => {
+        try {
+          const meta = await getJson<{
+            files?: Array<{ name: string; length?: string; format?: string }>;
+          }>(`https://archive.org/metadata/${encodeURIComponent(doc.identifier)}`, 3000);
+
+          const mp3 = meta?.files?.find(
+            (f) => f.name.endsWith(".mp3") && !f.name.includes("_vbr") && !f.name.includes("_sample"),
+          );
+
+          if (mp3) {
+            const streamUrl = `https://archive.org/download/${doc.identifier}/${encodeURIComponent(mp3.name)}`;
+            const artwork = `https://archive.org/services/img/${doc.identifier}`;
+            tracks.push({
+              id: `archive_${doc.identifier}`,
+              title: doc.title || "Classic Audio Track",
+              artist: doc.creator || "Classic Master",
+              artwork,
+              artworkLg: artwork,
+              duration: Math.round(Number(mp3.length) || 210),
+              streamUrl,
+              genre: "Classics",
+              kind: "track",
+            });
+          }
+        } catch {
+          // ignore individual item failure
+        }
+      }),
+    );
+
+    return tracks;
   } catch {
-    // fallback search
+    return [];
   }
+}
+
+export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
+  const [audiusRes, archiveRes] = await Promise.allSettled([
+    fetchFromAudius<AudiusTrack[]>("/tracks/search", { query, limit: String(limit) }),
+    fetchArchiveOrgTracks(query, Math.min(8, limit)),
+  ]);
+
+  const audiusTracks =
+    audiusRes.status === "fulfilled" && audiusRes.value
+      ? audiusRes.value.map(mapTrack).filter((x): x is Track => Boolean(x))
+      : [];
+
+  const archiveTracks =
+    archiveRes.status === "fulfilled" && archiveRes.value ? archiveRes.value : [];
+
+  const combined = [...audiusTracks, ...archiveTracks];
+
+  if (combined.length) {
+    const seen = new Set<string>();
+    return combined.filter((t) => {
+      const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, limit);
+  }
+
   const q = query.toLowerCase();
   const matched = CURATED_TRACKS.filter(
     (t) =>
@@ -502,6 +650,36 @@ export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]
 export async function fetchTrack(id: string): Promise<Track | null> {
   const curated = CURATED_TRACKS.find((t) => t.id === id);
   if (curated) return curated;
+
+  if (id.startsWith("archive_")) {
+    const identifier = id.replace("archive_", "");
+    try {
+      const meta = await getJson<{
+        metadata?: { title?: string; creator?: string };
+        files?: Array<{ name: string; length?: string }>;
+      }>(`https://archive.org/metadata/${encodeURIComponent(identifier)}`, 4000);
+
+      const mp3 = meta?.files?.find((f) => f.name.endsWith(".mp3") && !f.name.includes("_vbr"));
+      if (mp3) {
+        const streamUrl = `https://archive.org/download/${identifier}/${encodeURIComponent(mp3.name)}`;
+        const artwork = `https://archive.org/services/img/${identifier}`;
+        return {
+          id,
+          title: meta?.metadata?.title || "Audio Track",
+          artist: meta?.metadata?.creator || "Classic Master",
+          artwork,
+          artworkLg: artwork,
+          duration: Math.round(Number(mp3.length) || 210),
+          streamUrl,
+          genre: "Classics",
+          kind: "track",
+        };
+      }
+    } catch {
+      return null;
+    }
+  }
+
   try {
     const raw = await fetchFromAudius<AudiusTrack | AudiusTrack[]>(`/tracks/${encodeURIComponent(id)}`);
     const data = Array.isArray(raw) ? raw[0] : raw;
@@ -519,6 +697,7 @@ export function mapRadio(s: {
   url?: string;
   tags?: string;
   country?: string;
+  state?: string;
   bitrate?: number;
 }): RadioStation | null {
   const stream = s.url_resolved || s.url;
@@ -530,7 +709,7 @@ export function mapRadio(s: {
     artwork: s.favicon || null,
     streamUrl: stream,
     tags: s.tags || "",
-    country: s.country || "",
+    country: s.state ? `${s.state}, ${s.country || "India"}` : s.country || "",
     bitrate: s.bitrate,
   };
 }
@@ -549,7 +728,7 @@ export function radioToTrack(station: RadioStation): Track {
   };
 }
 
-export async function fetchRadioStations(limit = 24, tag?: string): Promise<RadioStation[]> {
+export async function fetchRadioStations(limit = 32, tag?: string): Promise<RadioStation[]> {
   for (const node of RADIO_NODES) {
     try {
       const url = new URL(`${node}/stations/search`);
@@ -558,8 +737,23 @@ export async function fetchRadioStations(limit = 24, tag?: string): Promise<Radi
       url.searchParams.set("order", "clickcount");
       url.searchParams.set("reverse", "true");
       if (tag) url.searchParams.set("tag", tag);
-      const data = await getJson<Parameters<typeof mapRadio>[0][]>(url.toString(), 4000);
-      const mapped = (data ?? []).map(mapRadio).filter((x): x is RadioStation => Boolean(x));
+
+      const [generalRes, regionalRes] = await Promise.allSettled([
+        getJson<Parameters<typeof mapRadio>[0][]>(url.toString(), 3500),
+        !tag
+          ? getJson<Parameters<typeof mapRadio>[0][]>(
+              `${node}/stations/bylanguage/bengali?limit=12&hidebroken=true`,
+              3500,
+            )
+          : Promise.resolve([]),
+      ]);
+
+      const general = (generalRes.status === "fulfilled" ? generalRes.value : []) ?? [];
+      const regional = (regionalRes.status === "fulfilled" ? regionalRes.value : []) ?? [];
+
+      const combined = [...regional, ...general];
+      const mapped = combined.map(mapRadio).filter((x): x is RadioStation => Boolean(x));
+
       if (mapped.length >= 3) {
         const seen = new Set<string>();
         return mapped.filter((s) => {
@@ -567,12 +761,13 @@ export async function fetchRadioStations(limit = 24, tag?: string): Promise<Radi
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
-        });
+        }).slice(0, limit);
       }
     } catch {
       // try next radio node
     }
   }
+
   if (tag) {
     const q = tag.toLowerCase();
     const filtered = CURATED_RADIO.filter((r) => r.tags.toLowerCase().includes(q));
@@ -581,25 +776,47 @@ export async function fetchRadioStations(limit = 24, tag?: string): Promise<Radi
   return CURATED_RADIO.slice(0, limit);
 }
 
-export async function searchRadio(query: string, limit = 16): Promise<RadioStation[]> {
+export async function searchRadio(query: string, limit = 20): Promise<RadioStation[]> {
+  const cleanQ = query.trim();
+  if (!cleanQ) return CURATED_RADIO.slice(0, limit);
+
   for (const node of RADIO_NODES) {
     try {
-      const url = new URL(`${node}/stations/search`);
-      url.searchParams.set("name", query);
-      url.searchParams.set("limit", String(limit));
-      url.searchParams.set("hidebroken", "true");
-      url.searchParams.set("order", "clickcount");
-      url.searchParams.set("reverse", "true");
-      const data = await getJson<Parameters<typeof mapRadio>[0][]>(url.toString(), 4000);
-      const mapped = (data ?? []).map(mapRadio).filter((x): x is RadioStation => Boolean(x));
-      if (mapped.length) return mapped;
+      const [byNameRes, byTagRes] = await Promise.allSettled([
+        getJson<Parameters<typeof mapRadio>[0][]>(
+          `${node}/stations/search?name=${encodeURIComponent(cleanQ)}&limit=${limit}&hidebroken=true&order=clickcount&reverse=true`,
+          3500,
+        ),
+        getJson<Parameters<typeof mapRadio>[0][]>(
+          `${node}/stations/search?tag=${encodeURIComponent(cleanQ)}&limit=${limit}&hidebroken=true&order=clickcount&reverse=true`,
+          3500,
+        ),
+      ]);
+
+      const list1 = (byNameRes.status === "fulfilled" ? byNameRes.value : []) ?? [];
+      const list2 = (byTagRes.status === "fulfilled" ? byTagRes.value : []) ?? [];
+      const merged = [...list1, ...list2].map(mapRadio).filter((x): x is RadioStation => Boolean(x));
+
+      if (merged.length) {
+        const seen = new Set<string>();
+        return merged.filter((s) => {
+          const key = s.name.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).slice(0, limit);
+      }
     } catch {
       // try next
     }
   }
-  const q = query.toLowerCase();
+
+  const q = cleanQ.toLowerCase();
   const matched = CURATED_RADIO.filter(
-    (s) => s.name.toLowerCase().includes(q) || s.tags.toLowerCase().includes(q),
+    (s) =>
+      s.name.toLowerCase().includes(q) ||
+      s.tags.toLowerCase().includes(q) ||
+      s.country.toLowerCase().includes(q),
   );
   return matched.length ? matched : CURATED_RADIO.slice(0, limit);
 }
