@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { usePlayer } from "@/lib/player-store";
 import { recordStreamServerFn } from "@/lib/artist-studio";
 import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
+import { fetchTrack } from "@/lib/music-api";
 import { toast } from "sonner";
 
 export function PlayerEngine() {
@@ -20,7 +21,31 @@ export function PlayerEngine() {
   const next = usePlayer((s) => s.next);
   const prev = usePlayer((s) => s.prev);
   const toggle = usePlayer((s) => s.toggle);
+  const playTrack = usePlayer((s) => s.playTrack);
   const clearPendingSeek = usePlayer((s) => s.clearPendingSeek);
+
+  // Auto-play shared song when URL contains ?track=... or ?play=...
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const trackId = url.searchParams.get("track") || url.searchParams.get("play");
+    if (!trackId) return;
+
+    void (async () => {
+      try {
+        const track = await fetchTrack(trackId);
+        if (track) {
+          playTrack(track);
+          toast.success(`Playing shared song: "${track.title}"`, {
+            description: `by ${track.artist}`,
+            duration: 4000,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to autoplay shared track:", e);
+      }
+    })();
+  }, []);
 
   // Anti-spam stream counting (30 seconds listening rule)
   const sessionIdRef = useRef<string>(

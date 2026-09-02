@@ -19,6 +19,7 @@ import { Route as StudioRouteImport } from './routes/studio'
 import { Route as ArtistIdRouteImport } from './routes/artist.$id'
 import { Route as GenreSlugRouteImport } from './routes/genre.$slug'
 import { Route as PlaylistIdRouteImport } from './routes/playlist.$id'
+import { Route as TrackIdRouteImport } from './routes/track.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiStorageUploadRouteImport } from './routes/api/storage/upload'
 
@@ -72,6 +73,11 @@ const PlaylistIdRoute = PlaylistIdRouteImport.update({
   path: '/playlist/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackIdRoute = TrackIdRouteImport.update({
+  id: '/track/$id',
+  path: '/track/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
+  '/track/$id': typeof TrackIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/storage/upload': typeof ApiStorageUploadRoute
 }
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
+  '/track/$id': typeof TrackIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/storage/upload': typeof ApiStorageUploadRoute
 }
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
+  '/track/$id': typeof TrackIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/storage/upload': typeof ApiStorageUploadRoute
 }
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
+    | '/track/$id'
     | '/api/auth/$'
     | '/api/storage/upload'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
+    | '/track/$id'
     | '/api/auth/$'
     | '/api/storage/upload'
   id:
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
+    | '/track/$id'
     | '/api/auth/$'
     | '/api/storage/upload'
   fileRoutesById: FileRoutesById
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   ArtistIdRoute: typeof ArtistIdRoute
   GenreSlugRoute: typeof GenreSlugRoute
   PlaylistIdRoute: typeof PlaylistIdRoute
+  TrackIdRoute: typeof TrackIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiStorageUploadRoute: typeof ApiStorageUploadRoute
 }
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlaylistIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track/$id': {
+      id: '/track/$id'
+      path: '/track/$id'
+      fullPath: '/track/$id'
+      preLoaderRoute: typeof TrackIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -286,6 +306,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArtistIdRoute: ArtistIdRoute,
   GenreSlugRoute: GenreSlugRoute,
   PlaylistIdRoute: PlaylistIdRoute,
+  TrackIdRoute: TrackIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiStorageUploadRoute: ApiStorageUploadRoute,
 }

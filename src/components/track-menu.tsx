@@ -109,16 +109,17 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
+            const shareUrl = `${window.location.origin}/track/${encodeURIComponent(track.id)}`;
             const shareData = {
-              title: track.title,
+              title: `${track.title} - ${track.artist}`,
               text: `Listen to "${track.title}" by ${track.artist} on Sonara`,
-              url: window.location.href,
+              url: shareUrl,
             };
             if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
               void navigator.share(shareData).catch(() => {});
             } else if (navigator.clipboard) {
-              void navigator.clipboard.writeText(window.location.href);
-              toast.success("Track link copied to clipboard!");
+              void navigator.clipboard.writeText(shareUrl);
+              toast.success("Song link copied to clipboard!");
             }
           }}
         >
