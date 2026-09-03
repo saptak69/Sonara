@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Music, User, ArrowUpRight } from "lucide-react";
+import { Search, Music, User, Disc, ArrowUpRight } from "lucide-react";
 import {
   fetchSearchSuggestionsServerFn,
   type SearchSuggestionResult,
@@ -165,6 +165,8 @@ export function SearchSuggestions({
     onClose();
     if (match.type === "artist" && match.entityId) {
       void navigate({ to: "/artist/$id", params: { id: match.entityId } });
+    } else if (match.type === "album" && match.entityId) {
+      void navigate({ to: "/playlist/$id", params: { id: match.entityId } });
     } else if (match.entityId) {
       // Play track directly
       void (async () => {
@@ -229,6 +231,11 @@ export function SearchSuggestions({
                       <>
                         <User className="size-3.5" />
                         <span>Artist</span>
+                      </>
+                    ) : match.type === "album" ? (
+                      <>
+                        <Disc className="size-3.5" />
+                        <span>Album</span>
                       </>
                     ) : (
                       <>

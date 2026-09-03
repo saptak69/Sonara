@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, Disc, Play, ShieldCheck, Sparkles, User } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
+import { Rail } from "@/components/rail";
+import { PlaylistCard } from "@/components/cards";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCount } from "@/lib/format";
-import { fetchArtist, fetchArtistTracks } from "@/lib/music-api";
+import { fetchArtist, fetchArtistTracks, fetchArtistAlbums } from "@/lib/music-api";
 import {
   getPublicArtistProfileServerFn,
   getPublicArtistTracksServerFn,
@@ -74,6 +76,12 @@ function ArtistPage() {
   const remoteTracksQuery = useQuery({
     queryKey: ["remote-artist-tracks", id],
     queryFn: () => fetchArtistTracks(id, 40),
+    enabled: !communityProfileQuery.isLoading && !communityProfileQuery.data && Boolean(remoteArtistQuery.data),
+  });
+
+  const remoteAlbumsQuery = useQuery({
+    queryKey: ["remote-artist-albums", id],
+    queryFn: () => fetchArtistAlbums(id, 20),
     enabled: !communityProfileQuery.isLoading && !communityProfileQuery.data && Boolean(remoteArtistQuery.data),
   });
 
@@ -260,6 +268,16 @@ function ArtistPage() {
           <TrackRow key={t.id} track={t} index={i} queue={list} showPlays />
         ))}
       </section>
+
+      {(remoteAlbumsQuery.data ?? []).length ? (
+        <section className="mt-10">
+          <Rail title="Albums">
+            {(remoteAlbumsQuery.data ?? []).map((album) => (
+              <PlaylistCard key={album.id} playlist={album} />
+            ))}
+          </Rail>
+        </section>
+      ) : null}
     </div>
   );
 }

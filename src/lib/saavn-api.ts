@@ -46,6 +46,35 @@ export type RawSaavnArtist = {
   role?: string;
 };
 
+export type RawSaavnAlbum = {
+  id?: string;
+  albumid?: string;
+  title?: string;
+  name?: string;
+  album?: string;
+  subtitle?: string;
+  header_desc?: string;
+  type?: string;
+  image?: string;
+  imageUrl?: string;
+  language?: string;
+  year?: string | number;
+  play_count?: string | number;
+  list_count?: string | number;
+  numSongs?: string | number;
+  primary_artists?: string;
+  primaryArtists?: string;
+  artist?: string | string[];
+  songs?: RawSaavnSong[];
+  list?: RawSaavnSong[];
+  more_info?: {
+    song_count?: string | number;
+    artistMap?: {
+      primary_artists?: { id: string; name: string }[];
+    };
+  };
+};
+
 /**
  * Decrypts JioSaavn encrypted media URLs using 3DES ECB (key 38346591)
  * Returns direct 320kbps / 160kbps CDN stream URL
@@ -142,6 +171,44 @@ export function mapSaavnArtist(a: RawSaavnArtist): Artist | null {
     artworkLg,
     followerCount: Number(a.follower_count) || 50000,
     trackCount: 40,
+  };
+}
+
+export function mapSaavnAlbum(a: RawSaavnAlbum): Playlist | null {
+  const id = a.id || a.albumid;
+  if (!id) return null;
+  const name = cleanHtmlEntities(a.title || a.name || a.album || "Untitled Album");
+  const rawImage = a.image || a.imageUrl;
+  const { artwork, artworkLg } = formatArtwork(rawImage);
+  const rawArtist =
+    (typeof a.primary_artists === "string" ? a.primary_artists : "") ||
+    (typeof a.primaryArtists === "string" ? a.primaryArtists : "") ||
+    (typeof a.artist === "string" ? a.artist : "") ||
+    (typeof a.subtitle === "string" ? a.subtitle : "");
+  const artistName = cleanHtmlEntities(rawArtist);
+  const trackCount = Number(
+    a.list_count || a.numSongs || a.more_info?.song_count || a.songs?.length || a.list?.length || 0,
+  );
+
+  const rawSongs = a.songs || a.list || [];
+  const tracks = rawSongs.length
+    ? rawSongs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x))
+    : undefined;
+
+  return {
+    id: `saavn_album_${id}`,
+    name,
+    description: artistName
+      ? `Album by ${artistName}${a.year ? ` · ${a.year}` : ""}`
+      : a.year
+        ? `Album · ${a.year}`
+        : "Album",
+    artwork,
+    artworkLg,
+    trackCount: tracks?.length || trackCount || 0,
+    isAlbum: true,
+    owner: artistName || undefined,
+    tracks,
   };
 }
 
@@ -377,20 +444,104 @@ export const getSaavnArtistServerFn = createServerFn({ method: "GET" })
  */
 export const getSaavnArtistTracksServerFn = createServerFn({ method: "GET" })
   .validator((data: { id: string; limit?: number }) => {
-    return z.object({ id: z.string(), limit: z.number().default(30) }).parse(data);
+    return z.object({ id: z.string(), limit: z.number().default(40) }).parse(data);
   })
   .handler(async ({ data }) => {
     try {
       const rawId = data.id.replace("saavn_artist_", "");
-      const json = await fetchSaavnJson<{ topSongs?: { songs?: RawSaavnSong[] } }>({
+      const json = await fetchSaavnJson<{
+        topSongs?: RawSaavnSong[] | { songs?: RawSaavnSong[] };
+      }>({
         __call: "artist.getArtistPageDetails",
         artistId: rawId,
-        n_song: String(data.limit),
+        n_song: String(data.limit || 40),
       });
 
-      const songs = json?.topSongs?.songs || [];
+      const songs = Array.isArray(json?.topSongs)
+        ? json.topSongs
+        : (json?.topSongs?.songs || []);
+
       return songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
     } catch {
       return [];
     }
   });
+
+/**
+ * Server Function: Get Artist Albums
+ */
+export const getSaavnArtistAlbumsServerFn = createServerFn({ method: "GET" })
+  .validator((data: { id: string; limit?: number }) => {
+    return z.object({ id: z.string(), limit: z.number().default(20) }).parse(data);
+  })
+  .handler(async ({ data }) => {
+    try {
+      const rawId = data.id.replace("saavn_artist_", "");
+      const json = await fetchSaavnJson<{
+        topAlbums?: RawSaavnAlbum[] | { albums?: RawSaavnAlbum[] };
+      }>({
+        __call: "artist.getArtistPageDetails",
+        artistId: rawId,
+        n_album: String(data.limit || 20),
+      });
+
+      const albums = Array.isArray(json?.topAlbums)
+        ? json.topAlbums
+        : (json?.topAlbums?.albums || []);
+
+      return albums.map(mapSaavnAlbum).filter((x): x is Playlist => Boolean(x));
+    } catch {
+      return [];
+    }
+  });
+
+/**
+ * Server Function: Search Albums
+ */
+export const searchSaavnAlbumsServerFn = createServerFn({ method: "GET" })
+  .validator((data: { query: string; limit?: number }) => {
+    return z
+      .object({
+        query: z.string().min(1),
+        limit: z.number().min(1).max(30).default(12),
+      })
+      .parse(data);
+  })
+  .handler(async ({ data }) => {
+    try {
+      const json = await fetchSaavnJson<{ results?: RawSaavnAlbum[] }>({
+        __call: "search.getAlbumResults",
+        q: data.query.trim(),
+        n: String(data.limit),
+        p: "1",
+      });
+
+      const albums = json?.results ?? [];
+      return albums.map(mapSaavnAlbum).filter((x): x is Playlist => Boolean(x));
+    } catch {
+      return [];
+    }
+  });
+
+/**
+ * Server Function: Get Album Details & Full Tracks
+ */
+export const getSaavnAlbumServerFn = createServerFn({ method: "GET" })
+  .validator((data: { id: string }) => {
+    return z.object({ id: z.string() }).parse(data);
+  })
+  .handler(async ({ data }) => {
+    try {
+      const rawId = data.id.replace("saavn_album_", "");
+      const json = await fetchSaavnJson<RawSaavnAlbum & { list?: RawSaavnSong[]; songs?: RawSaavnSong[] }>({
+        __call: "content.getAlbumDetails",
+        albumid: rawId,
+      });
+
+      if (!json) return null;
+      return mapSaavnAlbum(json);
+    } catch {
+      return null;
+    }
+  });
+

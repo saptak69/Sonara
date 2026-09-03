@@ -91,30 +91,23 @@ export const fetchSearchSuggestionsServerFn = createServerFn({ method: "GET" })
     const topItem = saavnData?.topquery?.data?.[0];
     if (topItem && topItem.title) {
       const title = cleanHtml(topItem.title);
+      const isArtist = topItem.type === "artist";
+      const isAlbum = topItem.type === "album";
+      const itemType = isArtist ? "artist" : isAlbum ? "album" : "song";
+      const entityId = isArtist
+        ? `saavn_artist_${topItem.id}`
+        : isAlbum
+          ? `saavn_album_${topItem.id}`
+          : `saavn_${topItem.id}`;
+
       topMatches.push({
         id: `top_${topItem.id}`,
         title,
         subtitle: cleanHtml(topItem.description || topItem.type),
         artwork: topItem.image?.replace("50x50", "150x150") || "",
-        type: topItem.type === "artist" ? "artist" : "song",
-        entityId: topItem.type === "artist" ? `saavn_artist_${topItem.id}` : `saavn_${topItem.id}`,
+        type: itemType,
+        entityId,
       });
-      querySet.add(title.toLowerCase());
-    }
-
-    // Add matching songs
-    for (const s of (saavnData?.songs?.data || []).slice(0, 3)) {
-      const title = cleanHtml(s.title);
-      if (!topMatches.some((m) => m.title.toLowerCase() === title.toLowerCase())) {
-        topMatches.push({
-          id: `song_${s.id}`,
-          title,
-          subtitle: cleanHtml(s.description || "Song"),
-          artwork: s.image?.replace("50x50", "150x150") || "",
-          type: "song",
-          entityId: `saavn_${s.id}`,
-        });
-      }
       querySet.add(title.toLowerCase());
     }
 
@@ -129,6 +122,38 @@ export const fetchSearchSuggestionsServerFn = createServerFn({ method: "GET" })
           artwork: a.image?.replace("50x50", "150x150") || "",
           type: "artist",
           entityId: `saavn_artist_${a.id}`,
+        });
+      }
+      querySet.add(title.toLowerCase());
+    }
+
+    // Add matching albums
+    for (const al of (saavnData?.albums?.data || []).slice(0, 2)) {
+      const title = cleanHtml(al.title);
+      if (!topMatches.some((m) => m.title.toLowerCase() === title.toLowerCase())) {
+        topMatches.push({
+          id: `album_${al.id}`,
+          title,
+          subtitle: cleanHtml(al.description || "Album"),
+          artwork: al.image?.replace("50x50", "150x150") || "",
+          type: "album",
+          entityId: `saavn_album_${al.id}`,
+        });
+      }
+      querySet.add(title.toLowerCase());
+    }
+
+    // Add matching songs
+    for (const s of (saavnData?.songs?.data || []).slice(0, 3)) {
+      const title = cleanHtml(s.title);
+      if (!topMatches.some((m) => m.title.toLowerCase() === title.toLowerCase())) {
+        topMatches.push({
+          id: `song_${s.id}`,
+          title,
+          subtitle: cleanHtml(s.description || "Song"),
+          artwork: s.image?.replace("50x50", "150x150") || "",
+          type: "song",
+          entityId: `saavn_${s.id}`,
         });
       }
       querySet.add(title.toLowerCase());

@@ -4,7 +4,7 @@ import { ArtistCard, PlaylistCard, RadioCard } from "@/components/cards";
 import { Rail } from "@/components/rail";
 import { TrackRow } from "@/components/track-row";
 import { HomeSkeleton } from "@/components/home-skeleton";
-import { searchArtists, searchPlaylists, searchRadio, searchTracks } from "@/lib/music-api";
+import { searchAlbums, searchArtists, searchPlaylists, searchRadio, searchTracks } from "@/lib/music-api";
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
@@ -59,6 +59,11 @@ function SearchPage() {
         return remote;
       }
     },
+    enabled: q.length > 1,
+  });
+  const albums = useQuery({
+    queryKey: ["search-albums", q],
+    queryFn: () => searchAlbums(q, 12),
     enabled: q.length > 1,
   });
   const playlists = useQuery({
@@ -183,6 +188,16 @@ function SearchPage() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">“{q}”</h1>
       </header>
 
+      {/* Artists Rail */}
+      {(artists.data ?? []).length ? (
+        <Rail title="Artists">
+          {(artists.data ?? []).map((a) => (
+            <ArtistCard key={a.id} artist={a} />
+          ))}
+        </Rail>
+      ) : null}
+
+      {/* Songs Section */}
       {(tracks.data ?? []).length ? (
         <section>
           <h2 className="mb-3 text-xl font-semibold tracking-tight">Songs</h2>
@@ -194,14 +209,16 @@ function SearchPage() {
         <p className="text-sm text-muted">No songs matched that search.</p>
       )}
 
-      {(artists.data ?? []).length ? (
-        <Rail title="Artists">
-          {(artists.data ?? []).map((a) => (
-            <ArtistCard key={a.id} artist={a} />
+      {/* Albums Rail */}
+      {(albums.data ?? []).length ? (
+        <Rail title="Albums">
+          {(albums.data ?? []).map((album) => (
+            <PlaylistCard key={album.id} playlist={album} />
           ))}
         </Rail>
       ) : null}
 
+      {/* Playlists Rail */}
       {(playlists.data ?? []).length ? (
         <Rail title="Playlists">
           {(playlists.data ?? []).map((p) => (
@@ -210,6 +227,7 @@ function SearchPage() {
         </Rail>
       ) : null}
 
+      {/* Radio Stations */}
       {(radio.data ?? []).length ? (
         <Rail title="Radio">
           {(radio.data ?? []).map((s) => (

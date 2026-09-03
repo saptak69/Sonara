@@ -12,10 +12,13 @@ import {
   searchSaavnTracksServerFn,
   searchSaavnPlaylistsServerFn,
   searchSaavnArtistsServerFn,
+  searchSaavnAlbumsServerFn,
   getSaavnTrackServerFn,
   getSaavnPlaylistServerFn,
+  getSaavnAlbumServerFn,
   getSaavnArtistServerFn,
   getSaavnArtistTracksServerFn,
+  getSaavnArtistAlbumsServerFn,
   resolveFullTrackStreamServerFn,
 } from "./saavn-api";
 import {
@@ -822,6 +825,16 @@ export async function searchPlaylists(query: string, limit = 12): Promise<Playli
   return fetchTrendingPlaylists(limit);
 }
 
+export async function searchAlbums(query: string, limit = 12): Promise<Playlist[]> {
+  try {
+    const albums = await searchSaavnAlbumsServerFn({ data: { query, limit } });
+    if (albums && albums.length) return albums;
+  } catch {
+    // fallback
+  }
+  return [];
+}
+
 export async function searchArtists(query: string, limit = 12): Promise<Artist[]> {
   try {
     const [saavnRes, deezerRes, audiusRes] = await Promise.allSettled([
@@ -878,6 +891,9 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
     const playlists = await fetchTrendingPlaylists(10);
     return playlists.find((p) => p.id === id) || playlists[0] || null;
   }
+  if (id.startsWith("saavn_album_")) {
+    return getSaavnAlbumServerFn({ data: { id } });
+  }
   if (id.startsWith("saavn_pl_")) {
     return getSaavnPlaylistServerFn({ data: { id } });
   }
@@ -891,6 +907,13 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   } catch {
     return null;
   }
+}
+
+export async function fetchArtistAlbums(id: string, limit = 20): Promise<Playlist[]> {
+  if (id.startsWith("saavn_artist_")) {
+    return getSaavnArtistAlbumsServerFn({ data: { id, limit } });
+  }
+  return [];
 }
 
 export async function fetchArtist(id: string): Promise<Artist | null> {
