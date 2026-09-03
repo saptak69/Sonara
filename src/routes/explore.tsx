@@ -4,7 +4,7 @@ import { AlbumCard, PlaylistCard, RadioCard } from "@/components/cards";
 import { HomeSkeleton } from "@/components/home-skeleton";
 import { Rail } from "@/components/rail";
 import { GENRES } from "@/lib/genres";
-import { fetchRadioStations, fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
+import { fetchFeaturedAlbums, fetchRadioStations, fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { hashHue } from "@/lib/utils";
 import type { Track } from "@/lib/types";
@@ -49,6 +49,10 @@ function Explore() {
   const radio = useQuery({
     queryKey: ["radio-featured"],
     queryFn: () => fetchRadioStations(12),
+  });
+  const featuredAlbums = useQuery({
+    queryKey: ["featured-albums-explore"],
+    queryFn: () => fetchFeaturedAlbums(12),
   });
 
   if (charts.isLoading && !charts.data) return <HomeSkeleton />;
@@ -107,6 +111,14 @@ function Explore() {
         <Rail title="Top songs">
           {(charts.data ?? []).map((t) => (
             <AlbumCard key={t.id} track={t} queue={charts.data} />
+          ))}
+        </Rail>
+      ) : null}
+
+      {(featuredAlbums.data ?? []).length ? (
+        <Rail title="Masterpiece & Iconic Albums">
+          {(featuredAlbums.data ?? []).map((album) => (
+            <PlaylistCard key={album.id} playlist={album} />
           ))}
         </Rail>
       ) : null}

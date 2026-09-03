@@ -6,7 +6,7 @@ import { Rail } from "@/components/rail";
 import { TrackRow } from "@/components/track-row";
 import { Button } from "@/components/ui/button";
 import { MOODS } from "@/lib/genres";
-import { fetchTrending, fetchTrendingPlaylists, fetchUnderground } from "@/lib/music-api";
+import { fetchFeaturedAlbums, fetchTrending, fetchTrendingPlaylists, fetchUnderground } from "@/lib/music-api";
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
@@ -57,6 +57,10 @@ function Home() {
   const playlists = useQuery({
     queryKey: ["playlists"],
     queryFn: () => fetchTrendingPlaylists(16),
+  });
+  const featuredAlbums = useQuery({
+    queryKey: ["featured-albums"],
+    queryFn: () => fetchFeaturedAlbums(12),
   });
 
   const loading = trending.isLoading && !trending.data;
@@ -109,6 +113,14 @@ function Home() {
             ))}
           </div>
         </section>
+      ) : null}
+
+      {(featuredAlbums.data ?? []).length ? (
+        <Rail title="Iconic & Trending Albums" to="/explore">
+          {(featuredAlbums.data ?? []).map((album) => (
+            <PlaylistCard key={album.id} playlist={album} />
+          ))}
+        </Rail>
       ) : null}
 
       <section className="space-y-4">

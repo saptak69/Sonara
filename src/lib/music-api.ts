@@ -825,10 +825,186 @@ export async function searchPlaylists(query: string, limit = 12): Promise<Playli
   return fetchTrendingPlaylists(limit);
 }
 
-export async function searchAlbums(query: string, limit = 12): Promise<Playlist[]> {
+export const FEATURED_ALBUMS: Playlist[] = [
+  {
+    id: "saavn_album_10970045",
+    name: "1989",
+    description: "Album by Taylor Swift · 2014",
+    artwork: "https://c.saavncdn.com/886/1989-English-2014-20240119005634-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/886/1989-English-2014-20240119005634-500x500.jpg",
+    trackCount: 16,
+    isAlbum: true,
+    owner: "Taylor Swift",
+  },
+  {
+    id: "saavn_album_16276424",
+    name: "Images and Words",
+    description: "Album by Dream Theater · 1992",
+    artwork: "https://c.saavncdn.com/867/Images-and-Words-English-1992-20260827073616-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/867/Images-and-Words-English-1992-20260827073616-500x500.jpg",
+    trackCount: 8,
+    isAlbum: true,
+    owner: "Dream Theater",
+  },
+  {
+    id: "saavn_album_1122874",
+    name: "Master Of Puppets",
+    description: "Album by Metallica · 1986",
+    artwork: "https://c.saavncdn.com/127/Master-Of-Puppets-1992-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/127/Master-Of-Puppets-1992-500x500.jpg",
+    trackCount: 8,
+    isAlbum: true,
+    owner: "Metallica",
+  },
+  {
+    id: "saavn_album_17037435",
+    name: "Lover",
+    description: "Album by Taylor Swift · 2019",
+    artwork: "https://c.saavncdn.com/228/Lover-English-2019-20250731010741-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/228/Lover-English-2019-20250731010741-500x500.jpg",
+    trackCount: 18,
+    isAlbum: true,
+    owner: "Taylor Swift",
+  },
+  {
+    id: "saavn_album_16271967",
+    name: "Black Clouds & Silver Linings",
+    description: "Album by Dream Theater · 2009",
+    artwork: "https://c.saavncdn.com/308/Black-Clouds-Silver-Linings-English-2009-20190607050635-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/308/Black-Clouds-Silver-Linings-English-2009-20190607050635-500x500.jpg",
+    trackCount: 6,
+    isAlbum: true,
+    owner: "Dream Theater",
+  },
+  {
+    id: "saavn_album_1707513",
+    name: "The Dark Side of the Moon",
+    description: "Album by Pink Floyd · 1973",
+    artwork: "https://c.saavncdn.com/261/The-Dark-Side-of-the-Moon-Unknown-2016-20250916233240-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/261/The-Dark-Side-of-the-Moon-Unknown-2016-20250916233240-500x500.jpg",
+    trackCount: 10,
+    isAlbum: true,
+    owner: "Pink Floyd",
+  },
+  {
+    id: "saavn_album_16264220",
+    name: "Fear of the Dark",
+    description: "Album by Iron Maiden · 1992",
+    artwork: "https://c.saavncdn.com/142/Fear-Of-The-Dark-2015-Remaster--English-2017-20190607041844-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/142/Fear-Of-The-Dark-2015-Remaster--English-2017-20190607041844-500x500.jpg",
+    trackCount: 12,
+    isAlbum: true,
+    owner: "Iron Maiden",
+  },
+  {
+    id: "saavn_album_1285399",
+    name: "Back In Black",
+    description: "Album by AC/DC · 1980",
+    artwork: "https://c.saavncdn.com/841/Back-In-Black-English-1980-20200720182610-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/841/Back-In-Black-English-1980-20200720182610-500x500.jpg",
+    trackCount: 10,
+    isAlbum: true,
+    owner: "AC/DC",
+  },
+  {
+    id: "saavn_album_77003454",
+    name: "A Night At The Opera",
+    description: "Album by Queen · 1975",
+    artwork: "https://c.saavncdn.com/264/A-Night-At-The-Opera-English-2026-20260617043345-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/264/A-Night-At-The-Opera-English-2026-20260617043345-500x500.jpg",
+    trackCount: 12,
+    isAlbum: true,
+    owner: "Queen",
+  },
+  {
+    id: "saavn_album_1139549",
+    name: "Aashiqui 2",
+    description: "Album by Mithoon, Ankit Tiwari, Jeet Gannguli · 2013",
+    artwork: "https://c.saavncdn.com/430/Aashiqui-2-Hindi-2013-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/430/Aashiqui-2-Hindi-2013-500x500.jpg",
+    trackCount: 11,
+    isAlbum: true,
+    owner: "Aashiqui 2",
+  },
+  {
+    id: "saavn_album_3084994",
+    name: "Starboy",
+    description: "Album by The Weeknd · 2016",
+    artwork: "https://c.saavncdn.com/372/Starboy-English-2016-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/372/Starboy-English-2016-500x500.jpg",
+    trackCount: 18,
+    isAlbum: true,
+    owner: "The Weeknd",
+  },
+  {
+    id: "saavn_album_1045274",
+    name: "Rockstar",
+    description: "Album by A.R. Rahman · 2011",
+    artwork: "https://c.saavncdn.com/408/Rockstar-Hindi-2011-20221212023139-500x500.jpg",
+    artworkLg: "https://c.saavncdn.com/408/Rockstar-Hindi-2011-20221212023139-500x500.jpg",
+    trackCount: 14,
+    isAlbum: true,
+    owner: "A.R. Rahman",
+  },
+];
+
+export async function fetchFeaturedAlbums(limit = 12): Promise<Playlist[]> {
+  return FEATURED_ALBUMS.slice(0, limit);
+}
+
+export async function searchAlbums(query: string, limit = 16): Promise<Playlist[]> {
+  const cleanQ = query.trim();
+  if (!cleanQ) return FEATURED_ALBUMS.slice(0, limit);
+
   try {
-    const albums = await searchSaavnAlbumsServerFn({ data: { query, limit } });
-    if (albums && albums.length) return albums;
+    const [saavnRes, artistsRes] = await Promise.allSettled([
+      searchSaavnAlbumsServerFn({ data: { query: cleanQ, limit } }),
+      searchSaavnArtistsServerFn({ data: { query: cleanQ, limit: 3 } }),
+    ]);
+
+    const directAlbums =
+      saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
+
+    const artists =
+      artistsRes.status === "fulfilled" && artistsRes.value ? artistsRes.value : [];
+
+    let artistAlbums: Playlist[] = [];
+    const topArtist = artists[0];
+    if (topArtist && topArtist.id.startsWith("saavn_artist_")) {
+      const qLower = cleanQ.toLowerCase();
+      const aLower = topArtist.name.toLowerCase();
+      if (aLower.includes(qLower) || qLower.includes(aLower)) {
+        try {
+          artistAlbums = await getSaavnArtistAlbumsServerFn({
+            data: { id: topArtist.id, limit: 20 },
+          });
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    const qLower = cleanQ.toLowerCase();
+    const curatedMatches = FEATURED_ALBUMS.filter(
+      (a) =>
+        a.name.toLowerCase().includes(qLower) ||
+        (a.owner && a.owner.toLowerCase().includes(qLower)),
+    );
+
+    const merged = [...artistAlbums, ...directAlbums, ...curatedMatches];
+    const seen = new Set<string>();
+    const deduped: Playlist[] = [];
+
+    for (const a of merged) {
+      const normKey = a.name.toLowerCase().replace(/[^\w]/g, "");
+      if (!seen.has(normKey) && !seen.has(a.id)) {
+        seen.add(normKey);
+        seen.add(a.id);
+        deduped.push(a);
+      }
+    }
+
+    if (deduped.length) return deduped.slice(0, limit);
   } catch {
     // fallback
   }

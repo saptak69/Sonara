@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArtistCard, PlaylistCard, RadioCard } from "@/components/cards";
 import { Rail } from "@/components/rail";
 import { TrackRow } from "@/components/track-row";
+import { Button } from "@/components/ui/button";
 import { HomeSkeleton } from "@/components/home-skeleton";
-import { searchAlbums, searchArtists, searchPlaylists, searchRadio, searchTracks } from "@/lib/music-api";
+import { fetchFeaturedAlbums, searchAlbums, searchArtists, searchPlaylists, searchRadio, searchTracks } from "@/lib/music-api";
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
@@ -22,6 +24,13 @@ function SearchPage() {
   const { q } = Route.useSearch();
   const recents = usePlayer((s) => s.recentSearches);
   const rememberSearch = usePlayer((s) => s.rememberSearch);
+  const [showAllSongs, setShowAllSongs] = useState(false);
+
+  const featuredAlbums = useQuery({
+    queryKey: ["featured-albums-search"],
+    queryFn: () => fetchFeaturedAlbums(12),
+    enabled: !q,
+  });
 
   const tracks = useQuery({
     queryKey: ["search-tracks", q],
@@ -54,7 +63,7 @@ function SearchPage() {
             playCount: c.playCount,
             kind: "track",
           }));
-        return [...matchedCommunity, ...remote];
+        return [...remote, ...matchedCommunity];
       } catch {
         return remote;
       }
@@ -63,7 +72,7 @@ function SearchPage() {
   });
   const albums = useQuery({
     queryKey: ["search-albums", q],
-    queryFn: () => searchAlbums(q, 12),
+    queryFn: () => searchAlbums(q, 16),
     enabled: q.length > 1,
   });
   const playlists = useQuery({
@@ -102,7 +111,7 @@ function SearchPage() {
             });
           }
         }
-        return [...matchedCommunityArtists, ...remote];
+        return [...remote, ...matchedCommunityArtists];
       } catch {
         return remote;
       }
@@ -116,15 +125,16 @@ function SearchPage() {
   });
 
   const TRENDING_SEARCHES = [
-    { label: "Dream Theater", tag: "Progressive Rock" },
+    { label: "Taylor Swift", tag: "Pop Icon" },
+    { label: "Dream Theater", tag: "Progressive Metal" },
+    { label: "Metallica", tag: "Heavy Metal" },
     { label: "Arijit Singh", tag: "Bollywood & Bengali" },
+    { label: "Pink Floyd", tag: "Classic Rock" },
     { label: "Rabindra Sangeet", tag: "Bengali Classics" },
     { label: "The Weeknd", tag: "Global Pop" },
-    { label: "Pink Floyd", tag: "Classic Rock" },
     { label: "AIR FM Gold Kolkata", tag: "Live Radio" },
     { label: "Daft Punk", tag: "Electronic" },
     { label: "Kishore Kumar", tag: "Timeless Master" },
-    { label: "Lo-Fi Rain Study", tag: "Chill" },
   ];
 
   if (!q) {
@@ -156,6 +166,15 @@ function SearchPage() {
             ))}
           </div>
         </section>
+
+        {/* Popular & Iconic Albums */}
+        {(featuredAlbums.data ?? []).length ? (
+          <Rail title="Popular & Iconic Albums">
+            {(featuredAlbums.data ?? []).map((album) => (
+              <PlaylistCard key={album.id} playlist={album} />
+            ))}
+          </Rail>
+        ) : null}
 
         {recents.length ? (
           <section className="space-y-3">
@@ -197,19 +216,7 @@ function SearchPage() {
         </Rail>
       ) : null}
 
-      {/* Songs Section */}
-      {(tracks.data ?? []).length ? (
-        <section>
-          <h2 className="mb-3 text-xl font-semibold tracking-tight">Songs</h2>
-          {(tracks.data ?? []).map((t, i) => (
-            <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
-          ))}
-        </section>
-      ) : (
-        <p className="text-sm text-muted">No songs matched that search.</p>
-      )}
-
-      {/* Albums Rail */}
+      {/* Albums Rail - High prominence directly above songs */}
       {(albums.data ?? []).length ? (
         <Rail title="Albums">
           {(albums.data ?? []).map((album) => (
@@ -217,6 +224,30 @@ function SearchPage() {
           ))}
         </Rail>
       ) : null}
+
+      {/* Songs Section */}
+      {(tracks.data ?? []).length ? (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-semibold tracking-tight">Songs</h2>
+            {(tracks.data ?? []).length > 6 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted hover:text-white"
+                onClick={() => setShowAllSongs((prev) => !prev)}
+              >
+                {showAllSongs ? "Show less" : `Show all ${(tracks.data ?? []).length} songs`}
+              </Button>
+            ) : null}
+          </div>
+          {(showAllSongs ? (tracks.data ?? []) : (tracks.data ?? []).slice(0, 6)).map((t, i) => (
+            <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
+          ))}
+        </section>
+      ) : (
+        <p className="text-sm text-muted">No songs matched that search.</p>
+      )}
 
       {/* Playlists Rail */}
       {(playlists.data ?? []).length ? (
