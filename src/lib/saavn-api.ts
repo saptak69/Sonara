@@ -38,7 +38,8 @@ export type RawSaavnPlaylist = {
 };
 
 export type RawSaavnArtist = {
-  id: string;
+  id?: string;
+  artistId?: string;
   name?: string;
   title?: string;
   image?: string;
@@ -158,12 +159,13 @@ export function mapSaavnPlaylist(p: RawSaavnPlaylist): Playlist | null {
 }
 
 export function mapSaavnArtist(a: RawSaavnArtist): Artist | null {
-  if (!a.id) return null;
+  const id = a.id || a.artistId;
+  if (!id) return null;
   const name = cleanHtmlEntities(a.name || a.title || "Artist");
   const { artwork, artworkLg } = formatArtwork(a.image);
 
   return {
-    id: `saavn_artist_${a.id}`,
+    id: `saavn_artist_${id}`,
     name,
     handle: name.toLowerCase().replace(/[^\w]/g, "_"),
     bio: `Top artist with over ${(Number(a.follower_count) || 50000).toLocaleString()} listeners.`,
