@@ -62,7 +62,13 @@ export function TrackRow({
           </span>
         ) : null}
       </button>
-      <div className="min-w-0">
+      <div
+        className="min-w-0 cursor-pointer select-none"
+        onClick={() => {
+          if (active) toggle();
+          else playTracks(queue.length ? queue : [track], startIndex < 0 ? 0 : startIndex);
+        }}
+      >
         <p className={cn("truncate text-sm font-medium", active ? "text-accent" : "text-fg")}>
           {typeof index === "number" ? (
             <span className="mr-2 tabular-nums text-subtle">{index + 1}</span>
@@ -75,6 +81,7 @@ export function TrackRow({
               to="/artist/$id"
               params={{ id: track.artistId }}
               className="hover:text-fg hover:underline"
+              onClick={(e) => e.stopPropagation()}
             >
               {track.artist}
             </Link>

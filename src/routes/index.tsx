@@ -104,7 +104,7 @@ function Home() {
           <div className="grid grid-flow-col grid-rows-4 gap-x-3 -mx-4 px-4 sm:mx-0 sm:px-1 sm:gap-x-4 overflow-x-auto pb-1 [scrollbar-width:none]">
             {picks.slice(0, 16).map((t) => (
               <div key={t.id} className="w-[min(20rem,75vw)] sm:w-[min(22rem,78vw)]">
-                <TrackRow track={t} queue={picks} showPlays />
+                <TrackRow track={t} queue={[t]} showPlays />
               </div>
             ))}
           </div>

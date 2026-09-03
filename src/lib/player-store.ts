@@ -41,6 +41,7 @@ type PlayerState = {
   cycleRepeat: () => void;
   toggleLike: (track: Track) => void;
   addToQueue: (track: Track) => void;
+  appendQueue: (tracks: Track[]) => void;
   playNext: (track: Track) => void;
   removeFromQueue: (i: number) => void;
   jumpTo: (i: number) => void;
@@ -123,6 +124,17 @@ export const usePlayer = create<PlayerState>()(
       playTrack: (track, rest = []) => {
         const queue = [track, ...rest.filter((t) => t.id !== track.id)];
         get().playTracks(queue, 0);
+        // If queue is standalone (1-2 tracks), automatically fetch matching genre/artist songs
+        if (queue.length <= 2) {
+          void import("./music-api").then(({ fetchRelatedQueue }) => {
+            void fetchRelatedQueue(track, 12).then((related) => {
+              const currentS = get();
+              if (currentS.queue[currentS.index]?.id === track.id) {
+                get().appendQueue(related);
+              }
+            });
+          });
+        }
       },
       toggle: () => {
         const s = get();
@@ -206,6 +218,14 @@ export const usePlayer = create<PlayerState>()(
           return;
         }
         set({ queue: [...s.queue, track] });
+      },
+      appendQueue: (tracks) => {
+        const s = get();
+        const existingIds = new Set(s.queue.map((t) => t.id));
+        const newTracks = tracks.filter((t) => !existingIds.has(t.id));
+        if (newTracks.length) {
+          set({ queue: [...s.queue, ...newTracks] });
+        }
       },
       playNext: (track) => {
         const s = get();

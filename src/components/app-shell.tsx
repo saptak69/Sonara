@@ -23,6 +23,8 @@ const NAV = [
   { to: "/library", label: "Library", icon: Library },
 ] as const;
 
+import { SearchSuggestions } from "@/components/search-suggestions";
+
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -36,13 +38,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [openCreate, setOpenCreate] = useState(false);
   const [name, setName] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [desktopSuggestionsOpen, setDesktopSuggestionsOpen] = useState(false);
+  const [mobileSuggestionsOpen, setMobileSuggestionsOpen] = useState(false);
+
+  const executeSearch = (queryStr: string) => {
+    const query = queryStr.trim();
+    if (!query) return;
+    setQ(query);
+    rememberSearch(query);
+    setDesktopSuggestionsOpen(false);
+    setMobileSuggestionsOpen(false);
+    setMobileSearchOpen(false);
+    void navigate({ to: "/search", search: { q: query } });
+  };
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
-    const query = q.trim();
-    if (!query) return;
-    rememberSearch(query);
-    void navigate({ to: "/search", search: { q: query } });
+    executeSearch(q);
   };
 
   return (
@@ -200,33 +212,46 @@ export function AppShell({ children }: { children: ReactNode }) {
           {mobileSearchOpen ? (
             <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
               <form
-                onSubmit={(e) => {
-                  onSearch(e);
-                  setMobileSearchOpen(false);
-                }}
+                onSubmit={onSearch}
                 className="relative flex-1"
               >
                 <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" />
                 <input
                   autoFocus
                   value={q}
-                  onChange={(e) => setQ(e.target.value)}
+                  onChange={(e) => {
+                    setQ(e.target.value);
+                    setMobileSuggestionsOpen(true);
+                  }}
+                  onFocus={() => setMobileSuggestionsOpen(true)}
                   placeholder="Search songs, artists, radio..."
                   className="h-10 w-full rounded-full bg-black/80 pr-9 pl-10 text-xs text-fg outline-none ring-accent/50 focus:ring-2 border border-white/20 backdrop-blur-2xl shadow-inner"
                 />
                 {q ? (
                   <button
                     type="button"
-                    onClick={() => setQ("")}
+                    onClick={() => {
+                      setQ("");
+                      setMobileSuggestionsOpen(false);
+                    }}
                     className="absolute top-1/2 right-3 -translate-y-1/2 text-muted hover:text-fg"
                   >
                     <X className="size-3.5" />
                   </button>
                 ) : null}
+                <SearchSuggestions
+                  query={q}
+                  isOpen={mobileSuggestionsOpen}
+                  onClose={() => setMobileSuggestionsOpen(false)}
+                  onSelectQuery={(suggestion) => executeSearch(suggestion)}
+                />
               </form>
               <button
                 type="button"
-                onClick={() => setMobileSearchOpen(false)}
+                onClick={() => {
+                  setMobileSearchOpen(false);
+                  setMobileSuggestionsOpen(false);
+                }}
                 className="px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-fg active:scale-95 transition-colors"
               >
                 Cancel
@@ -276,9 +301,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted/70 transition-colors" />
               <input
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setDesktopSuggestionsOpen(true);
+                }}
+                onFocus={() => setDesktopSuggestionsOpen(true)}
                 placeholder="Search songs, artists, radio..."
                 className="h-11 w-full rounded-full bg-white/10 hover:bg-white/15 focus:bg-black/80 pr-4 pl-10 text-sm text-fg outline-none ring-accent/50 placeholder:text-white/45 focus:ring-2 border border-white/15 backdrop-blur-2xl transition-all shadow-inner"
+              />
+              <SearchSuggestions
+                query={q}
+                isOpen={desktopSuggestionsOpen}
+                onClose={() => setDesktopSuggestionsOpen(false)}
+                onSelectQuery={(suggestion) => executeSearch(suggestion)}
               />
             </form>
 

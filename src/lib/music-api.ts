@@ -18,6 +18,10 @@ import {
   getSaavnArtistTracksServerFn,
   resolveFullTrackStreamServerFn,
 } from "./saavn-api";
+import {
+  searchSoundCloudTracksServerFn,
+  getSoundCloudTrackServerFn,
+} from "./soundcloud-api";
 
 const APP = "sonara_music";
 
@@ -413,31 +417,28 @@ export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]
     }
 
     // Homepage Listen Now: Real chart hits across Bengali, Bollywood, Progressive Rock, and Pop
-    const [bengaliRes, bollywoodRes, rockRes, popRes, audiusRes] = await Promise.allSettled([
+    const [bengaliRes, bollywoodRes, rockRes, popRes, scRes] = await Promise.allSettled([
       searchSaavnTracksServerFn({ data: { query: "Arijit Singh Bengali", limit: 8 } }),
       searchSaavnTracksServerFn({ data: { query: "Bollywood Trending", limit: 8 } }),
       searchSaavnTracksServerFn({ data: { query: "Dream Theater Pink Floyd", limit: 8 } }),
-      searchSaavnTracksServerFn({ data: { query: "The Weeknd Daft Punk", limit: 8 } }),
-      fetchFromAudius<AudiusTrack[]>("/tracks/trending", { limit: "8" }),
+      searchSaavnTracksServerFn({ data: { query: "Taylor Swift The Weeknd", limit: 8 } }),
+      searchSoundCloudTracksServerFn({ data: { query: "Classic Rock Acoustic", limit: 6 } }),
     ]);
 
     const bengali = bengaliRes.status === "fulfilled" ? bengaliRes.value : [];
     const bollywood = bollywoodRes.status === "fulfilled" ? bollywoodRes.value : [];
     const rock = rockRes.status === "fulfilled" ? rockRes.value : [];
     const pop = popRes.status === "fulfilled" ? popRes.value : [];
-    const audius =
-      audiusRes.status === "fulfilled" && audiusRes.value
-        ? audiusRes.value.map(mapTrack).filter((x): x is Track => Boolean(x))
-        : [];
+    const scTracks = scRes.status === "fulfilled" ? scRes.value : [];
 
     const interleaved: Track[] = [];
-    const maxLen = Math.max(bengali.length, bollywood.length, rock.length, pop.length, audius.length);
+    const maxLen = Math.max(bengali.length, bollywood.length, rock.length, pop.length, scTracks.length);
     for (let i = 0; i < maxLen; i++) {
       if (bengali[i]) interleaved.push(bengali[i]);
       if (bollywood[i]) interleaved.push(bollywood[i]);
       if (rock[i]) interleaved.push(rock[i]);
       if (pop[i]) interleaved.push(pop[i]);
-      if (audius[i]) interleaved.push(audius[i]);
+      if (scTracks[i]) interleaved.push(scTracks[i]);
     }
 
     if (interleaved.length) {
@@ -610,11 +611,12 @@ async function fetchArchiveOrgTracks(query: string, limit = 12): Promise<Track[]
 }
 
 export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
-  const [saavnRes, deezerRes, audiusRes, archiveRes] = await Promise.allSettled([
+  const [saavnRes, deezerRes, soundcloudRes, audiusRes, archiveRes] = await Promise.allSettled([
     searchSaavnTracksServerFn({ data: { query, limit: Math.min(20, limit) } }),
     searchDeezerTracksServerFn({ data: { query, limit: Math.min(12, limit) } }),
-    fetchFromAudius<AudiusTrack[]>("/tracks/search", { query, limit: String(limit) }),
-    fetchArchiveOrgTracks(query, Math.min(6, limit)),
+    searchSoundCloudTracksServerFn({ data: { query, limit: Math.min(10, limit) } }),
+    fetchFromAudius<AudiusTrack[]>("/tracks/search", { query, limit: String(Math.min(6, limit)) }),
+    fetchArchiveOrgTracks(query, Math.min(4, limit)),
   ]);
 
   const saavnTracks =
@@ -622,6 +624,9 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
 
   const deezerTracks =
     deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
+
+  const soundcloudTracks =
+    soundcloudRes.status === "fulfilled" && soundcloudRes.value ? soundcloudRes.value : [];
 
   const audiusTracks =
     audiusRes.status === "fulfilled" && audiusRes.value
@@ -631,8 +636,8 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
   const archiveTracks =
     archiveRes.status === "fulfilled" && archiveRes.value ? archiveRes.value : [];
 
-  // Priority: Full-length 320kbps tracks first, then Deezer, Audius, and Archive
-  const combined = [...saavnTracks, ...deezerTracks, ...audiusTracks, ...archiveTracks];
+  // Priority: Full-length 320kbps master tracks first, then SoundCloud, Deezer, Archive
+  const combined = [...saavnTracks, ...soundcloudTracks, ...deezerTracks, ...audiusTracks, ...archiveTracks];
 
   if (combined.length) {
     const seen = new Set<string>();
@@ -651,7 +656,140 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
       t.artist.toLowerCase().includes(q) ||
       (t.genre && t.genre.toLowerCase().includes(q)),
   );
-  return matched.length ? matched : CURATED_TRACKS.slice(0, limit);
+  if (matched.length) return matched.slice(0, limit);
+
+  return CURATED_TRACKS.slice(0, limit);
+}
+
+/**
+ * Intelligent Next-Track / Queue Recommendation Algorithm
+ * Analyzes the played song's artist, genre, and acoustic vibe to queue matching songs.
+ * Ensures Rock stays with Rock/Metal, Bengali stays with Bengali, and prevents random EDM/DJ mixes!
+ */
+export async function fetchRelatedQueue(track: Track, limit = 15): Promise<Track[]> {
+  try {
+    const artist = track.artist?.toLowerCase() || "";
+    const title = track.title?.toLowerCase() || "";
+    const genre = track.genre?.toLowerCase() || "";
+    const blob = `${artist} ${title} ${genre}`;
+
+    // 1. Rock / Prog Rock / Metal
+    const isRockOrMetal =
+      genre.includes("rock") ||
+      genre.includes("metal") ||
+      genre.includes("prog") ||
+      /dream theater|pink floyd|queen|metallica|rush|porcupine tree|tool|opeth|iron maiden|led zeppelin|ac\/dc|guns n' roses|nirvana|linkin park|foo fighters|deep purple|black sabbath|fossils|cactus|steven wilson|judas priest|megadeth/.test(
+        blob,
+      );
+
+    // 2. Bengali Music
+    const isBengali =
+      genre.includes("bengali") ||
+      genre.includes("bangla") ||
+      /arijit singh|anupam roy|fossils|rupam islam|cactus|rabindra|shreya ghoshal|nachiketa|somlata|silajit|hemanta|manna dey|kishore kumar|moheener ghoraguli/.test(
+        blob,
+      );
+
+    // 3. Bollywood / Hindi Melodic
+    const isBollywood =
+      genre.includes("hindi") ||
+      genre.includes("bollywood") ||
+      /arijit singh|atif aslam|pritam|shreya ghoshal|mohit chauhan|kk|sonu nigam|jubin nautiyal|darshan raval|sachin-jigar|ar rahman|vishal mishra/.test(
+        blob,
+      );
+
+    // 4. Pop / Western Contemporary
+    const isPop =
+      genre.includes("pop") ||
+      /taylor swift|the weeknd|billie eilish|olivia rodrigo|coldplay|daft punk|dua lipa|ed sheeran|bruno mars|sabrina carpenter|ariana grande|adele|charlie puth/.test(
+        blob,
+      );
+
+    let queries: string[] = [];
+
+    if (isRockOrMetal) {
+      if (isBengali) {
+        queries = ["Fossils Bangla Rock", "Cactus Bengali Band", "Rupam Islam Rock", "Lakkhichhara"];
+      } else {
+        queries = [
+          `${track.artist} greatest hits`,
+          "Dream Theater Pink Floyd",
+          "Progressive Rock Metal Anthems",
+          "Rush Porcupine Tree",
+          "Classic Rock Metal",
+        ];
+      }
+    } else if (isBengali) {
+      queries = [
+        `${track.artist} Bengali`,
+        "Bengali Golden Treasures",
+        "Anupam Roy Hits",
+        "Arijit Singh Bengali Songs",
+      ];
+    } else if (isBollywood) {
+      queries = [
+        `${track.artist} Superhits`,
+        "Bollywood Romance Melody",
+        "Arijit Singh Atif Aslam",
+        "Pritam Bollywood Hits",
+      ];
+    } else if (isPop) {
+      queries = [
+        `${track.artist} top hits`,
+        "Pop Anthems Hits",
+        "The Weeknd Taylor Swift",
+        "Coldplay Pop Rock",
+      ];
+    } else {
+      queries = [`${track.artist} songs`, `${track.genre || track.artist} popular`];
+    }
+
+    const results: Track[] = [];
+    const seen = new Set<string>([track.id]);
+
+    const [saavnRes, scRes] = await Promise.allSettled([
+      Promise.allSettled(
+        queries.slice(0, 3).map((q) => searchSaavnTracksServerFn({ data: { query: q, limit: 8 } })),
+      ),
+      isRockOrMetal
+        ? searchSoundCloudTracksServerFn({ data: { query: `${track.artist} rock`, limit: 6 } })
+        : Promise.resolve([]),
+    ]);
+
+    if (saavnRes.status === "fulfilled") {
+      for (const res of saavnRes.value) {
+        if (res.status === "fulfilled" && res.value) {
+          for (const t of res.value) {
+            const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+            if (!seen.has(key) && !seen.has(t.id)) {
+              seen.add(key);
+              seen.add(t.id);
+              results.push(t);
+            }
+          }
+        }
+      }
+    }
+
+    if (scRes.status === "fulfilled" && Array.isArray(scRes.value)) {
+      for (const t of scRes.value) {
+        const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+        if (!seen.has(key) && !seen.has(t.id)) {
+          seen.add(key);
+          seen.add(t.id);
+          results.push(t);
+        }
+      }
+    }
+
+    if (results.length >= 3) {
+      return results.slice(0, limit);
+    }
+  } catch {
+    // fallback
+  }
+
+  return CURATED_TRACKS.filter((t) => t.id !== track.id).slice(0, limit);
 }
 
 export async function searchPlaylists(query: string, limit = 12): Promise<Playlist[]> {
@@ -811,6 +949,10 @@ export async function fetchTrack(id: string): Promise<Track | null> {
 
   if (id.startsWith("saavn_")) {
     return getSaavnTrackServerFn({ data: { id } });
+  }
+
+  if (id.startsWith("soundcloud_")) {
+    return getSoundCloudTrackServerFn({ data: { id } });
   }
 
   if (id.startsWith("deezer_")) {

@@ -185,6 +185,25 @@ export function PlayerEngine() {
     };
   }, [current?.id, current?.title, current?.artist, current?.streamUrl, current?.duration, setDuration]);
 
+  // Continuous Smart Vibe Queue: dynamically fetch related tracks before the queue runs out
+  const fetchingRelatedRef = useRef<string | null>(null);
+  const queueLength = usePlayer((s) => s.queue.length);
+  const queueIndex = usePlayer((s) => s.index);
+
+  useEffect(() => {
+    if (!current?.id || queueLength === 0) return;
+    if (queueIndex >= queueLength - 2 && fetchingRelatedRef.current !== current.id) {
+      fetchingRelatedRef.current = current.id;
+      void import("@/lib/music-api").then(({ fetchRelatedQueue }) => {
+        void fetchRelatedQueue(current, 10).then((related) => {
+          if (related.length) {
+            usePlayer.getState().appendQueue(related);
+          }
+        });
+      });
+    }
+  }, [current?.id, queueLength, queueIndex]);
+
   // Volume, Muted, and Playback Rate
   useEffect(() => {
     const audio = audioRef.current;
