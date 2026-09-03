@@ -11,6 +11,70 @@ import { fetchTrack } from "@/lib/music-api";
 import { Cover } from "@/components/cover";
 import { cn } from "@/lib/utils";
 
+function SuggestionItemButton({
+  children,
+  onSelect,
+  className,
+}: {
+  children: React.ReactNode;
+  onSelect: () => void;
+  className?: string;
+}) {
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const isScrollingRef = useRef(false);
+
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => {
+        // Prevent blurring search input on desktop mouse click
+        e.preventDefault();
+      }}
+      onClick={(e) => {
+        // Desktop click or synthetic click
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect();
+      }}
+      onTouchStart={(e) => {
+        const touch = e.touches[0];
+        touchStartRef.current = {
+          x: touch.clientX,
+          y: touch.clientY,
+          time: Date.now(),
+        };
+        isScrollingRef.current = false;
+      }}
+      onTouchMove={(e) => {
+        if (!touchStartRef.current) return;
+        const touch = e.touches[0];
+        const diffY = Math.abs(touch.clientY - touchStartRef.current.y);
+        const diffX = Math.abs(touch.clientX - touchStartRef.current.x);
+        // If finger moved more than 8px, user is scrolling, not tapping
+        if (diffY > 8 || diffX > 8) {
+          isScrollingRef.current = true;
+        }
+      }}
+      onTouchEnd={(e) => {
+        // Only trigger search if user was tapping, not scrolling/swiping
+        if (!isScrollingRef.current && touchStartRef.current) {
+          const elapsed = Date.now() - touchStartRef.current.time;
+          if (elapsed < 500) {
+            e.preventDefault();
+            e.stopPropagation();
+            onSelect();
+          }
+        }
+        touchStartRef.current = null;
+        isScrollingRef.current = false;
+      }}
+      className={className}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function SearchSuggestions({
   query,
   isOpen,
@@ -127,9 +191,8 @@ export function SearchSuggestions({
     <div
       ref={containerRef}
       onMouseDown={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
       className={cn(
-        "absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl border border-white/15 bg-black/90 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150",
+        "absolute left-0 right-0 top-full mt-2 z-50 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto overscroll-contain rounded-2xl border border-white/15 bg-black/90 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 [scrollbar-width:thin] touch-pan-y",
         className,
       )}
     >
@@ -143,24 +206,9 @@ export function SearchSuggestions({
             {data.topMatches.map((match, idx) => {
               const isSelected = selectedIndex === idx;
               return (
-                <button
+                <SuggestionItemButton
                   key={match.id}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSelectMatch(match);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSelectMatch(match);
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSelectMatch(match);
-                  }}
+                  onSelect={() => handleSelectMatch(match)}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors cursor-pointer",
                     isSelected ? "bg-white/15 text-white" : "hover:bg-white/10 text-fg",
@@ -189,7 +237,7 @@ export function SearchSuggestions({
                       </>
                     )}
                   </div>
-                </button>
+                </SuggestionItemButton>
               );
             })}
           </div>
@@ -209,24 +257,9 @@ export function SearchSuggestions({
               const globalIdx = data.topMatches.length + idx;
               const isSelected = selectedIndex === globalIdx;
               return (
-                <button
+                <SuggestionItemButton
                   key={q}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onSelectQuery(q);
-                    onClose();
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onSelectQuery(q);
-                    onClose();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                  onSelect={() => {
                     onSelectQuery(q);
                     onClose();
                   }}
@@ -240,7 +273,7 @@ export function SearchSuggestions({
                     <span className="truncate capitalize">{q}</span>
                   </div>
                   <ArrowUpRight className="size-3.5 shrink-0 text-muted/60" />
-                </button>
+                </SuggestionItemButton>
               );
             })}
           </div>
