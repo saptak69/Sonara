@@ -126,6 +126,8 @@ export function SearchSuggestions({
   return (
     <div
       ref={containerRef}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
       className={cn(
         "absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl border border-white/15 bg-black/90 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150",
         className,
@@ -144,9 +146,23 @@ export function SearchSuggestions({
                 <button
                   key={match.id}
                   type="button"
-                  onClick={() => handleSelectMatch(match)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelectMatch(match);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelectMatch(match);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelectMatch(match);
+                  }}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors",
+                    "flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors cursor-pointer",
                     isSelected ? "bg-white/15 text-white" : "hover:bg-white/10 text-fg",
                   )}
                 >
@@ -196,12 +212,26 @@ export function SearchSuggestions({
                 <button
                   key={q}
                   type="button"
-                  onClick={() => {
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSelectQuery(q);
+                    onClose();
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSelectQuery(q);
+                    onClose();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     onSelectQuery(q);
                     onClose();
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors",
+                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors cursor-pointer",
                     isSelected ? "bg-white/15 text-white font-medium" : "hover:bg-white/10 text-fg/90",
                   )}
                 >

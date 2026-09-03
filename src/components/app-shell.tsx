@@ -49,6 +49,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDesktopSuggestionsOpen(false);
     setMobileSuggestionsOpen(false);
     setMobileSearchOpen(false);
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     void navigate({ to: "/search", search: { q: query } });
   };
 
@@ -261,6 +264,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-between w-full md:hidden">
               <Logo compact={false} />
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Open search"
+                  onClick={() => setMobileSearchOpen(true)}
+                  className="grid size-9 place-items-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 text-fg border border-white/15 backdrop-blur-xl transition-all shadow-sm"
+                >
+                  <Search className="size-4" />
+                </button>
                 {user && !user.isDevFallback ? (
                   <Link
                     to="/studio"
@@ -283,14 +294,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                     Sign In
                   </Link>
                 )}
-                <button
-                  type="button"
-                  aria-label="Open search"
-                  onClick={() => setMobileSearchOpen(true)}
-                  className="grid size-9 place-items-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 text-fg border border-white/15 backdrop-blur-xl transition-all shadow-sm"
-                >
-                  <Search className="size-4" />
-                </button>
               </div>
             </div>
           )}
