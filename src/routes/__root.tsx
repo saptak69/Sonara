@@ -3,6 +3,8 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { AppShell } from "@/components/app-shell";
 import { QueryProvider } from "@/lib/query-provider";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Sonara Music";
@@ -43,6 +45,8 @@ export const Route = createRootRoute({
             </AppShell>
           </QueryProvider>
         </AuthProvider>
+        <Analytics />
+        <SpeedInsights />
         <Scripts />
       </body>
     </html>
