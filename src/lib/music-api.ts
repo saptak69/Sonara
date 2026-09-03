@@ -35,8 +35,8 @@ const AUDIUS_NODES = [
 ];
 
 const RADIO_NODES = [
+  "https://all.api.radio-browser.info/json",
   "https://de1.api.radio-browser.info/json",
-  "https://at1.api.radio-browser.info/json",
 ];
 
 type ArtworkMap = {
