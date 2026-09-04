@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MOODS } from "@/lib/genres";
 import { fetchFeaturedAlbums, fetchTrending, fetchTrendingPlaylists, fetchUnderground } from "@/lib/music-api";
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
+import { SiteFooter } from "@/components/site-footer";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
 
@@ -166,6 +167,8 @@ function Home() {
           ))}
         </Rail>
       ) : null}
+
+      <SiteFooter />
     </div>
   );
 }

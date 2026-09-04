@@ -1,4 +1,4 @@
-import { Compass, Disc, Home, Library, LogOut, Plus, Radio, Search, User, X } from "lucide-react";
+import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { type FormEvent, type ReactNode, useMemo, useState } from "react";
 import { Logo } from "@/components/logo";
@@ -15,7 +15,16 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { Cover } from "@/components/cover";
 
-const NAV = [
+const SIDEBAR_NAV = [
+  { to: "/", label: "Home", icon: Home },
+  { to: "/explore", label: "Explore", icon: Compass },
+  { to: "/studio", label: "Studio", icon: Disc },
+  { to: "/radio", label: "Radio", icon: Radio },
+  { to: "/library", label: "Library", icon: Library },
+  { to: "/about", label: "About", icon: Info },
+] as const;
+
+const MOBILE_NAV = [
   { to: "/", label: "Home", icon: Home },
   { to: "/explore", label: "Explore", icon: Compass },
   { to: "/studio", label: "Studio", icon: Disc },
@@ -98,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="fixed top-0 left-0 z-20 hidden h-dvh w-sidebar flex-col bg-black/40 backdrop-blur-3xl border-r border-white/10 px-4 pt-5 pb-player md:flex">
         <Logo />
         <nav className="mt-8 flex flex-col gap-1">
-          {NAV.map((item) => {
+          {SIDEBAR_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
             return (
@@ -170,7 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         {/* User Profile / Auth Block */}
-        <div className="mt-auto pt-4 border-t border-white/10">
+        <div className="mt-auto pt-4 border-t border-white/10 space-y-2.5">
           {user && !user.isDevFallback ? (
             <div className="flex items-center justify-between gap-2 p-2 rounded-2xl bg-white/5 border border-white/10">
               <Link to="/studio" className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-80 transition-opacity">
@@ -206,6 +215,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               Sign In / Artist Join
             </Link>
           )}
+
+          <div className="flex items-center justify-between px-1.5 pt-1 text-[11px] text-muted">
+            <Link to="/about" className="hover:text-fg transition-colors flex items-center gap-1">
+              <Info className="size-3 text-accent" />
+              <span>About Sonara</span>
+            </Link>
+            <span className="text-subtle">v1.0</span>
+          </div>
         </div>
       </aside>
 
@@ -264,6 +281,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-between w-full md:hidden">
               <Logo compact={false} />
               <div className="flex items-center gap-2">
+                <Link
+                  to="/about"
+                  aria-label="About Sonara"
+                  className="grid size-9 place-items-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 text-fg border border-white/15 backdrop-blur-xl transition-all shadow-sm"
+                  title="About Sonara"
+                >
+                  <Info className="size-4 text-white/80" />
+                </Link>
                 <button
                   type="button"
                   aria-label="Open search"
@@ -321,6 +346,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </form>
 
             <div className="flex items-center gap-3">
+              <Link
+                to="/about"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-medium text-muted hover:text-fg border border-white/10 backdrop-blur-xl transition-all"
+                title="About Sonara"
+              >
+                <Info className="size-3.5 text-accent" />
+                About
+              </Link>
               {user && !user.isDevFallback ? (
                 <Link
                   to="/studio"
@@ -368,7 +401,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <PlayerBar />
         <nav className="flex h-16 items-center justify-around border-t border-white/[0.08] bg-black/85 backdrop-blur-2xl px-2 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-10px_30px_rgba(0,0,0,0.8)] md:hidden">
-          {NAV.map((item) => {
+          {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
             return (
