@@ -4,7 +4,7 @@ import { SonaraIcon } from "@/components/logo";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-white/10 bg-black/70 backdrop-blur-3xl py-12 px-4 sm:px-8 text-muted">
+    <footer className="mt-16 border-t border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-2xl py-12 px-4 sm:px-8 text-muted">
       <div className="max-w-6xl mx-auto flex flex-col gap-10">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-3">

@@ -36,16 +36,17 @@ function AboutPage() {
     setTimeout(() => setCopiedEmail(false), 2500);
   };
 
-  // Standardized frosted glass class for high readability and consistent tactile depth
+  // Standardized frosted glass matching the rest of Sonara:
+  // Clean, luminous frosted glass (no black tint) with uniform backdrop blur, subtle highlight border, and soft elevation
   const frostedGlass =
-    "rounded-3xl border border-white/15 bg-black/65 bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-2xl shadow-xl";
+    "rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] backdrop-blur-2xl shadow-xl hover:border-white/20 transition-all";
   const nestedSlab =
-    "rounded-2xl border border-white/15 bg-black/75 backdrop-blur-xl shadow-inner";
+    "rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl shadow-sm";
 
   return (
     <div className="min-h-screen px-4 py-8 sm:px-8 max-w-5xl mx-auto space-y-16 animate-in fade-in duration-300">
       {/* Hero Header */}
-      <section className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-white/[0.09] via-black/70 to-black/95 p-8 sm:p-12 backdrop-blur-3xl shadow-2xl">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 via-white/[0.04] to-white/[0.01] p-8 sm:p-12 backdrop-blur-3xl shadow-2xl">
         <div className="absolute -top-24 -right-24 size-96 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 size-80 rounded-full bg-rose-900/20 blur-3xl pointer-events-none" />
 
@@ -65,22 +66,22 @@ function AboutPage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-muted">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60 border border-white/15 backdrop-blur-xl text-fg/90">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl text-fg/90">
                 <Code2 className="size-3.5 text-accent" />
                 React & Vite
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60 border border-white/15 backdrop-blur-xl text-fg/90">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl text-fg/90">
                 <Zap className="size-3.5 text-amber-400" />
                 High-Performance Caching
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/60 border border-white/15 backdrop-blur-xl text-fg/90">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl text-fg/90">
                 <Shield className="size-3.5 text-emerald-400" />
                 Educational & Non-Commercial
               </span>
             </div>
           </div>
 
-          <div className="hidden sm:flex flex-col items-center justify-center p-6 rounded-2xl bg-black/65 border border-white/15 backdrop-blur-2xl shadow-xl">
+          <div className="hidden sm:flex flex-col items-center justify-center p-6 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-2xl shadow-xl">
             <SonaraIcon size={84} />
             <span className="mt-3 text-sm font-semibold tracking-wider text-fg/90">SONARA AUDIO</span>
             <span className="text-[11px] text-muted">Experimental Engine</span>
@@ -103,7 +104,7 @@ function AboutPage() {
               Built by Saptak Mondal — Software Engineer & Creative Technologist
             </p>
           </div>
-          <span className="px-3 py-1 rounded-full bg-black/60 border border-white/15 backdrop-blur-xl text-xs font-medium text-muted hidden sm:inline-block">
+          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-xs font-medium text-muted hidden sm:inline-block">
             Independent Builder
           </span>
         </div>
@@ -204,7 +205,7 @@ function AboutPage() {
               <button
                 type="button"
                 onClick={handleCopyEmail}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-black/60 hover:bg-black/80 text-fg text-xs font-medium border border-white/15 backdrop-blur-xl transition-all active:scale-95 shadow-sm"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-fg text-xs font-medium border border-white/15 backdrop-blur-xl transition-all active:scale-95 shadow-sm"
               >
                 <Mail className="size-3.5 text-accent" />
                 <span>{copiedEmail ? "Copied Email!" : "Get In Touch"}</span>
@@ -401,7 +402,7 @@ function AboutPage() {
 
           <div className="text-xs text-muted/90 pt-3 border-t border-white/[0.08] flex items-center justify-between flex-wrap gap-2">
             <span>We review legitimate notices promptly and take appropriate corrective action where required.</span>
-            <span className="text-fg font-mono text-[11px] bg-black/60 px-3 py-1 rounded-lg border border-white/15">
+            <span className="text-fg font-mono text-[11px] bg-white/5 px-3 py-1 rounded-lg border border-white/10">
               {contactEmail}
             </span>
           </div>
@@ -437,7 +438,7 @@ function AboutPage() {
         </div>
 
         <div className="text-center pt-2">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/60 border border-white/15 backdrop-blur-xl text-xs text-muted">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-xs text-muted">
             Last updated: September 2026
           </span>
         </div>

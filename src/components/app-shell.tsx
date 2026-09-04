@@ -216,12 +216,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           )}
 
-          <div className="flex items-center justify-between px-1.5 pt-1 text-[11px] text-muted">
-            <Link to="/about" className="hover:text-fg transition-colors flex items-center gap-1">
-              <Info className="size-3 text-accent" />
-              <span>About Sonara</span>
-            </Link>
-            <span className="text-subtle">v1.0</span>
+          <div className="flex items-center justify-between px-1.5 pt-1 text-[11px] text-subtle">
+            <span>Sonara</span>
+            <span>v1.0</span>
           </div>
         </div>
       </aside>
@@ -346,14 +343,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </form>
 
             <div className="flex items-center gap-3">
-              <Link
-                to="/about"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-medium text-muted hover:text-fg border border-white/10 backdrop-blur-xl transition-all"
-                title="About Sonara"
-              >
-                <Info className="size-3.5 text-accent" />
-                About
-              </Link>
               {user && !user.isDevFallback ? (
                 <Link
                   to="/studio"
