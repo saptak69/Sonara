@@ -347,7 +347,7 @@ function unwrap<T>(payload: { data?: T } | T): T {
 
 function pickArt(art: ArtworkMap, size: keyof NonNullable<ArtworkMap>): string | null {
   if (!art) return null;
-  const raw = art[size] || art["480x480"] || art["1000x1000"] || art["150x150"] || null;
+  const raw = art[size] || art["480x480"] || art["150x150"] || art["1000x1000"] || null;
   if (!raw) return null;
   return raw.startsWith("http://") ? raw.replace("http://", "https://") : raw;
 }
@@ -367,7 +367,7 @@ export function mapTrack(t: AudiusTrack): Track | null {
     artistId: t.user?.id,
     album: undefined,
     artwork: pickArt(t.artwork ?? null, "150x150"),
-    artworkLg: pickArt(t.artwork ?? null, "1000x1000") || pickArt(t.artwork ?? null, "480x480"),
+    artworkLg: pickArt(t.artwork ?? null, "480x480") || pickArt(t.artwork ?? null, "1000x1000"),
     duration: Number(t.duration) || 0,
     streamUrl: trackStreamUrl(t.id),
     genre: t.genre,
@@ -385,7 +385,7 @@ export function mapPlaylist(p: AudiusPlaylist): Playlist | null {
     name: p.playlist_name,
     description: p.description || undefined,
     artwork: pickArt(p.artwork ?? null, "480x480"),
-    artworkLg: pickArt(p.artwork ?? null, "1000x1000"),
+    artworkLg: pickArt(p.artwork ?? null, "480x480") || pickArt(p.artwork ?? null, "1000x1000"),
     trackCount: p.track_count ?? tracks.length,
     isAlbum: Boolean(p.is_album),
     owner: p.user?.name,
@@ -402,7 +402,7 @@ export function mapArtist(u: AudiusUser): Artist | null {
     handle: u.handle,
     bio: u.bio,
     artwork: pickArt(u.profile_picture ?? null, "480x480"),
-    artworkLg: pickArt(u.profile_picture ?? null, "1000x1000"),
+    artworkLg: pickArt(u.profile_picture ?? null, "480x480") || pickArt(u.profile_picture ?? null, "1000x1000"),
     followerCount: u.follower_count,
     trackCount: u.track_count,
   };

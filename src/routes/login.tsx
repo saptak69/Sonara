@@ -47,11 +47,13 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   // If already authenticated, redirect to /studio on client mount
+  const userId = user?.id;
+  const isDevFallback = user?.isDevFallback;
   useEffect(() => {
-    if (!isPending && user && !user.isDevFallback) {
+    if (!isPending && userId && !isDevFallback) {
       void navigate({ to: "/studio" });
     }
-  }, [isPending, user, navigate]);
+  }, [isPending, userId, isDevFallback, navigate]);
 
   // Handle Continue with Google (Real Google OAuth)
   const handleGoogleClick = async () => {

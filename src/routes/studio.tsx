@@ -84,8 +84,11 @@ function ArtistStudioPage() {
   // Local audio preview deck
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isLoadingRef = useRef(false);
 
   const loadData = async () => {
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
     try {
       setLoading(true);
       const prof = await getOrCreateArtistProfileServerFn();
@@ -99,17 +102,19 @@ function ArtistStudioPage() {
       setTracks(myTracks);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load studio data";
-      toast.error(msg);
+      console.warn("Could not load studio data:", msg);
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
+  const userId = user?.id;
   useEffect(() => {
-    if (!isPending && user) {
+    if (!isPending && userId) {
       void loadData();
     }
-  }, [user, isPending]);
+  }, [userId, isPending]);
 
   // Handle audio file upload to first-party storage endpoint
   const handleAudioUpload = async (e: ChangeEvent<HTMLInputElement>) => {
