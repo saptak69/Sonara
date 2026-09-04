@@ -79,16 +79,28 @@ export const Route = createFileRoute("/api/storage/upload")({
           const id = randomUUID();
           const filename = `${id}.${ext}`;
           const subDir = category === "audio" ? "audio" : "artwork";
-
-          const targetDir = join(process.cwd(), "public", "uploads", subDir);
-          await mkdir(targetDir, { recursive: true });
-
-          const filePath = join(targetDir, filename);
-          const buffer = Buffer.from(await file.arrayBuffer());
-          await writeFile(filePath, buffer);
-
-          const publicUrl = `/uploads/${subDir}/${filename}`;
           const storageKey = `${subDir}/${filename}`;
+          const buffer = Buffer.from(await file.arrayBuffer());
+
+          let publicUrl = `/uploads/${subDir}/${filename}`;
+          let writtenToDisk = false;
+
+          // Attempt local file write (Node.js dev & standalone servers)
+          try {
+            const targetDir = join(process.cwd(), "public", "uploads", subDir);
+            await mkdir(targetDir, { recursive: true });
+            const filePath = join(targetDir, filename);
+            await writeFile(filePath, buffer);
+            writtenToDisk = true;
+          } catch {
+            // Filesystem is read-only or container is serverless (e.g. Vercel)
+            writtenToDisk = false;
+          }
+
+          // If disk is unavailable, generate persistent Data URL so playback & artwork never 404
+          if (!writtenToDisk) {
+            publicUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
+          }
 
           return new Response(
             JSON.stringify({

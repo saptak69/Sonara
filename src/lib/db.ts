@@ -93,10 +93,30 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_INT8, Number);
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
-    const pool = new Pool({ connectionString: databaseUrl });
+    const pool = new Pool({
+      connectionString: databaseUrl,
+      connectionTimeoutMillis: 8000,
+      idleTimeoutMillis: 30000,
+      max: 10,
+    });
     return toSql(async <T>(text: string, params: unknown[]) => {
-      const res = await pool.query(text, params);
-      return res.rows as T[];
+      try {
+        const res = await pool.query(text, params);
+        return res.rows as T[];
+      } catch (err: unknown) {
+        const error = err as { code?: string; message?: string };
+        const isTransient =
+          error?.code === "ECONNRESET" ||
+          error?.code === "ETIMEDOUT" ||
+          error?.code === "57P01" ||
+          error?.message?.includes("Connection terminated") ||
+          error?.message?.includes("timeout");
+        if (isTransient) {
+          const res = await pool.query(text, params);
+          return res.rows as T[];
+        }
+        throw err;
+      }
     });
   })().catch((err) => {
     globalRef.__pgSqlPromise__ = undefined;

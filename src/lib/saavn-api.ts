@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import crypto from "node:crypto";
+import { serverCache, CACHE_TTL } from "./cache.server";
 import type { Artist, Playlist, Track } from "./types";
 
 export type RawSaavnSong = {
@@ -88,8 +89,8 @@ export function decryptSaavnMediaUrl(encryptedUrl?: string): string | null {
     decipher.setAutoPadding(true);
     let decrypted = decipher.update(encryptedUrl, "base64", "utf-8");
     decrypted += decipher.final("utf-8");
-    // Request highest quality 320kbps MP4/AAC stream
-    return decrypted.replace(/_96\.(mp4|m4a)/, "_320.mp4");
+    // Request highest quality 320kbps MP4/AAC stream, upgrading from 48, 96, 160 or 320 preview URLs
+    return decrypted.replace(/_(?:48|96|160|320)\.(mp4|m4a)/, "_320.mp4");
   } catch {
     return null;
   }
@@ -256,30 +257,32 @@ export const resolveFullTrackStreamServerFn = createServerFn({ method: "GET" })
     return z.object({ title: z.string(), artist: z.string().optional() }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const q = `${data.title} ${data.artist || ""}`.trim();
-      const json = await fetchSaavnJson<{ results?: RawSaavnSong[] }>({
-        __call: "search.getResults",
-        q,
-        n: "5",
-        p: "1",
-      });
+    const q = `${data.title} ${data.artist || ""}`.trim().toLowerCase();
+    return serverCache.getOrFetch(`stream_res_${q}`, CACHE_TTL.STREAM_URL, async () => {
+      try {
+        const json = await fetchSaavnJson<{ results?: RawSaavnSong[] }>({
+          __call: "search.getResults",
+          q,
+          n: "5",
+          p: "1",
+        });
 
-      const songs = json?.results ?? [];
-      for (const s of songs) {
-        const streamUrl = decryptSaavnMediaUrl(s.encrypted_media_url);
-        if (streamUrl) {
-          const duration = Math.round(Number(s.duration) || 200);
-          return {
-            streamUrl,
-            duration,
-          };
+        const songs = json?.results ?? [];
+        for (const s of songs) {
+          const streamUrl = decryptSaavnMediaUrl(s.encrypted_media_url);
+          if (streamUrl) {
+            const duration = Math.round(Number(s.duration) || 200);
+            return {
+              streamUrl,
+              duration,
+            };
+          }
         }
+        return null;
+      } catch {
+        return null;
       }
-      return null;
-    } catch {
-      return null;
-    }
+    });
   });
 
 /**
@@ -295,20 +298,23 @@ export const searchSaavnTracksServerFn = createServerFn({ method: "GET" })
       .parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const json = await fetchSaavnJson<{ results?: RawSaavnSong[] }>({
-        __call: "search.getResults",
-        q: data.query.trim(),
-        n: String(data.limit),
-        p: "1",
-      });
+    const key = `saavn_search_t_${data.query.trim().toLowerCase()}_${data.limit}`;
+    return serverCache.getOrFetch(key, CACHE_TTL.SEARCH_RESULTS, async () => {
+      try {
+        const json = await fetchSaavnJson<{ results?: RawSaavnSong[] }>({
+          __call: "search.getResults",
+          q: data.query.trim(),
+          n: String(data.limit),
+          p: "1",
+        });
 
-      const songs = json?.results ?? [];
-      const mapped = songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
-      return mapped.slice(0, data.limit);
-    } catch {
-      return [];
-    }
+        const songs = json?.results ?? [];
+        const mapped = songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
+        return mapped.slice(0, data.limit);
+      } catch {
+        return [];
+      }
+    });
   });
 
 /**
@@ -324,19 +330,22 @@ export const searchSaavnPlaylistsServerFn = createServerFn({ method: "GET" })
       .parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const json = await fetchSaavnJson<{ results?: RawSaavnPlaylist[] }>({
-        __call: "search.getPlaylistResults",
-        q: data.query.trim(),
-        n: String(data.limit),
-        p: "1",
-      });
+    const key = `saavn_search_pl_${data.query.trim().toLowerCase()}_${data.limit}`;
+    return serverCache.getOrFetch(key, CACHE_TTL.SEARCH_RESULTS, async () => {
+      try {
+        const json = await fetchSaavnJson<{ results?: RawSaavnPlaylist[] }>({
+          __call: "search.getPlaylistResults",
+          q: data.query.trim(),
+          n: String(data.limit),
+          p: "1",
+        });
 
-      const playlists = json?.results ?? [];
-      return playlists.map(mapSaavnPlaylist).filter((x): x is Playlist => Boolean(x));
-    } catch {
-      return [];
-    }
+        const playlists = json?.results ?? [];
+        return playlists.map(mapSaavnPlaylist).filter((x): x is Playlist => Boolean(x));
+      } catch {
+        return [];
+      }
+    });
   });
 
 /**
@@ -352,19 +361,22 @@ export const searchSaavnArtistsServerFn = createServerFn({ method: "GET" })
       .parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const json = await fetchSaavnJson<{ results?: RawSaavnArtist[] }>({
-        __call: "search.getArtistResults",
-        q: data.query.trim(),
-        n: String(data.limit),
-        p: "1",
-      });
+    const key = `saavn_search_art_${data.query.trim().toLowerCase()}_${data.limit}`;
+    return serverCache.getOrFetch(key, CACHE_TTL.SEARCH_RESULTS, async () => {
+      try {
+        const json = await fetchSaavnJson<{ results?: RawSaavnArtist[] }>({
+          __call: "search.getArtistResults",
+          q: data.query.trim(),
+          n: String(data.limit),
+          p: "1",
+        });
 
-      const artists = json?.results ?? [];
-      return artists.map(mapSaavnArtist).filter((x): x is Artist => Boolean(x));
-    } catch {
-      return [];
-    }
+        const artists = json?.results ?? [];
+        return artists.map(mapSaavnArtist).filter((x): x is Artist => Boolean(x));
+      } catch {
+        return [];
+      }
+    });
   });
 
 /**
@@ -375,18 +387,20 @@ export const getSaavnTrackServerFn = createServerFn({ method: "GET" })
     return z.object({ id: z.string() }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const rawId = data.id.replace("saavn_", "");
-      const json = await fetchSaavnJson<{ songs?: RawSaavnSong[] }>({
-        __call: "song.getDetails",
-        pids: rawId,
-      });
+    const rawId = data.id.replace("saavn_", "");
+    return serverCache.getOrFetch(`saavn_song_${rawId}`, CACHE_TTL.STREAM_URL, async () => {
+      try {
+        const json = await fetchSaavnJson<{ songs?: RawSaavnSong[] }>({
+          __call: "song.getDetails",
+          pids: rawId,
+        });
 
-      const song = json?.songs?.[0];
-      return song ? mapSaavnTrack(song) : null;
-    } catch {
-      return null;
-    }
+        const song = json?.songs?.[0];
+        return song ? mapSaavnTrack(song) : null;
+      } catch {
+        return null;
+      }
+    });
   });
 
 /**
@@ -397,27 +411,29 @@ export const getSaavnPlaylistServerFn = createServerFn({ method: "GET" })
     return z.object({ id: z.string() }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const rawId = data.id.replace("saavn_pl_", "");
-      const json = await fetchSaavnJson<RawSaavnPlaylist & { list?: RawSaavnSong[]; songs?: RawSaavnSong[] }>({
-        __call: "playlist.getDetails",
-        listid: rawId,
-      });
+    const rawId = data.id.replace("saavn_pl_", "");
+    return serverCache.getOrFetch(`saavn_pl_${rawId}`, CACHE_TTL.ALBUM_DETAILS, async () => {
+      try {
+        const json = await fetchSaavnJson<RawSaavnPlaylist & { list?: RawSaavnSong[]; songs?: RawSaavnSong[] }>({
+          __call: "playlist.getDetails",
+          listid: rawId,
+        });
 
-      if (!json) return null;
-      const base = mapSaavnPlaylist(json);
-      if (!base) return null;
+        if (!json) return null;
+        const base = mapSaavnPlaylist(json);
+        if (!base) return null;
 
-      const rawSongs = json.list || json.songs || [];
-      const tracks = rawSongs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
-      return {
-        ...base,
-        tracks: tracks.length ? tracks : undefined,
-        trackCount: tracks.length || base.trackCount,
-      };
-    } catch {
-      return null;
-    }
+        const rawSongs = json.list || json.songs || [];
+        const tracks = rawSongs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
+        return {
+          ...base,
+          tracks: tracks.length ? tracks : undefined,
+          trackCount: tracks.length || base.trackCount,
+        };
+      } catch {
+        return null;
+      }
+    });
   });
 
 /**
@@ -428,17 +444,19 @@ export const getSaavnArtistServerFn = createServerFn({ method: "GET" })
     return z.object({ id: z.string() }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const rawId = data.id.replace("saavn_artist_", "");
-      const json = await fetchSaavnJson<RawSaavnArtist>({
-        __call: "artist.getArtistPageDetails",
-        artistId: rawId,
-      });
+    const rawId = data.id.replace("saavn_artist_", "");
+    return serverCache.getOrFetch(`saavn_artist_${rawId}`, CACHE_TTL.ARTIST_PROFILE, async () => {
+      try {
+        const json = await fetchSaavnJson<RawSaavnArtist>({
+          __call: "artist.getArtistPageDetails",
+          artistId: rawId,
+        });
 
-      return json ? mapSaavnArtist(json) : null;
-    } catch {
-      return null;
-    }
+        return json ? mapSaavnArtist(json) : null;
+      } catch {
+        return null;
+      }
+    });
   });
 
 /**
@@ -449,24 +467,27 @@ export const getSaavnArtistTracksServerFn = createServerFn({ method: "GET" })
     return z.object({ id: z.string(), limit: z.number().default(40) }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const rawId = data.id.replace("saavn_artist_", "");
-      const json = await fetchSaavnJson<{
-        topSongs?: RawSaavnSong[] | { songs?: RawSaavnSong[] };
-      }>({
-        __call: "artist.getArtistPageDetails",
-        artistId: rawId,
-        n_song: String(data.limit || 40),
-      });
+    const rawId = data.id.replace("saavn_artist_", "");
+    const key = `saavn_art_tr_${rawId}_${data.limit || 40}`;
+    return serverCache.getOrFetch(key, CACHE_TTL.ARTIST_PROFILE, async () => {
+      try {
+        const json = await fetchSaavnJson<{
+          topSongs?: RawSaavnSong[] | { songs?: RawSaavnSong[] };
+        }>({
+          __call: "artist.getArtistPageDetails",
+          artistId: rawId,
+          n_song: String(data.limit || 40),
+        });
 
-      const songs = Array.isArray(json?.topSongs)
-        ? json.topSongs
-        : (json?.topSongs?.songs || []);
+        const songs = Array.isArray(json?.topSongs)
+          ? json.topSongs
+          : (json?.topSongs?.songs || []);
 
-      return songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
-    } catch {
-      return [];
-    }
+        return songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
+      } catch {
+        return [];
+      }
+    });
   });
 
 /**
@@ -477,24 +498,27 @@ export const getSaavnArtistAlbumsServerFn = createServerFn({ method: "GET" })
     return z.object({ id: z.string(), limit: z.number().default(20) }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const rawId = data.id.replace("saavn_artist_", "");
-      const json = await fetchSaavnJson<{
-        topAlbums?: RawSaavnAlbum[] | { albums?: RawSaavnAlbum[] };
-      }>({
-        __call: "artist.getArtistPageDetails",
-        artistId: rawId,
-        n_album: String(data.limit || 20),
-      });
+    const rawId = data.id.replace("saavn_artist_", "");
+    const key = `saavn_art_alb_${rawId}_${data.limit || 20}`;
+    return serverCache.getOrFetch(key, CACHE_TTL.ARTIST_PROFILE, async () => {
+      try {
+        const json = await fetchSaavnJson<{
+          topAlbums?: RawSaavnAlbum[] | { albums?: RawSaavnAlbum[] };
+        }>({
+          __call: "artist.getArtistPageDetails",
+          artistId: rawId,
+          n_album: String(data.limit || 20),
+        });
 
-      const albums = Array.isArray(json?.topAlbums)
-        ? json.topAlbums
-        : (json?.topAlbums?.albums || []);
+        const albums = Array.isArray(json?.topAlbums)
+          ? json.topAlbums
+          : (json?.topAlbums?.albums || []);
 
-      return albums.map(mapSaavnAlbum).filter((x): x is Playlist => Boolean(x));
-    } catch {
-      return [];
-    }
+        return albums.map(mapSaavnAlbum).filter((x): x is Playlist => Boolean(x));
+      } catch {
+        return [];
+      }
+    });
   });
 
 /**
@@ -510,19 +534,22 @@ export const searchSaavnAlbumsServerFn = createServerFn({ method: "GET" })
       .parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const json = await fetchSaavnJson<{ results?: RawSaavnAlbum[] }>({
-        __call: "search.getAlbumResults",
-        q: data.query.trim(),
-        n: String(data.limit),
-        p: "1",
-      });
+    const key = `saavn_search_alb_${data.query.trim().toLowerCase()}_${data.limit}`;
+    return serverCache.getOrFetch(key, CACHE_TTL.SEARCH_RESULTS, async () => {
+      try {
+        const json = await fetchSaavnJson<{ results?: RawSaavnAlbum[] }>({
+          __call: "search.getAlbumResults",
+          q: data.query.trim(),
+          n: String(data.limit),
+          p: "1",
+        });
 
-      const albums = json?.results ?? [];
-      return albums.map(mapSaavnAlbum).filter((x): x is Playlist => Boolean(x));
-    } catch {
-      return [];
-    }
+        const albums = json?.results ?? [];
+        return albums.map(mapSaavnAlbum).filter((x): x is Playlist => Boolean(x));
+      } catch {
+        return [];
+      }
+    });
   });
 
 /**
@@ -533,17 +560,19 @@ export const getSaavnAlbumServerFn = createServerFn({ method: "GET" })
     return z.object({ id: z.string() }).parse(data);
   })
   .handler(async ({ data }) => {
-    try {
-      const rawId = data.id.replace("saavn_album_", "");
-      const json = await fetchSaavnJson<RawSaavnAlbum & { list?: RawSaavnSong[]; songs?: RawSaavnSong[] }>({
-        __call: "content.getAlbumDetails",
-        albumid: rawId,
-      });
+    const rawId = data.id.replace("saavn_album_", "");
+    return serverCache.getOrFetch(`saavn_album_${rawId}`, CACHE_TTL.ALBUM_DETAILS, async () => {
+      try {
+        const json = await fetchSaavnJson<RawSaavnAlbum & { list?: RawSaavnSong[]; songs?: RawSaavnSong[] }>({
+          __call: "content.getAlbumDetails",
+          albumid: rawId,
+        });
 
-      if (!json) return null;
-      return mapSaavnAlbum(json);
-    } catch {
-      return null;
-    }
+        if (!json) return null;
+        return mapSaavnAlbum(json);
+      } catch {
+        return null;
+      }
+    });
   });
 

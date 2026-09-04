@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { serverCache, CACHE_TTL } from "./cache.server";
 
 export type SuggestionMatch = {
   id: string;
@@ -37,6 +38,8 @@ export const fetchSearchSuggestionsServerFn = createServerFn({ method: "GET" })
     if (!q || q.length < 2) {
       return { queries: [], topMatches: [] };
     }
+
+    return serverCache.getOrFetch(`sugg_${q}`, CACHE_TTL.SUGGESTIONS, async () => {
 
     const [ytRes, saavnRes] = await Promise.allSettled([
       // 1. YouTube / Google Music Suggestions
@@ -172,4 +175,5 @@ export const fetchSearchSuggestionsServerFn = createServerFn({ method: "GET" })
       queries,
       topMatches: topMatches.slice(0, 4),
     };
+    });
   });
