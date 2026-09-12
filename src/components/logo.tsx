@@ -81,8 +81,8 @@ export function Logo({
         className,
       )}
     >
-      <div className={cn("relative shrink-0 transition-transform duration-200 group-hover:scale-105 group-active:scale-95", compact ? "w-10 h-10 overflow-hidden" : "")}>
-        <img src="/sonara-logo.png" alt="Sonara" className={cn("object-contain", compact ? "h-full w-full object-left" : "h-10 md:h-12 w-auto max-w-[160px]")} />
+      <div className={cn("relative shrink-0 transition-transform duration-200 group-hover:scale-105 group-active:scale-95", compact ? "w-12 h-12 overflow-hidden" : "")}>
+        <img src="/sonara-logo.png" alt="Sonara" className={cn("object-contain drop-shadow-md", compact ? "h-full w-full object-left" : "h-14 md:h-20 w-auto max-w-[240px]")} />
       </div>
     </Link>
   );
