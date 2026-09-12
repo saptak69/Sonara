@@ -20,14 +20,14 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "var(--color-bg)" },
       { property: "og:title", content: "Sonara" },
       { property: "og:description", content: "Free Music Streaming App" },
-      { property: "og:image", content: "/sonara-logo.png" },
+      { property: "og:image", content: "/sonara-logo-v2.png" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: "icon", type: "image/png", href: "/sonara-logo.png" },
+      { rel: "icon", type: "image/png", href: "/sonara-logo-v2.png" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/sonara-logo.png" },
+      { rel: "apple-touch-icon", href: "/sonara-logo-v2.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

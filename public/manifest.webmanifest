@@ -8,7 +8,7 @@
   "theme_color": "#030303",
   "icons": [
     {
-      "src": "/sonara-logo.png",
+      "src": "/sonara-logo-v2.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
