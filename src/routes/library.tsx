@@ -5,6 +5,7 @@ import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
 import { Rail } from "@/components/rail";
 import { TrackRow } from "@/components/track-row";
+import { RadioContent } from "@/routes/radio";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
 import type { Playlist } from "@/lib/types";
@@ -12,12 +13,12 @@ import { cn } from "@/lib/utils";
 import { Compass, Heart, History, ListMusic, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-type LibrarySearch = { tab?: "recents" | "favorites" | "playlists" };
+type LibrarySearch = { tab?: "recents" | "favorites" | "playlists" | "radios" };
 
 export const Route = createFileRoute("/library")({ 
   validateSearch: (search: Record<string, unknown>): LibrarySearch => {
     return {
-      tab: search.tab === "favorites" || search.tab === "playlists" || search.tab === "recents" 
+      tab: search.tab === "favorites" || search.tab === "playlists" || search.tab === "recents" || search.tab === "radios"
         ? search.tab as any 
         : undefined,
     }
@@ -37,7 +38,7 @@ function LibraryPage() {
   const deletePlaylist = usePlayer((s) => s.deletePlaylist);
   const clearRecents = usePlayer((s) => s.clearRecents);
   
-  const [tab, setTab] = useState<"recents" | "favorites" | "playlists">(initialTab || "recents");
+  const [tab, setTab] = useState<"recents" | "favorites" | "playlists" | "radios">(initialTab || "recents");
 
   useEffect(() => {
     if (initialTab && initialTab !== tab) {
@@ -45,7 +46,7 @@ function LibraryPage() {
     }
   }, [initialTab]);
 
-  const handleTabChange = (newTab: "recents" | "favorites" | "playlists") => {
+  const handleTabChange = (newTab: "recents" | "favorites" | "playlists" | "radios") => {
     setTab(newTab);
     void navigate({ search: { tab: newTab }, replace: true });
   };
@@ -101,6 +102,7 @@ function LibraryPage() {
             ["recents", "Recents", recents.length],
             ["favorites", "Favorites", likedTracks.length],
             ["playlists", "Playlists", userPlaylists.length],
+            ["radios", "Radios", 0],
           ] as const
         ).map(([id, label, count]) => (
           <button
@@ -225,6 +227,12 @@ function LibraryPage() {
             action={{ label: "Browse Music", to: "/explore" }}
           />
         )
+      ) : null}
+
+      {tab === "radios" ? (
+        <div className="pt-2">
+          <RadioContent />
+        </div>
       ) : null}
     </div>
   );
