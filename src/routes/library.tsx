@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
 import { Rail } from "@/components/rail";
@@ -11,9 +12,23 @@ import { cn } from "@/lib/utils";
 import { Compass, Heart, History, ListMusic, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/library")({ component: LibraryPage });
+type LibrarySearch = { tab?: "recents" | "favorites" | "playlists" };
+
+export const Route = createFileRoute("/library")({ 
+  validateSearch: (search: Record<string, unknown>): LibrarySearch => {
+    return {
+      tab: search.tab === "favorites" || search.tab === "playlists" || search.tab === "recents" 
+        ? search.tab as any 
+        : undefined,
+    }
+  },
+  component: LibraryPage 
+});
 
 function LibraryPage() {
+  const { tab: initialTab } = Route.useSearch();
+  const navigate = useNavigate({ from: "/library" });
+  
   const recents = usePlayer((s) => s.recents);
   const likedIds = usePlayer((s) => s.likedIds);
   const playlists = usePlayer((s) => s.playlists);
@@ -21,7 +36,19 @@ function LibraryPage() {
   const createPlaylist = usePlayer((s) => s.createPlaylist);
   const deletePlaylist = usePlayer((s) => s.deletePlaylist);
   const clearRecents = usePlayer((s) => s.clearRecents);
-  const [tab, setTab] = useState<"recents" | "likes" | "playlists">("recents");
+  
+  const [tab, setTab] = useState<"recents" | "favorites" | "playlists">(initialTab || "recents");
+
+  useEffect(() => {
+    if (initialTab && initialTab !== tab) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const handleTabChange = (newTab: "recents" | "favorites" | "playlists") => {
+    setTab(newTab);
+    void navigate({ search: { tab: newTab }, replace: true });
+  };
 
   const likedTracks = useMemo(() => {
     const fromPlaylists = playlists.find((p) => p.id === "likes")?.tracks ?? [];
@@ -72,7 +99,7 @@ function LibraryPage() {
         {(
           [
             ["recents", "Recents", recents.length],
-            ["likes", "Liked Songs", likedTracks.length],
+            ["favorites", "Favorites", likedTracks.length],
             ["playlists", "Playlists", userPlaylists.length],
           ] as const
         ).map(([id, label, count]) => (
@@ -85,7 +112,7 @@ function LibraryPage() {
                 ? "bg-white/15 text-fg border border-white/20 shadow-sm backdrop-blur-md"
                 : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg",
             )}
-            onClick={() => setTab(id)}
+            onClick={() => handleTabChange(id)}
           >
             <span>{label}</span>
             {count > 0 ? (
@@ -129,7 +156,7 @@ function LibraryPage() {
         )
       ) : null}
 
-      {tab === "likes" ? (
+      {tab === "favorites" ? (
         likedTracks.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
@@ -145,9 +172,9 @@ function LibraryPage() {
         ) : (
           <Empty
             icon={Heart}
-            title="No liked songs yet"
-            text="Tap the heart on any track across Sonara to build your personal favorites collection."
-            action={{ label: "Discover new music", to: "/" }}
+            title="Oops! There's no favorites"
+            text="Tap the heart icon on any song you like to add it to your favorites."
+            action={{ label: "Discover new music", to: "/explore" }}
           />
         )
       ) : null}

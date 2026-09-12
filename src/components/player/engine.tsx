@@ -1,12 +1,19 @@
 import { useEffect, useRef } from "react";
-import { usePlayer } from "@/lib/player-store";
+import { usePlayer, getNextIndex } from "@/lib/player-store";
 import { recordStreamServerFn } from "@/lib/artist-studio";
 import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
 import { fetchTrack } from "@/lib/music-api";
 import { toast } from "sonner";
+import type { Track } from "@/lib/types";
 
 export function PlayerEngine() {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audio1Ref = useRef<HTMLAudioElement>(null);
+  const audio2Ref = useRef<HTMLAudioElement>(null);
+  const activeIndexRef = useRef<1 | 2>(1);
+  
+  const getActive = () => activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
+  const getInactive = () => activeIndexRef.current === 1 ? audio2Ref.current : audio1Ref.current;
+
   const current = usePlayer((s) => s.queue[s.index]);
   const isPlaying = usePlayer((s) => s.isPlaying);
   const volume = usePlayer((s) => s.volume);
@@ -107,49 +114,85 @@ export function PlayerEngine() {
   }, [sleepTimer, setPlaying, setSleepTimer]);
 
   const currentTrackIdRef = useRef<string | null>(null);
+  const preloadedTrackRef = useRef<string | null>(null);
 
   // Synchronous, atomic track switching and playback management
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
     if (!current) {
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
+      const a1 = audio1Ref.current;
+      const a2 = audio2Ref.current;
+      if (a1) { a1.pause(); a1.removeAttribute("src"); a1.load(); }
+      if (a2) { a2.pause(); a2.removeAttribute("src"); a2.load(); }
       currentTrackIdRef.current = null;
       return;
     }
 
-    const isNewTrack = currentTrackIdRef.current !== current.id || audio.src !== current.streamUrl;
+    const activeAudio = getActive();
+    const inactiveAudio = getInactive();
+    if (!activeAudio || !inactiveAudio) return;
+
+    const isNewTrack = currentTrackIdRef.current !== current.id;
     if (isNewTrack) {
       currentTrackIdRef.current = current.id;
-      // 1. Immediately pause and flush the previous track/stream
-      audio.pause();
-      try {
-        audio.currentTime = 0;
-      } catch {
-        /* live streams may reject seek */
-      }
-      // 2. Assign new stream URL and load
-      audio.src = current.streamUrl;
-      audio.load();
-    }
+      
+      // If we preloaded this track on the inactive audio, instantly swap active player
+      if (preloadedTrackRef.current === current.id) {
+         activeIndexRef.current = activeIndexRef.current === 1 ? 2 : 1;
+         const newActive = getActive()!;
+         const oldActive = getInactive()!;
+         
+         oldActive.pause();
+         try { oldActive.currentTime = 0; } catch {}
+         oldActive.removeAttribute("src");
 
-    // 3. Play or Pause deterministically
-    if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          if (err.name !== "AbortError") {
-            setPlaying(false);
-          }
-        });
+         if (isPlaying) {
+             newActive.play().catch((err) => {
+                 if (err.name !== "AbortError") setPlaying(false);
+             });
+         }
+      } else {
+         // Did not preload (e.g., user clicked a specific track from search)
+         activeAudio.pause();
+         try { activeAudio.currentTime = 0; } catch {}
+         activeAudio.src = current.streamUrl;
+         activeAudio.load();
+         if (isPlaying) {
+             activeAudio.play().catch((err) => {
+                 if (err.name !== "AbortError") setPlaying(false);
+             });
+         }
       }
     } else {
-      audio.pause();
+      // Just play/pause toggle for current track
+      if (isPlaying) {
+          activeAudio.play().catch((err) => {
+              if (err.name !== "AbortError") setPlaying(false);
+          });
+      } else {
+          activeAudio.pause();
+      }
     }
   }, [current?.id, current?.streamUrl, isPlaying, setPlaying]);
+
+  // Preloading Effect: Listen to store changes to preload next track for gapless playback
+  useEffect(() => {
+      const unsub = usePlayer.subscribe((state) => {
+          const currentT = state.queue[state.index];
+          if (!currentT) return;
+          const nextIdx = getNextIndex(state);
+          const nextT = nextIdx != null ? state.queue[nextIdx] : null;
+
+          if (nextT && nextT.id !== preloadedTrackRef.current && nextT.id !== currentT.id) {
+              const inactive = getInactive();
+              if (inactive) {
+                  inactive.src = nextT.streamUrl;
+                  inactive.load();
+                  preloadedTrackRef.current = nextT.id;
+              }
+          }
+      });
+      return unsub;
+  }, []);
 
   // Seamlessly auto-upgrade preview streams (30s previews) to full-length 320kbps master streams
   useEffect(() => {
@@ -163,7 +206,7 @@ export function PlayerEngine() {
     })
       .then((full) => {
         if (cancelled || !full?.streamUrl) return;
-        const audio = audioRef.current;
+        const audio = getActive();
         if (!audio || currentTrackIdRef.current !== current.id) return;
         const pos = audio.currentTime;
         const wasPlaying = !audio.paused;
@@ -206,16 +249,17 @@ export function PlayerEngine() {
 
   // Volume, Muted, and Playback Rate
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.volume = volume;
-    audio.muted = muted;
-    audio.playbackRate = playbackRate || 1.0;
+    [audio1Ref.current, audio2Ref.current].forEach(audio => {
+        if (!audio) return;
+        audio.volume = volume;
+        audio.muted = muted;
+        audio.playbackRate = playbackRate || 1.0;
+    });
   }, [volume, muted, playbackRate]);
 
   // Seeking
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = getActive();
     if (!audio || pendingSeek == null) return;
     try {
       audio.currentTime = pendingSeek;
@@ -227,7 +271,7 @@ export function PlayerEngine() {
 
   // MediaSession integration
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = getActive();
     if (!audio || !current) return;
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -270,30 +314,69 @@ export function PlayerEngine() {
 
   const lastErrorRef = useRef<number>(0);
 
-  return (
-    <audio
-      ref={audioRef}
-      preload="metadata"
-      onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-      onDurationChange={(e) => setDuration(e.currentTarget.duration || 0)}
-      onEnded={() => next()}
-      onPlay={() => setPlaying(true)}
-      onPause={() => {
-        if (usePlayer.getState().isPlaying) {
-          /* paused externally */
-        }
-      }}
-      onError={() => {
-        const now = Date.now();
-        if (now - lastErrorRef.current > 1500) {
-          lastErrorRef.current = now;
-          if (usePlayer.getState().isPlaying) {
-            next();
+  const createEventHandlers = (audioIndex: 1 | 2) => ({
+    onTimeUpdate: (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      if (activeIndexRef.current === audioIndex) {
+          setCurrentTime(e.currentTarget.currentTime);
+      }
+    },
+    onDurationChange: (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      if (activeIndexRef.current === audioIndex) {
+          setDuration(e.currentTarget.duration || 0);
+      }
+    },
+    onEnded: () => {
+      if (activeIndexRef.current === audioIndex) {
+          next();
+      }
+    },
+    onPlay: () => {
+      if (activeIndexRef.current === audioIndex) {
+          setPlaying(true);
+      }
+    },
+    onPause: () => {},
+    onError: () => {
+      if (activeIndexRef.current === audioIndex) {
+          const now = Date.now();
+          if (now - lastErrorRef.current > 1500) {
+            lastErrorRef.current = now;
+            const currentT = usePlayer.getState().current();
+            if (currentT && usePlayer.getState().isPlaying) {
+                toast.loading(`Recovering audio for "${currentT.title}"...`, { id: 'fallback' });
+                void resolveFullTrackStreamServerFn({
+                   data: { title: currentT.title, artist: currentT.artist }
+                }).then(full => {
+                   if (full?.streamUrl && full.streamUrl !== currentT.streamUrl) {
+                      const a = activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
+                      if (a && usePlayer.getState().current()?.id === currentT.id) {
+                         a.src = full.streamUrl;
+                         a.load();
+                         a.play().catch(() => {});
+                         toast.success("Stream recovered successfully", { id: 'fallback' });
+                      }
+                   } else {
+                      toast.error("Stream failed to play.", { id: 'fallback' });
+                      next();
+                   }
+                }).catch(() => {
+                   toast.dismiss('fallback');
+                   next();
+                });
+            } else if (usePlayer.getState().isPlaying) {
+              next();
+            }
+          } else {
+            setPlaying(false);
           }
-        } else {
-          setPlaying(false);
-        }
-      }}
-    />
+      }
+    }
+  });
+
+  return (
+    <>
+      <audio ref={audio1Ref} preload="auto" {...createEventHandlers(1)} />
+      <audio ref={audio2Ref} preload="auto" {...createEventHandlers(2)} />
+    </>
   );
 }

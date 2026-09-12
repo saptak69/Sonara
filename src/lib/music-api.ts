@@ -25,6 +25,7 @@ import {
   searchSoundCloudTracksServerFn,
   getSoundCloudTrackServerFn,
 } from "./soundcloud-api";
+import { createServerFn } from "@tanstack/react-start";
 
 const APP = "sonara_music";
 
@@ -1379,26 +1380,72 @@ function parseSynced(raw: string | null | undefined): { time: number; text: stri
   return lines.length ? lines : null;
 }
 
-export async function fetchLyrics(title: string, artist: string): Promise<Lyrics | null> {
-  try {
-    const url = new URL("https://lrclib.net/api/search");
-    url.searchParams.set("track_name", title);
-    url.searchParams.set("artist_name", artist.replace(/^@/, ""));
-    const data = await getJson<
-      {
-        plainLyrics?: string | null;
-        syncedLyrics?: string | null;
-        instrumental?: boolean;
-      }[]
-    >(url.toString(), 4000);
-    const hit = (data ?? []).find((d) => d.plainLyrics || d.syncedLyrics || d.instrumental);
-    if (!hit) return null;
-    return {
-      plain: hit.plainLyrics || "",
-      synced: parseSynced(hit.syncedLyrics),
-      instrumental: Boolean(hit.instrumental),
-    };
-  } catch {
+export const fetchLyricsServerFn = createServerFn({ method: "GET" })
+  .validator((d: { title: string; artist: string }) => d)
+  .handler(async ({ data }) => {
+    const { title, artist } = data;
+    try {
+      const url = new URL("https://lrclib.net/api/search");
+      url.searchParams.set("q", `${title} ${artist.replace(/^@/, "")}`);
+      
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      try {
+        const res = await fetch(url.toString(), {
+          signal: controller.signal,
+          headers: {
+            "User-Agent": "SonaraMusic/1.0.0 (https://github.com/sonara)",
+          },
+        });
+        if (res.ok) {
+          const resData = await res.json();
+          // Prioritize tracks with synced lyrics
+          let hit = (resData ?? []).find((d: any) => d.syncedLyrics);
+          if (!hit) {
+            hit = (resData ?? []).find((d: any) => d.plainLyrics || d.instrumental);
+          }
+          if (hit) {
+            return {
+              plain: hit.plainLyrics || "",
+              synced: parseSynced(hit.syncedLyrics),
+              instrumental: Boolean(hit.instrumental),
+            };
+          }
+        }
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch {
+      // Ignore and fallback
+    }
+
+    // Fallback to lyrics.ovh
+    try {
+      const ovhUrl = `https://api.lyrics.ovh/v1/${encodeURIComponent(artist.replace(/^@/, ""))}/${encodeURIComponent(title)}`;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      try {
+        const res = await fetch(ovhUrl, { signal: controller.signal });
+        if (res.ok) {
+          const ovhData = await res.json();
+          if (ovhData?.lyrics) {
+            return {
+              plain: ovhData.lyrics,
+              synced: null,
+              instrumental: false,
+            };
+          }
+        }
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch {
+      // Both failed
+    }
+
     return null;
-  }
+  });
+
+export async function fetchLyrics(title: string, artist: string): Promise<Lyrics | null> {
+  return fetchLyricsServerFn({ data: { title, artist } });
 }

@@ -14,29 +14,29 @@ export function QueuePanel() {
   return (
     <aside
       data-open={open}
-      className="queue-drawer fixed top-0 right-0 z-50 flex h-[calc(100dvh-var(--spacing-player))] w-[min(22rem,100vw)] flex-col border-l border-border bg-surface"
+      className="queue-drawer fixed top-0 right-0 z-50 flex h-[calc(100dvh-var(--spacing-player))] w-[min(22rem,100vw)] flex-col border-l border-brass/25 bg-[var(--color-surface)] texture-brushed font-mono shadow-2xl"
     >
-      <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="text-sm font-semibold">Queue</h2>
-        <Button variant="icon" size="iconSm" aria-label="Close queue" onClick={() => setQueueOpen(false)}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-brass/15 bg-[var(--color-surface)]">
+        <h2 className="text-xs font-mono font-semibold tracking-wider uppercase text-paper">Sounding Queue</h2>
+        <Button variant="icon" size="iconSm" aria-label="Close queue" onClick={() => setQueueOpen(false)} className="text-brass-dim hover:text-paper">
           <X className="size-4" />
         </Button>
       </div>
-      <div className="flex-1 overflow-y-auto px-2 pb-4">
+      <div className="flex-1 overflow-y-auto px-2 pb-4 pt-2">
         {current ? (
           <div className="mb-4">
-            <p className="px-2 pb-2 text-[11px] font-medium tracking-wide text-subtle uppercase">
-              Now playing
+            <p className="px-2 pb-2 text-[10px] font-mono tracking-widest text-brass-dim uppercase">
+              Active Sounding
             </p>
             <TrackRow track={current} queue={queue} />
           </div>
         ) : (
-          <p className="px-3 py-8 text-sm text-muted">Nothing in the queue yet.</p>
+          <p className="px-3 py-8 text-xs font-mono text-brass-dim/70">No soundings in active queue.</p>
         )}
         {upcoming.length ? (
           <div>
-            <p className="px-2 pb-2 text-[11px] font-medium tracking-wide text-subtle uppercase">
-              Next
+            <p className="px-2 pb-2 text-[10px] font-mono tracking-widest text-brass-dim uppercase">
+              Upcoming In Log
             </p>
             {upcoming.map((t) => (
               <TrackRow key={t.id} track={t} queue={queue} />

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArtistCard, PlaylistCard, RadioCard } from "@/components/cards";
 import { Rail } from "@/components/rail";
@@ -10,6 +10,7 @@ import { fetchFeaturedAlbums, searchAlbums, searchArtists, searchPlaylists, sear
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
+import { Search as SearchIcon, X } from "lucide-react";
 
 type Search = { q: string };
 
@@ -22,9 +23,22 @@ export const Route = createFileRoute("/search")({
 
 function SearchPage() {
   const { q } = Route.useSearch();
+  const navigate = useNavigate();
   const recents = usePlayer((s) => s.recentSearches);
   const rememberSearch = usePlayer((s) => s.rememberSearch);
   const [showAllSongs, setShowAllSongs] = useState(false);
+  const [localQ, setLocalQ] = useState(q);
+
+  useEffect(() => {
+    setLocalQ(q);
+  }, [q]);
+
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localQ.trim()) return;
+    rememberSearch(localQ.trim());
+    void navigate({ to: "/search", search: { q: localQ.trim() } });
+  };
 
   const featuredAlbums = useQuery({
     queryKey: ["featured-albums-search"],
@@ -141,9 +155,23 @@ function SearchPage() {
     return (
       <div className="stagger-in px-4 py-8 md:px-8 space-y-8">
         <header>
-          <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Explore Everything</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Search</h1>
-          <p className="mt-1.5 text-sm text-muted">
+          <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
+            <input
+              value={localQ}
+              onChange={(e) => setLocalQ(e.target.value)}
+              placeholder="Search for songs, artists..."
+              className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
+            />
+            {localQ && (
+              <button type="button" onClick={() => setLocalQ("")} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
+                <X className="size-4" />
+              </button>
+            )}
+          </form>
+          <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase hidden md:block">Explore Everything</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight hidden md:block">Search</h1>
+          <p className="mt-1.5 text-sm text-muted hidden md:block">
             Find millions of full-length songs, rock bands, Bengali hits, playlists, and live radio.
           </p>
         </header>
@@ -203,6 +231,23 @@ function SearchPage() {
   return (
     <div className="stagger-in space-y-10 px-4 py-6 md:px-8">
       <header>
+        <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
+          <input
+            value={localQ}
+            onChange={(e) => setLocalQ(e.target.value)}
+            placeholder="Search for songs, artists..."
+            className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
+          />
+          {localQ && (
+            <button type="button" onClick={() => {
+              setLocalQ("");
+              void navigate({ to: "/search", search: { q: "" } });
+            }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
+              <X className="size-4" />
+            </button>
+          )}
+        </form>
         <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Results</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">“{q}”</h1>
       </header>

@@ -65,7 +65,7 @@ function remember(list: Track[], track: Track): Track[] {
   return [track, ...list.filter((t) => t.id !== track.id)].slice(0, MAX_RECENTS);
 }
 
-function nextIndex(state: PlayerState): number | null {
+export function getNextIndex(state: PlayerState): number | null {
   const { queue, index, repeat, shuffle } = state;
   if (queue.length === 0) return null;
   if (repeat === "one") return index;
@@ -144,7 +144,7 @@ export const usePlayer = create<PlayerState>()(
       setPlaying: (v) => set({ isPlaying: v }),
       next: () => {
         const s = get();
-        const n = nextIndex(s);
+        const n = getNextIndex(s);
         if (n == null) {
           set({ isPlaying: false });
           return;

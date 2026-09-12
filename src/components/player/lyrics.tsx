@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { fetchLyrics } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
+import { cn } from "@/lib/utils";
 
 export function LyricsPanel() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -28,7 +29,7 @@ export function LyricsPanel() {
   const customLyrics = track?.lyrics;
 
   return (
-    <div className="mt-6 max-h-64 overflow-y-auto px-2 text-center [scrollbar-width:thin]">
+    <div className="mt-6 md:mt-0 flex-1 w-full overflow-y-auto px-2 md:px-8 text-center md:text-left [scrollbar-width:none] mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)">
       {isLoading ? (
         <p className="text-sm text-muted">Finding lyrics…</p>
       ) : data?.synced ? (
@@ -37,11 +38,12 @@ export function LyricsPanel() {
             <p
               key={`${line.time}-${i}`}
               ref={i === activeIndex ? activeRef : undefined}
-              className={
+              className={cn(
+                "transition-all duration-300 py-2",
                 i === activeIndex
-                  ? "text-lg font-semibold text-fg"
-                  : "text-sm text-subtle transition-colors duration-200"
-              }
+                  ? "text-2xl md:text-4xl font-bold text-white scale-105 origin-left"
+                  : "text-lg md:text-2xl text-white/40 hover:text-white/60 blur-[1px] hover:blur-none"
+              )}
             >
               {line.text || " "}
             </p>

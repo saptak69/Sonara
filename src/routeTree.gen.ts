@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RadioRouteImport } from './routes/radio'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as StudioRouteImport } from './routes/studio'
+import { Route as YouRouteImport } from './routes/you'
 import { Route as ArtistIdRouteImport } from './routes/artist.$id'
 import { Route as GenreSlugRouteImport } from './routes/genre.$slug'
 import { Route as PlaylistIdRouteImport } from './routes/playlist.$id'
@@ -64,6 +65,11 @@ const StudioRoute = StudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const YouRoute = YouRouteImport.update({
+  id: '/you',
+  path: '/you',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArtistIdRoute = ArtistIdRouteImport.update({
   id: '/artist/$id',
   path: '/artist/$id',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/you': typeof YouRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/you': typeof YouRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/you': typeof YouRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/search'
     | '/studio'
+    | '/you'
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/search'
     | '/studio'
+    | '/you'
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/radio'
     | '/search'
     | '/studio'
+    | '/you'
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   RadioRoute: typeof RadioRoute
   SearchRoute: typeof SearchRoute
   StudioRoute: typeof StudioRoute
+  YouRoute: typeof YouRoute
   ArtistIdRoute: typeof ArtistIdRoute
   GenreSlugRoute: typeof GenreSlugRoute
   PlaylistIdRoute: typeof PlaylistIdRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/you': {
+      id: '/you'
+      path: '/you'
+      fullPath: '/you'
+      preLoaderRoute: typeof YouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/artist/$id': {
       id: '/artist/$id'
       path: '/artist/$id'
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   RadioRoute: RadioRoute,
   SearchRoute: SearchRoute,
   StudioRoute: StudioRoute,
+  YouRoute: YouRoute,
   ArtistIdRoute: ArtistIdRoute,
   GenreSlugRoute: GenreSlugRoute,
   PlaylistIdRoute: PlaylistIdRoute,

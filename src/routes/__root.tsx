@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/app-shell";
 import { QueryProvider } from "@/lib/query-provider";
 import { Analytics } from "@vercel/analytics/react";
@@ -14,9 +15,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: APP_NAME },
-      { name: "description", content: "Stream independent music and live radio with Sonara dark music player." },
-      { name: "theme-color", content: "#030303" },
+      { title: "Sonara — Maritime Sound Chart" },
+      { name: "description", content: "Sonara ~ maritime sound chart and precision listening instrument." },
+      { name: "theme-color", content: "var(--color-bg)" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -27,7 +28,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap",
       },
     ],
   }),
@@ -40,9 +41,11 @@ export const Route = createRootRoute({
         <PreviewHostBridge />
         <AuthProvider>
           <QueryProvider>
-            <AppShell>
-              <Outlet />
-            </AppShell>
+            <TooltipProvider delayDuration={200} skipDelayDuration={100}>
+              <AppShell>
+                <Outlet />
+              </AppShell>
+            </TooltipProvider>
           </QueryProvider>
         </AuthProvider>
         <Analytics />

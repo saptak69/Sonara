@@ -1,6 +1,7 @@
-import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X } from "lucide-react";
+import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X, Heart, Menu, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, MonitorSpeaker, Mic2, Volume2, ListMusic } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { type FormEvent, type ReactNode, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Logo } from "@/components/logo";
 import { PlayerEngine } from "@/components/player/engine";
 import { PlayerBar } from "@/components/player/bar";
@@ -14,41 +15,80 @@ import { Toaster, toast } from "sonner";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { Cover } from "@/components/cover";
+import { SearchSuggestions } from "@/components/search-suggestions";
+import { formatTime } from "@/lib/format";
 
 const SIDEBAR_NAV = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/explore", label: "Explore", icon: Compass },
-  { to: "/studio", label: "Studio", icon: Disc },
+  { to: "/library", label: "Your Library", icon: Library },
+] as const;
+
+const SIDEBAR_DISCOVER = [
+  { to: "/explore", label: "Discover", icon: Compass },
   { to: "/radio", label: "Radio", icon: Radio },
-  { to: "/library", label: "Library", icon: Library },
-  { to: "/about", label: "About", icon: Info },
+  { to: "/library", search: { tab: "favorites" }, label: "Favorites", icon: Heart },
 ] as const;
 
 const MOBILE_NAV = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/explore", label: "Explore", icon: Compass },
-  { to: "/studio", label: "Studio", icon: Disc },
-  { to: "/radio", label: "Radio", icon: Radio },
+  { to: "/search", label: "Search", icon: Search },
   { to: "/library", label: "Library", icon: Library },
+  { to: "/you", label: "You", icon: User },
 ] as const;
-
-import { SearchSuggestions } from "@/components/search-suggestions";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const search = useRouterState({ select: (s) => s.location.search as Record<string, string> });
   const navigate = useNavigate();
   const { user } = useCurrentUserState();
   const hasTrack = usePlayer((s) => Boolean(s.queue[s.index]));
+  const current = usePlayer((s) => s.current());
+  const isPlaying = usePlayer((s) => s.isPlaying);
+  const toggle = usePlayer((s) => s.toggle);
+  const next = usePlayer((s) => s.next);
+  const prev = usePlayer((s) => s.prev);
+  const progress = usePlayer((s) => s.progress);
+  const duration = usePlayer((s) => s.duration);
+  const seek = usePlayer((s) => s.seek);
+  const queue = usePlayer((s) => s.queue);
+  const index = usePlayer((s) => s.index);
+  
   const rawPlaylists = usePlayer((s) => s.playlists);
   const playlists = useMemo(() => rawPlaylists.filter((p) => p.id !== "likes"), [rawPlaylists]);
   const createPlaylist = usePlayer((s) => s.createPlaylist);
   const rememberSearch = usePlayer((s) => s.rememberSearch);
+  
   const [q, setQ] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [name, setName] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [desktopSuggestionsOpen, setDesktopSuggestionsOpen] = useState(false);
   const [mobileSuggestionsOpen, setMobileSuggestionsOpen] = useState(false);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
+      const isSlash = e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement);
+
+      if (isCmdK || isSlash) {
+        e.preventDefault();
+        if (window.innerWidth >= 768) {
+          desktopSearchInputRef.current?.focus();
+          desktopSearchInputRef.current?.select();
+          setDesktopSuggestionsOpen(true);
+        } else {
+          setMobileSearchOpen(true);
+          setTimeout(() => {
+            mobileSearchInputRef.current?.focus();
+          }, 60);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   const executeSearch = (queryStr: string) => {
     const query = queryStr.trim();
@@ -69,29 +109,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     executeSearch(q);
   };
 
+  const upNext = queue.slice(index + 1, index + 5);
+
   return (
-    <div className="min-h-dvh bg-transparent text-fg relative isolate selection:bg-accent/40 selection:text-white">
-      {/* Background cinematic glowing flower video */}
-      <div
-        className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none"
-        aria-hidden="true"
-      >
-        <video
-          className="absolute inset-0 h-full w-full object-cover object-center opacity-90 scale-100 filter brightness-105 contrast-110 saturate-135"
-          autoPlay
-          muted
-          loop
-          playsInline
-          disablePictureInPicture
-        >
-          <source
-            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260808_064556_051587f1-74a1-4336-8c05-4dde3594ed05.mp4"
-            type="video/mp4"
-          />
-        </video>
-        {/* Soft cinematic dark glass vignette: vibrant center, smooth edges */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/10 to-black/75" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-transparent via-black/15 to-black/60" />
+    <div className="min-h-dvh bg-bg text-fg relative isolate selection:bg-accent/30 selection:text-fg font-sans">
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none" aria-hidden="true">
+        <div className="absolute inset-0 bg-bg" />
+        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-accent/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3" />
       </div>
 
       <PlayerEngine />
@@ -100,329 +125,236 @@ export function AppShell({ children }: { children: ReactNode }) {
         position="bottom-center"
         offset={hasTrack ? 88 : 24}
         toastOptions={{
-          className: "bg-black/80 backdrop-blur-2xl text-fg border-white/15 shadow-2xl",
+          className: "bg-surface text-fg border border-border font-sans text-xs shadow-2xl rounded-xl",
         }}
       />
 
-      <aside className="fixed top-0 left-0 z-20 hidden h-dvh w-sidebar flex-col bg-black/40 backdrop-blur-3xl border-r border-white/10 px-4 pt-5 pb-player md:flex">
-        <Logo />
-        <nav className="mt-8 flex flex-col gap-1">
+      {/* Left Sidebar */}
+      <aside className="fixed top-0 left-0 z-20 hidden h-dvh w-sidebar flex-col bg-bg border-r border-border px-6 pt-8 pb-player md:flex">
+        <Logo compact={false} />
+        
+        <nav className="mt-10 flex flex-col gap-2">
           {SIDEBAR_NAV.map((item) => {
-            const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
+            const active = item.to === "/" ? path === "/" : (path.startsWith(item.to) && search.tab !== "favorites");
             const Icon = item.icon;
             return (
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={() => {
+                  if (item.to === "/") {
+                    const main = document.getElementById("main-scroll-area");
+                    if (main) main.scrollTo({ top: 0, behavior: "instant" });
+                    window.scrollTo({ top: 0, behavior: "instant" });
+                  }
+                }}
                 className={cn(
-                  "flex h-11 items-center gap-4 rounded-xl px-3.5 text-sm font-medium transition-all duration-150",
-                  active
-                    ? "bg-white/15 text-fg shadow-sm border border-white/20 backdrop-blur-md"
-                    : "text-muted hover:bg-white/10 hover:text-fg",
+                  "flex h-10 items-center gap-4 rounded-lg px-3 text-sm font-medium transition-all duration-150 active:scale-[0.98]",
+                  active ? "text-accent bg-accent/10" : "text-muted hover:text-fg hover:bg-hover",
                 )}
               >
-                <Icon className="size-5" strokeWidth={active ? 2.4 : 2} />
+                <Icon className="size-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="mt-6">
-          <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-4 rounded-xl px-3.5 text-muted hover:text-fg hover:bg-white/10"
-              >
-                <span className="grid size-6 place-items-center rounded-md bg-white/10 border border-white/15">
+
+        <div className="mt-8 border-t border-border/50 pt-6">
+          <nav className="flex flex-col gap-2">
+            {SIDEBAR_DISCOVER.map((item) => {
+              const active = item.to === "/library" 
+                ? path.startsWith(item.to) && search.tab === "favorites"
+                : path.startsWith(item.to);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  search={"search" in item ? item.search : undefined}
+                  className={cn(
+                    "flex h-10 items-center gap-4 rounded-lg px-3 text-sm font-medium transition-all duration-150 active:scale-[0.98]",
+                    active ? "text-accent bg-accent/10" : "text-muted hover:text-fg hover:bg-hover",
+                  )}
+                >
+                  <Icon className="size-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="mt-8 border-t border-border/50 pt-6 flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between px-3 mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Playlists</h3>
+            <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+              <DialogTrigger asChild>
+                <button className="text-muted hover:text-fg transition-colors">
                   <Plus className="size-4" />
-                </span>
-                New playlist
-              </Button>
-            </DialogTrigger>
-            <DialogContent title="New playlist">
-              <form
-                className="space-y-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const id = createPlaylist(name);
-                  setName("");
-                  setOpenCreate(false);
-                  void navigate({ to: "/library" });
-                  void id;
-                }}
+                </button>
+              </DialogTrigger>
+              <DialogContent title="New playlist">
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    createPlaylist(name);
+                    setName("");
+                    setOpenCreate(false);
+                    void navigate({ to: "/library" });
+                  }}
+                >
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Playlist name"
+                    className="h-12 w-full rounded-xl bg-surface px-4 text-sm text-fg outline-none ring-accent/40 focus:ring-2 border border-border"
+                  />
+                  <Button variant="solid" className="w-full rounded-xl bg-accent text-white font-medium text-sm hover:bg-accent/90 h-12" type="submit">
+                    Create
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="flex-1 overflow-y-auto [scrollbar-width:none] px-1 space-y-1">
+            {playlists.map((p) => (
+              <Link
+                key={p.id}
+                to="/library"
+                className="block truncate rounded-lg px-2 py-2 text-sm text-muted hover:text-fg hover:bg-hover transition-colors"
               >
-                <input
-                  autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Playlist name"
-                  className="h-11 w-full rounded-xl bg-black/60 px-3.5 text-sm outline-none ring-accent/50 focus:ring-2 border border-white/20"
-                />
-                <Button variant="solid" className="w-full rounded-xl" type="submit">
-                  Create
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="mt-4 flex-1 overflow-y-auto [scrollbar-width:none]">
-          {playlists.map((p) => (
-            <Link
-              key={p.id}
-              to="/library"
-              className="block truncate rounded-lg px-3 py-2 text-sm text-muted hover:text-fg hover:bg-white/10 transition-colors"
-            >
-              {p.name}
-            </Link>
-          ))}
-        </div>
-
-        {/* User Profile / Auth Block */}
-        <div className="mt-auto pt-4 border-t border-white/10 space-y-2.5">
-          {user && !user.isDevFallback ? (
-            <div className="flex items-center justify-between gap-2 p-2 rounded-2xl bg-white/5 border border-white/10">
-              <Link to="/studio" className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-80 transition-opacity">
-                <Cover
-                  src={user.profileImageUrl}
-                  alt={user.displayName || "User"}
-                  title={user.displayName || "User"}
-                  rounded="full"
-                  className="size-8 shrink-0"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-fg truncate">{user.displayName || "Artist"}</p>
-                  <p className="text-[10px] text-muted truncate">Artist Studio</p>
-                </div>
+                {p.name}
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  void signOut().then(() => toast.success("Signed out"));
-                }}
-                className="p-1.5 text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-white/10"
-                title="Sign out"
-              >
-                <LogOut className="size-4" />
-              </button>
-            </div>
-          ) : (
-            <Link
-              to="/login"
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent/20 hover:bg-accent/30 text-accent font-medium text-xs border border-accent/30 transition-all shadow-sm"
-            >
-              <User className="size-3.5" />
-              Sign In / Artist Join
-            </Link>
-          )}
-
-          <div className="flex items-center justify-between px-1.5 pt-1 text-[11px] text-subtle">
-            <span>Sonara</span>
-            <span>v1.0</span>
+            ))}
           </div>
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex flex-col justify-center bg-black/45 backdrop-blur-3xl border-b border-white/10 px-4 md:px-8 transition-all md:ml-sidebar pt-[env(safe-area-inset-top,0px)] shadow-lg">
-        <div className="flex h-16 md:h-18 items-center justify-between gap-3 sm:gap-6 w-full">
-          {/* Mobile view: Either Logo + User Avatar + Search Icon, or Full Expanded Search Input */}
-          {mobileSearchOpen ? (
-            <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
-              <form
-                onSubmit={onSearch}
-                className="relative flex-1"
-              >
-                <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" />
+      {/* Main Content Area */}
+      <main
+        id="main-scroll-area"
+        className={cn(
+          "transition-all min-w-0 relative h-dvh overflow-y-auto",
+          "md:ml-sidebar",
+          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-28" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
+        )}
+      >
+        <header className="sticky top-0 z-20 flex h-20 items-center px-4 md:px-8 transition-all bg-bg/80 backdrop-blur-xl border-b border-border/50">
+          <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
+            {mobileSearchOpen ? (
+              <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
+                <form onSubmit={onSearch} className="relative flex-1">
+                  <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
+                  <input
+                    ref={mobileSearchInputRef}
+                    autoFocus
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      setMobileSuggestionsOpen(true);
+                    }}
+                    onFocus={() => setMobileSuggestionsOpen(true)}
+                    placeholder="Search for songs, artists..."
+                    className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
+                  />
+                  {q && (
+                    <button type="button" onClick={() => { setQ(""); setMobileSuggestionsOpen(false); }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
+                      <X className="size-4" />
+                    </button>
+                  )}
+                  <SearchSuggestions query={q} isOpen={mobileSuggestionsOpen} onClose={() => setMobileSuggestionsOpen(false)} onSelectQuery={executeSearch} />
+                </form>
+                <button type="button" onClick={() => { setMobileSearchOpen(false); setMobileSuggestionsOpen(false); }} className="text-sm font-medium text-muted hover:text-fg px-2">Cancel</button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between w-full md:hidden">
+                <Logo compact={false} />
+                <div className="flex items-center gap-3">
+                  <Link to="/about" className="text-muted hover:text-fg p-2">
+                    <Info className="size-5" />
+                  </Link>
+                  {user && !user.isDevFallback ? (
+                    <Link to="/studio">
+                      <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8" />
+                    </Link>
+                  ) : (
+                    <Link to="/login" className="text-sm font-medium text-accent">Sign In</Link>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="hidden md:flex items-center gap-6 flex-1">
+              <form onSubmit={onSearch} className="relative w-full max-w-md">
+                <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
                 <input
-                  autoFocus
+                  ref={desktopSearchInputRef}
                   value={q}
                   onChange={(e) => {
                     setQ(e.target.value);
-                    setMobileSuggestionsOpen(true);
+                    setDesktopSuggestionsOpen(true);
                   }}
-                  onFocus={() => setMobileSuggestionsOpen(true)}
-                  placeholder="Search songs, artists, radio..."
-                  className="h-10 w-full rounded-full bg-black/80 pr-9 pl-10 text-xs text-fg outline-none ring-accent/50 focus:ring-2 border border-white/20 backdrop-blur-2xl shadow-inner"
+                  onFocus={() => setDesktopSuggestionsOpen(true)}
+                  placeholder="Search for songs, artists, albums, or moods..."
+                  className="h-11 w-full rounded-full bg-surface hover:bg-hover focus:bg-surface pr-14 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
                 />
-                {q ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQ("");
-                      setMobileSuggestionsOpen(false);
-                    }}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted hover:text-fg"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                ) : null}
-                <SearchSuggestions
-                  query={q}
-                  isOpen={mobileSuggestionsOpen}
-                  onClose={() => setMobileSuggestionsOpen(false)}
-                  onSelectQuery={(suggestion) => executeSearch(suggestion)}
-                />
+                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center text-xs font-medium text-muted">
+                  ⌘K
+                </div>
+                <SearchSuggestions query={q} isOpen={desktopSuggestionsOpen} onClose={() => setDesktopSuggestionsOpen(false)} onSelectQuery={executeSearch} />
               </form>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileSearchOpen(false);
-                  setMobileSuggestionsOpen(false);
-                }}
-                className="px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-fg active:scale-95 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between w-full md:hidden">
-              <Logo compact={false} />
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/about"
-                  aria-label="About Sonara"
-                  className="grid size-9 place-items-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 text-fg border border-white/15 backdrop-blur-xl transition-all shadow-sm"
-                  title="About Sonara"
-                >
-                  <Info className="size-4 text-white/80" />
+
+              <div className="ml-auto flex items-center gap-4">
+                <Link to="/about" className="p-2 text-muted hover:text-fg transition-colors">
+                  <Info className="size-5" />
                 </Link>
-                <button
-                  type="button"
-                  aria-label="Open search"
-                  onClick={() => setMobileSearchOpen(true)}
-                  className="grid size-9 place-items-center rounded-full bg-white/10 hover:bg-white/15 active:scale-95 text-fg border border-white/15 backdrop-blur-xl transition-all shadow-sm"
-                >
-                  <Search className="size-4" />
-                </button>
                 {user && !user.isDevFallback ? (
-                  <Link
-                    to="/studio"
-                    className="grid size-9 place-items-center rounded-full overflow-hidden border border-white/20 bg-white/10"
-                    title="Artist Studio"
-                  >
-                    <Cover
-                      src={user.profileImageUrl}
-                      alt={user.displayName || "User"}
-                      title={user.displayName || "User"}
-                      rounded="full"
-                      className="size-9"
-                    />
+                  <Link to="/studio" className="flex items-center gap-3 pl-2 border-l border-border/50 hover:opacity-80 transition-opacity">
+                    <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8" />
+                    <span className="text-sm font-medium">{user.displayName || "User"}</span>
                   </Link>
                 ) : (
-                  <Link
-                    to="/login"
-                    className="px-3 py-1.5 rounded-full bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 text-[11px] font-semibold transition-all"
-                  >
+                  <Link to="/login" className="px-5 py-2 rounded-full bg-accent text-white font-medium text-sm hover:bg-accent/90 transition-colors">
                     Sign In
                   </Link>
                 )}
               </div>
             </div>
-          )}
-
-          {/* Desktop Search bar & User Profile */}
-          <div className="hidden md:flex items-center justify-between gap-4 flex-1">
-            <form onSubmit={onSearch} className="relative flex-1 max-w-xl">
-              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted/70 transition-colors" />
-              <input
-                value={q}
-                onChange={(e) => {
-                  setQ(e.target.value);
-                  setDesktopSuggestionsOpen(true);
-                }}
-                onFocus={() => setDesktopSuggestionsOpen(true)}
-                placeholder="Search songs, artists, radio..."
-                className="h-11 w-full rounded-full bg-white/10 hover:bg-white/15 focus:bg-black/80 pr-4 pl-10 text-sm text-fg outline-none ring-accent/50 placeholder:text-white/45 focus:ring-2 border border-white/15 backdrop-blur-2xl transition-all shadow-inner"
-              />
-              <SearchSuggestions
-                query={q}
-                isOpen={desktopSuggestionsOpen}
-                onClose={() => setDesktopSuggestionsOpen(false)}
-                onSelectQuery={(suggestion) => executeSearch(suggestion)}
-              />
-            </form>
-
-            <div className="flex items-center gap-3">
-              {user && !user.isDevFallback ? (
-                <Link
-                  to="/studio"
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-xs font-medium text-fg border border-white/15 backdrop-blur-xl transition-all"
-                >
-                  <Cover
-                    src={user.profileImageUrl}
-                    alt={user.displayName || "User"}
-                    title={user.displayName || "User"}
-                    rounded="full"
-                    className="size-6"
-                  />
-                  <span className="max-w-28 truncate">{user.displayName || "Studio"}</span>
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent hover:bg-accent/90 text-white text-xs font-semibold shadow-md shadow-accent/20 transition-all"
-                >
-                  <User className="size-3.5" />
-                  Sign In
-                </Link>
-              )}
-            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main
-        className={cn(
-          "md:ml-sidebar transition-all",
-          hasTrack
-            ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-player"
-            : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
-        )}
-      >
-        {children}
+        <div className="max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
 
-      <div
-        className={cn(
-          "fixed inset-x-0 bottom-0 z-30 pointer-events-auto",
-          hasTrack ? "" : "md:hidden",
-        )}
-      >
-        <PlayerBar />
-        <nav className="flex h-16 items-center justify-around border-t border-white/[0.08] bg-black/85 backdrop-blur-2xl px-2 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-10px_30px_rgba(0,0,0,0.8)] md:hidden">
+      {/* Mobile Bottom Navigation & Global Player Bar */}
+      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none", hasTrack ? "" : "md:hidden")}>
+        <div className="pointer-events-auto">
+          <PlayerBar />
+        </div>
+        <nav className="pointer-events-auto flex h-16 items-center justify-around bg-surface/95 backdrop-blur-lg border-t border-border px-2 pb-[env(safe-area-inset-bottom,0px)] md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-150 active:scale-95 select-none",
-                  active ? "text-accent" : "text-white/40 hover:text-white/70",
-                )}
+              <Link 
+                key={item.to} 
+                to={item.to} 
+                onClick={() => {
+                  if (item.to === "/") {
+                    const main = document.getElementById("main-scroll-area");
+                    if (main) main.scrollTo({ top: 0, behavior: "instant" });
+                    window.scrollTo({ top: 0, behavior: "instant" });
+                  }
+                }}
+                className={cn("flex flex-1 flex-col items-center justify-center gap-1 transition-colors active:scale-95", active ? "text-accent" : "text-muted hover:text-fg")}
               >
-                <div className="relative flex items-center justify-center">
-                  <Icon
-                    className={cn(
-                      "size-[19px] transition-all duration-150",
-                      active
-                        ? "text-accent drop-shadow-[0_0_8px_rgba(255,42,61,0.5)]"
-                        : "text-white/45 group-hover:text-white/75",
-                    )}
-                    strokeWidth={active ? 2.2 : 1.75}
-                  />
-                </div>
-                <span
-                  className={cn(
-                    "mt-1 text-[10px] tracking-tight transition-all duration-150 leading-none",
-                    active
-                      ? "font-semibold text-accent"
-                      : "font-normal text-white/45 group-hover:text-white/75",
-                  )}
-                >
-                  {item.label}
-                </span>
+                <Icon className={cn("size-6", active ? "fill-accent/20" : "")} strokeWidth={active ? 2.5 : 2} />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -432,5 +364,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <FullPlayer />
       <QueuePanel />
     </div>
+  );
+}
+
+function MoreHorizontal(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
   );
 }

@@ -286,6 +286,23 @@ export function SearchSuggestions({
           </div>
         </div>
       ) : null}
+
+      {/* Footer Navigation Hints */}
+      <div className="mt-2 flex items-center justify-between border-t border-white/10 px-3 pt-2 text-[10px] text-muted/70">
+        <span className="flex items-center gap-1.5">
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↑</kbd>
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↓</kbd>
+          navigate
+        </span>
+        <span className="flex items-center gap-1.5">
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↵</kbd>
+          select
+        </span>
+        <span className="flex items-center gap-1.5">
+          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">esc</kbd>
+          close
+        </span>
+      </div>
     </div>
   );
 }
