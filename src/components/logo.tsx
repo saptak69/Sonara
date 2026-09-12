@@ -77,17 +77,12 @@ export function Logo({
         window.scrollTo({ top: 0, behavior: "instant" });
       }}
       className={cn(
-        "flex items-center gap-3 rounded-lg outline-none focus-visible:ring-1 focus-visible:ring-brass/60 group transition-all",
+        "flex items-center rounded-lg outline-none focus-visible:ring-1 focus-visible:ring-brass/60 group transition-all",
         className,
       )}
     >
-      <div className="relative shrink-0 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
-        <img src="/sonara-logo.png" alt="Sonara" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
-      </div>
-      <div className={cn("flex flex-col min-w-0 justify-center", compact && "sr-only")}>
-        <span className="font-display text-[32px] md:text-[40px] font-medium text-paper transition-colors group-hover:text-brass leading-none -mt-1">
-          sonara
-        </span>
+      <div className={cn("relative shrink-0 transition-transform duration-200 group-hover:scale-105 group-active:scale-95", compact ? "w-10 h-10 overflow-hidden" : "")}>
+        <img src="/sonara-logo.png" alt="Sonara" className={cn("object-contain", compact ? "h-full w-full object-left" : "h-10 md:h-12 w-auto max-w-[160px]")} />
       </div>
     </Link>
   );
