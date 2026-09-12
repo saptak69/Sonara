@@ -15,9 +15,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Sonara — Maritime Sound Chart" },
-      { name: "description", content: "Sonara ~ maritime sound chart and precision listening instrument." },
+      { title: "Sonara" },
+      { name: "description", content: "Free Music Streaming App" },
       { name: "theme-color", content: "var(--color-bg)" },
+      { property: "og:title", content: "Sonara" },
+      { property: "og:description", content: "Free Music Streaming App" },
+      { property: "og:image", content: "/sonara-logo.png" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

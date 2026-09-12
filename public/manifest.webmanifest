@@ -1,7 +1,7 @@
 {
-  "name": "Sonara Music - by Jiko",
+  "name": "Sonara",
   "short_name": "Sonara",
-  "description": "Dark, cinematic music player made by Jiko",
+  "description": "Free Music Streaming App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#030303",
