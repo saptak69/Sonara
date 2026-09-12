@@ -83,68 +83,60 @@ export function Logo({
 
             <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fffcf8" />
-              <stop offset="100%" stopColor="#ffe6cc" />
+              <stop offset="50%" stopColor="#ffeadd" />
+              <stop offset="100%" stopColor="#ffcda8" />
             </linearGradient>
 
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#7a0303" floodOpacity="0.8"/>
+              <feDropShadow dx="2" dy="3" stdDeviation="2" floodColor="#5a0000" floodOpacity="0.85"/>
+              <feDropShadow dx="-1" dy="-1" stdDeviation="1" floodColor="#ffffff" floodOpacity="0.4"/>
             </filter>
 
-            <clipPath id="sunClip">
-              <circle cx="280" cy="50" r="50" />
+            <clipPath id="leftCut">
+              <polygon points="10,120 160,0 400,0 400,120" />
             </clipPath>
           </defs>
 
-          {/* Staggered Horizontal Lines (Sun & Tail) */}
+          {/* Staggered Horizontal Lines & Sweeping Arcs */}
           <motion.g 
+            clipPath="url(#leftCut)"
             variants={{
               hover: { x: 5, transition: { type: "spring", stiffness: 300, damping: 20 } },
               tap: { x: -5, scale: 0.95 },
               idle: { x: 0 }
             }}
           >
-            {/* The circular part of the sun */}
-            <g clipPath="url(#sunClip)">
-              <rect x="230" y="0" width="100" height="15" fill="url(#sunGrad)" />
-              <rect x="230" y="20" width="100" height="12" fill="url(#sunGrad)" />
-              <rect x="230" y="37" width="100" height="10" fill="url(#sunGrad)" />
-              <rect x="230" y="52" width="100" height="8" fill="url(#sunGrad)" />
-              <rect x="230" y="65" width="100" height="7" fill="url(#sunGrad)" />
-              <rect x="230" y="77" width="100" height="6" fill="url(#sunGrad)" />
-              <rect x="230" y="88" width="100" height="5" fill="url(#sunGrad)" />
+            <g stroke="url(#sunGrad)" strokeWidth="7.5" strokeLinecap="round" fill="none">
+              <path d="M -50 15 L 245 15" />
+              <path d="M -50 29 L 280 29" />
+              <path d="M -50 43 L 305 43" />
+              <path d="M -50 57 L 320 57" />
+              <path d="M -50 71 L 325 71" />
+              {/* Bottom lines sweeping up on the right */}
+              <path d="M -50 85 L 290 85 A 35 35 0 0 0 325 50" />
+              <path d="M -50 99 L 290 99 A 49 49 0 0 0 339 50" />
+              <path d="M -50 113 L 290 113 A 63 63 0 0 0 353 50" />
             </g>
-
-            {/* The sweeping tail lines that extend to the left */}
-            <rect x="180" y="20" width="80" height="12" fill="url(#sunGrad)" className="opacity-90" />
-            <rect x="150" y="37" width="120" height="10" fill="url(#sunGrad)" className="opacity-95" />
-            <rect x="120" y="52" width="150" height="8" fill="url(#sunGrad)" />
-            <rect x="80" y="65" width="200" height="7" fill="url(#sunGrad)" />
-            
-            {/* Bottom longest lines */}
-            <rect x="40" y="77" width="260" height="6" fill="url(#sunGrad)" rx="3" />
-            <rect x="30" y="88" width="280" height="5" fill="url(#sunGrad)" rx="2.5" />
-            <rect x="20" y="98" width="290" height="4" fill="url(#sunGrad)" rx="2" />
           </motion.g>
 
           {/* The Text "sonara" */}
           {!compact && (
             <motion.text 
-              x="30" 
-              y="75" 
+              x="180" 
+              y="94" 
               fontFamily="system-ui, -apple-system, sans-serif" 
-              fontSize="68" 
+              fontSize="78" 
               fontWeight="900" 
               fontStyle="italic"
               fill="url(#textGrad)"
               filter="url(#glow)"
-              textLength="280"
-              lengthAdjust="spacingAndGlyphs"
+              textAnchor="middle"
               variants={{
-                hover: { scale: 1.02, x: 2, transition: { type: "spring", stiffness: 400, damping: 25 } },
+                hover: { scale: 1.04, x: 2, transition: { type: "spring", stiffness: 400, damping: 25 } },
                 tap: { scale: 0.95 },
                 idle: { scale: 1, x: 0 }
               }}
-              style={{ letterSpacing: "-0.02em" }}
+              style={{ transform: "skewX(-16deg)", letterSpacing: "0.02em" }}
             >
               sonara
             </motion.text>
@@ -152,19 +144,19 @@ export function Logo({
 
           {/* The Sparkle / Star */}
           <motion.path 
-            d="M 330 30 Q 335 50 355 55 Q 335 60 330 80 Q 325 60 305 55 Q 325 50 330 30 Z" 
-            fill="#ffebd6"
+            d="M 345 35 Q 347 62 385 65 Q 347 68 345 95 Q 343 68 305 65 Q 343 62 345 35 Z" 
+            fill="url(#textGrad)"
             filter="url(#glow)"
             variants={{
               hover: { 
                 rotate: 90, 
-                scale: 1.2,
+                scale: 1.25,
                 transition: { type: "spring", stiffness: 200, damping: 10 }
               },
               tap: { scale: 0.5, rotate: -45 },
               idle: { rotate: 0, scale: 1 }
             }}
-            style={{ transformOrigin: "330px 55px" }}
+            style={{ transformOrigin: "345px 65px" }}
           />
         </svg>
       </motion.div>
