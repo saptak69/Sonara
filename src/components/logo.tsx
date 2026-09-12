@@ -49,6 +49,13 @@ export function Logo({
   compact?: boolean;
   className?: string;
 }) {
+  const reactId = useId();
+  const safeId = reactId.replace(/[^a-zA-Z0-9_-]/g, "");
+  const sunGradId = `sunGrad-${safeId}`;
+  const textGradId = `textGrad-${safeId}`;
+  const glowId = `glow-${safeId}`;
+  const leftCutId = `leftCut-${safeId}`;
+
   return (
     <Link
       to="/"
@@ -72,41 +79,41 @@ export function Logo({
           viewBox="0 0 400 120" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className={cn("drop-shadow-sm", compact ? "h-full w-full object-left" : "h-10 md:h-14 w-auto max-w-[200px]")}
+          className={cn("drop-shadow-sm", compact ? "h-full w-auto max-w-none" : "h-9 w-[120px] md:h-12 md:w-[160px]")}
         >
           <defs>
-            <linearGradient id="sunGrad" x1="0" y1="1" x2="1" y2="0">
+            <linearGradient id={sunGradId} x1="0" y1="1" x2="1" y2="0">
               <stop offset="0%" stopColor="#7a0303" />
               <stop offset="35%" stopColor="#c71f00" />
               <stop offset="100%" stopColor="#ff8c00" />
             </linearGradient>
 
-            <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={textGradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#fffcf8" />
               <stop offset="50%" stopColor="#ffeadd" />
               <stop offset="100%" stopColor="#ffcda8" />
             </linearGradient>
 
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="2" dy="3" stdDeviation="2" floodColor="#5a0000" floodOpacity="0.85"/>
               <feDropShadow dx="-1" dy="-1" stdDeviation="1" floodColor="#ffffff" floodOpacity="0.4"/>
             </filter>
 
-            <clipPath id="leftCut">
+            <clipPath id={leftCutId}>
               <polygon points="10,120 160,0 400,0 400,120" />
             </clipPath>
           </defs>
 
           {/* Staggered Horizontal Lines & Sweeping Arcs */}
           <motion.g 
-            clipPath="url(#leftCut)"
+            clipPath={`url(#${leftCutId})`}
             variants={{
               hover: { x: 5, transition: { type: "spring", stiffness: 300, damping: 20 } },
               tap: { x: -5, scale: 0.95 },
               idle: { x: 0 }
             }}
           >
-            <g stroke="url(#sunGrad)" strokeWidth="7.5" strokeLinecap="round" fill="none">
+            <g stroke={`url(#${sunGradId})`} strokeWidth="7.5" strokeLinecap="round" fill="none">
               <path d="M -50 15 L 245 15" />
               <path d="M -50 29 L 280 29" />
               <path d="M -50 43 L 305 43" />
@@ -128,8 +135,8 @@ export function Logo({
               fontSize="78" 
               fontWeight="900" 
               fontStyle="italic"
-              fill="url(#textGrad)"
-              filter="url(#glow)"
+              fill={`url(#${textGradId})`}
+              filter={`url(#${glowId})`}
               textAnchor="middle"
               variants={{
                 hover: { scale: 1.04, x: 2, transition: { type: "spring", stiffness: 400, damping: 25 } },
@@ -145,8 +152,8 @@ export function Logo({
           {/* The Sparkle / Star */}
           <motion.path 
             d="M 345 35 Q 347 62 385 65 Q 347 68 345 95 Q 343 68 305 65 Q 343 62 345 35 Z" 
-            fill="url(#textGrad)"
-            filter="url(#glow)"
+            fill={`url(#${textGradId})`}
+            filter={`url(#${glowId})`}
             variants={{
               hover: { 
                 rotate: 90, 
