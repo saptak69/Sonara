@@ -63,7 +63,7 @@ export function Logo({
       )}
     >
       <motion.div 
-        className={cn("relative shrink-0", compact ? "w-12 h-12 overflow-hidden" : "")}
+        className={cn("relative shrink-0", compact ? "w-10 h-10 overflow-hidden" : "")}
         whileHover="hover"
         whileTap="tap"
         initial="idle"
@@ -72,7 +72,7 @@ export function Logo({
           viewBox="0 0 400 120" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className={cn("drop-shadow-md", compact ? "h-full w-full object-left" : "h-14 md:h-20 w-auto max-w-[260px]")}
+          className={cn("drop-shadow-sm", compact ? "h-full w-full object-left" : "h-10 md:h-14 w-auto max-w-[200px]")}
         >
           <defs>
             <linearGradient id="sunGrad" x1="0" y1="1" x2="1" y2="0">
