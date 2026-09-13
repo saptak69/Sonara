@@ -277,6 +277,27 @@ export function PlayerEngine() {
   useEffect(() => {
     const audio = getActive();
     if (!audio || !current) return;
+    
+    // First setup the native Android Capacitor plugin (for lock screen/notifications)
+    import('@capgo/capacitor-media-session')
+      .then(({ MediaSession }) => {
+        MediaSession.setMetadata({
+          title: current.title,
+          artist: current.artist,
+          album: "Sonara",
+          artwork: current.artworkLg
+            ? [{ src: current.artworkLg, sizes: "512x512", type: "image/jpeg" }]
+            : [],
+        });
+        MediaSession.setPlaybackState({ playbackState: isPlaying ? "playing" : "paused" });
+        MediaSession.setActionHandler({ action: "play" }, () => setPlaying(true));
+        MediaSession.setActionHandler({ action: "pause" }, () => setPlaying(false));
+        MediaSession.setActionHandler({ action: "previoustrack" }, () => prev());
+        MediaSession.setActionHandler({ action: "nexttrack" }, () => next());
+      })
+      .catch((e) => console.log("Capacitor MediaSession not available", e));
+
+    // Fallback to standard web MediaSession for browsers
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: current.title,
