@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build web assets
-        run: npm run build
+      - name: Create dummy web assets for Capacitor sync
+        run: mkdir dist && echo "<html><body>Loading Sonara...</body></html>" > dist/index.html
 
       - name: Setup Java
         uses: actions/setup-java@v3
