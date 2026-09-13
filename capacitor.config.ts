@@ -7,6 +7,12 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://sonara-murex.vercel.app/',
     cleartext: true
+  },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: true,
+      style: 'DARK'
+    }
   }
 };
 

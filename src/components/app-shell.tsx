@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className="fixed top-0 left-0 z-20 hidden h-dvh w-sidebar flex-col bg-bg border-r border-border px-6 pt-8 pb-player md:flex">
+      <aside className="fixed top-0 left-0 z-20 hidden h-dvh w-sidebar flex-col bg-bg border-r border-border px-6 pt-[calc(2rem+env(safe-area-inset-top,0px))] pb-[calc(var(--spacing-player)+env(safe-area-inset-bottom,0px))] md:flex">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -242,7 +242,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-28" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex h-20 items-center px-4 md:px-8 transition-all bg-bg/80 backdrop-blur-xl border-b border-border/50">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all bg-bg/80 backdrop-blur-xl border-b border-border/50">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
