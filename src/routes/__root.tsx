@@ -3,6 +3,7 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/app-shell";
+import { PushNotificationsSetup } from "@/components/push-notifications";
 import { QueryProvider } from "@/lib/query-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -43,6 +44,7 @@ export const Route = createRootRoute({
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
+        <PushNotificationsSetup />
         <AuthProvider>
           <QueryProvider>
             <TooltipProvider delayDuration={200} skipDelayDuration={100}>
