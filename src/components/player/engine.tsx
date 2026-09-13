@@ -228,14 +228,18 @@ export function PlayerEngine() {
     };
   }, [current?.id, current?.title, current?.artist, current?.streamUrl, current?.duration, setDuration]);
 
-  // Continuous Smart Vibe Queue: dynamically fetch related tracks before the queue runs out
+  // Continuous Smart Vibe Queue: dynamically fetch related tracks
   const fetchingRelatedRef = useRef<string | null>(null);
   const queueLength = usePlayer((s) => s.queue.length);
   const queueIndex = usePlayer((s) => s.index);
+  const shuffle = usePlayer((s) => s.shuffle);
 
   useEffect(() => {
     if (!current?.id || queueLength === 0) return;
-    if (queueIndex >= queueLength - 2 && fetchingRelatedRef.current !== current.id) {
+    
+    // Trigger if we are near the end of the queue, OR if shuffle is on and we want to ensure similar tracks are available
+    // We only fetch once per 'current.id' to avoid spamming
+    if ((queueIndex >= queueLength - 2 || shuffle) && fetchingRelatedRef.current !== current.id) {
       fetchingRelatedRef.current = current.id;
       void import("@/lib/music-api").then(({ fetchRelatedQueue }) => {
         void fetchRelatedQueue(current, 10).then((related) => {
@@ -245,7 +249,7 @@ export function PlayerEngine() {
         });
       });
     }
-  }, [current?.id, queueLength, queueIndex]);
+  }, [current?.id, queueLength, queueIndex, shuffle]);
 
   // Volume, Muted, and Playback Rate
   useEffect(() => {

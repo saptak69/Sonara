@@ -796,6 +796,21 @@ export async function fetchRelatedQueue(track: Track, limit = 15): Promise<Track
   return CURATED_TRACKS.filter((t) => t.id !== track.id).slice(0, limit);
 }
 
+import { getSimilarSongsServerFn } from "./saavn-api";
+
+export async function fetchRelatedQueue(track: Track, limit: number = 10): Promise<Track[]> {
+  if (track.id.startsWith("saavn_")) {
+    const similar = await getSimilarSongsServerFn({ data: { id: track.id, limit } });
+    if (similar && similar.length > 0) return similar;
+  }
+  // Fallback to searching the artist
+  if (track.artist) {
+    const results = await searchTracks(track.artist.split(",")[0]);
+    return results.filter((t) => t.id !== track.id).slice(0, limit);
+  }
+  return [];
+}
+
 export async function searchPlaylists(query: string, limit = 12): Promise<Playlist[]> {
   try {
     const [saavnRes, deezerRes, audiusRes] = await Promise.allSettled([

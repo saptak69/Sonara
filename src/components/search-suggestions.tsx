@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Music, User, Disc, ArrowUpRight } from "lucide-react";
+import { Search, Music, User, Disc, ArrowUpRight, History } from "lucide-react";
 import {
   fetchSearchSuggestionsServerFn,
   type SearchSuggestionResult,
@@ -130,7 +130,12 @@ export function SearchSuggestions({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  const totalItems = data.topMatches.length + data.queries.length;
+  const recentSearches = usePlayer((s) => s.recentSearches);
+  const showRecents = query.trim().length === 0;
+  
+  const displayQueries = showRecents ? recentSearches : data.queries;
+  const displayMatches = showRecents ? [] : data.topMatches;
+  const totalItems = displayMatches.length + displayQueries.length;
 
   // Keyboard navigation
   useEffect(() => {
@@ -145,11 +150,11 @@ export function SearchSuggestions({
         setSelectedIndex((prev) => (prev - 1 + totalItems) % totalItems);
       } else if (e.key === "Enter" && selectedIndex >= 0) {
         e.preventDefault();
-        if (selectedIndex < data.topMatches.length) {
-          handleSelectMatch(data.topMatches[selectedIndex]);
+        if (selectedIndex < displayMatches.length) {
+          handleSelectMatch(displayMatches[selectedIndex]);
         } else {
-          const queryIdx = selectedIndex - data.topMatches.length;
-          onSelectQuery(data.queries[queryIdx]);
+          const queryIdx = selectedIndex - displayMatches.length;
+          onSelectQuery(displayQueries[queryIdx]);
           onClose();
         }
       } else if (e.key === "Escape") {
@@ -159,7 +164,7 @@ export function SearchSuggestions({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, totalItems, selectedIndex, data, onSelectQuery, onClose]);
+  }, [isOpen, totalItems, selectedIndex, displayMatches, displayQueries, onSelectQuery, onClose]);
 
   const handleSelectMatch = (match: SuggestionMatch) => {
     onClose();
@@ -185,7 +190,7 @@ export function SearchSuggestions({
     }
   };
 
-  if (!isOpen || query.trim().length < 2 || (data.queries.length === 0 && data.topMatches.length === 0 && !loading)) {
+  if (!isOpen || (displayQueries.length === 0 && displayMatches.length === 0 && !loading)) {
     return null;
   }
 
@@ -199,13 +204,13 @@ export function SearchSuggestions({
       )}
     >
       {/* Top Entity Matches (Songs / Artists) */}
-      {data.topMatches.length > 0 ? (
+      {displayMatches.length > 0 ? (
         <div className="mb-2">
           <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted/70">
             Top Matches
           </div>
           <div className="space-y-1">
-            {data.topMatches.map((match, idx) => {
+            {displayMatches.map((match, idx) => {
               const isSelected = selectedIndex === idx;
               return (
                 <SuggestionItemButton
@@ -252,16 +257,14 @@ export function SearchSuggestions({
       ) : null}
 
       {/* Query Suggestions */}
-      {data.queries.length > 0 ? (
+      {displayQueries.length > 0 ? (
         <div>
-          {data.topMatches.length > 0 ? (
-            <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted/70">
-              Suggestions
-            </div>
-          ) : null}
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted/70">
+            {showRecents ? "Recent Searches" : "Search Suggestions"}
+          </div>
           <div className="space-y-0.5">
-            {data.queries.map((q, idx) => {
-              const globalIdx = data.topMatches.length + idx;
+            {displayQueries.map((q, idx) => {
+              const globalIdx = displayMatches.length + idx;
               const isSelected = selectedIndex === globalIdx;
               return (
                 <SuggestionItemButton
@@ -276,7 +279,7 @@ export function SearchSuggestions({
                   )}
                 >
                   <div className="flex items-center gap-3 truncate">
-                    <Search className="size-4 shrink-0 text-muted" />
+                    {showRecents ? <History className="size-4 shrink-0 text-muted" /> : <Search className="size-4 shrink-0 text-muted" />}
                     <span className="truncate capitalize">{q}</span>
                   </div>
                   <ArrowUpRight className="size-3.5 shrink-0 text-muted/60" />

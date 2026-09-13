@@ -404,6 +404,54 @@ export const getSaavnTrackServerFn = createServerFn({ method: "GET" })
   });
 
 /**
+ * Server Function: Get Similar Songs (Recommendations)
+ */
+export const getSimilarSongsServerFn = createServerFn({ method: "GET" })
+  .validator((data: { id: string; limit?: number }) => {
+    return z.object({ id: z.string(), limit: z.number().default(20) }).parse(data);
+  })
+  .handler(async ({ data }) => {
+    const rawId = data.id.replace("saavn_", "");
+    return serverCache.getOrFetch(`saavn_reco_${rawId}_${data.limit || 20}`, CACHE_TTL.SEARCH_RESULTS, async () => {
+      try {
+        // First try the reco API
+        let json = await fetchSaavnJson<RawSaavnSong[]>({
+          __call: "reco.getreco",
+          pid: rawId,
+        });
+
+        // If it fails or returns empty, try fetching station by song
+        if (!Array.isArray(json) || json.length === 0) {
+           const station = await fetchSaavnJson<{ stationid?: string }>({
+             __call: "webradio.createEntityStation",
+             entity_id: rawId,
+             entity_type: "queue",
+           });
+           if (station?.stationid) {
+             const stationSongs = await fetchSaavnJson<{ [key: string]: { song?: RawSaavnSong } }>({
+               __call: "webradio.getSong",
+               stationid: station.stationid,
+               k: String(data.limit || 20),
+               next: "1",
+             });
+             if (stationSongs) {
+               json = Object.values(stationSongs)
+                 .map((v) => v?.song)
+                 .filter((x): x is RawSaavnSong => Boolean(x));
+             }
+           }
+        }
+
+        const songs = Array.isArray(json) ? json : [];
+        const mapped = songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
+        return mapped.slice(0, data.limit || 20);
+      } catch {
+        return [];
+      }
+    });
+  });
+
+/**
  * Server Function: Get Playlist Details & Full Tracks
  */
 export const getSaavnPlaylistServerFn = createServerFn({ method: "GET" })
