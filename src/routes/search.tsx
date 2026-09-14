@@ -176,6 +176,25 @@ function SearchPage() {
           </p>
         </header>
 
+        {recents.length ? (
+          <section className="space-y-3">
+            <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Recent Searches</h2>
+            <div className="flex flex-wrap gap-2">
+              {recents.map((s) => (
+                <Link
+                  key={s}
+                  to="/search"
+                  search={{ q: s }}
+                  className="rounded-full bg-white/5 border border-white/10 px-3.5 py-1.5 text-xs text-fg/80 hover:text-white hover:bg-white/15 transition-all"
+                  onClick={() => rememberSearch(s)}
+                >
+                  {s}
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {/* Trending culture & rock searches */}
         <section className="space-y-3">
           <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Trending & Featured</h2>
@@ -204,24 +223,7 @@ function SearchPage() {
           </Rail>
         ) : null}
 
-        {recents.length ? (
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Recent Searches</h2>
-            <div className="flex flex-wrap gap-2">
-              {recents.map((s) => (
-                <Link
-                  key={s}
-                  to="/search"
-                  search={{ q: s }}
-                  className="rounded-full bg-white/5 border border-white/10 px-3.5 py-1.5 text-xs text-fg/80 hover:text-white hover:bg-white/15 transition-all"
-                  onClick={() => rememberSearch(s)}
-                >
-                  {s}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
+
       </div>
     );
   }

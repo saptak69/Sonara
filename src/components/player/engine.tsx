@@ -275,9 +275,6 @@ export function PlayerEngine() {
 
   // MediaSession integration
   useEffect(() => {
-    const audio = getActive();
-    if (!audio || !current) return;
-    
     // First setup the native Android Capacitor plugin (for lock screen/notifications)
     import('@capgo/capacitor-media-session')
       .then(({ MediaSession }) => {
