@@ -336,7 +336,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto">
           <PlayerBar />
         </div>
-        <nav className="pointer-events-auto flex h-16 items-center justify-around bg-surface/95 backdrop-blur-lg border-t border-border px-2 pb-[env(safe-area-inset-bottom,0px)] md:hidden">
+        <nav className="pointer-events-auto flex items-center justify-around bg-surface/95 backdrop-blur-lg border-t border-border px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
