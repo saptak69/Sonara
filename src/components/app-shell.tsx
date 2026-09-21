@@ -267,7 +267,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex items-center h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all bg-surface/40 backdrop-blur-2xl border-b border-white/5">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] md:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all bg-surface/40 backdrop-blur-2xl border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">

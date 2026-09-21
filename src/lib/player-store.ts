@@ -294,7 +294,7 @@ export const usePlayer = create<PlayerState>()(
           recents: remember(s.recents, track),
         });
       },
-      setExpanded: (v) => set({ expanded: v, queueOpen: v ? (!get().lyricsOpen) : false }),
+      setExpanded: (v) => set({ expanded: v, queueOpen: v ? (typeof window !== 'undefined' && window.matchMedia("(min-width: 768px)").matches ? !get().lyricsOpen : false) : false }),
       setQueueOpen: (v) => set({ queueOpen: v, lyricsOpen: v ? false : get().lyricsOpen }),
       setLyricsOpen: (v) => set({ lyricsOpen: v, queueOpen: v ? false : get().queueOpen }),
       setSleepTimer: (minutes) => {
