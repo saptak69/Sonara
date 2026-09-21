@@ -157,8 +157,8 @@ function SearchPage() {
   if (!q) {
     return (
       <div className="stagger-in px-4 py-8 md:px-8 space-y-8">
-        <header>
-          <form onSubmit={onSearchSubmit} className="relative z-50 md:hidden mb-6">
+        <header className="relative z-50">
+          <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
             <input
               value={localQ}
@@ -268,8 +268,8 @@ function SearchPage() {
 
   return (
     <div className="stagger-in space-y-10 px-4 py-6 md:px-8">
-      <header>
-        <form onSubmit={onSearchSubmit} className="relative z-50 md:hidden mb-6">
+      <header className="relative z-50">
+        <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
           <input
             value={localQ}
