@@ -271,7 +271,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
-                <form onSubmit={onSearch} className="relative flex-1">
+                <form onSubmit={onSearch} className="relative z-50 flex-1">
                   <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
                   <input
                     ref={mobileSearchInputRef}
@@ -314,7 +314,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
 
             <div className="hidden md:flex items-center gap-6 flex-1">
-              <form onSubmit={onSearch} className="relative w-full max-w-md">
+              <form onSubmit={onSearch} className="relative z-50 w-full max-w-md">
                 <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
                 <input
                   ref={desktopSearchInputRef}
