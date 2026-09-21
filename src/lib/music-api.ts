@@ -666,12 +666,87 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
   return CURATED_TRACKS.slice(0, limit);
 }
 
+export async function generateWeeklyMix(recents: Track[]): Promise<Track[]> {
+  try {
+    if (!recents || recents.length === 0) {
+      return fetchTrending(20);
+    }
+    
+    // Extract top artists and genres from recent tracks
+    const artists = new Map<string, number>();
+    const genres = new Map<string, number>();
+    
+    recents.forEach(track => {
+      if (track.artist) {
+        artists.set(track.artist, (artists.get(track.artist) || 0) + 1);
+      }
+      if (track.genre) {
+        genres.set(track.genre, (genres.get(track.genre) || 0) + 1);
+      }
+    });
+
+    const topArtists = Array.from(artists.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+    const topGenres = Array.from(genres.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(e => e[0]);
+    
+    const queries: string[] = [];
+    topArtists.forEach(a => queries.push(`${a} popular`));
+    topGenres.forEach(g => queries.push(`${g} hits`));
+    
+    if (queries.length === 0) {
+      return fetchTrending(20);
+    }
+
+    const mix: Track[] = [];
+    const seen = new Set<string>();
+
+    // Fetch from Saavn for highest quality
+    const results = await Promise.allSettled(
+      queries.map(q => searchSaavnTracksServerFn({ data: { query: q, limit: 6 } }))
+    );
+    
+    for (const res of results) {
+      if (res.status === 'fulfilled' && res.value) {
+        for (const t of res.value) {
+          const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+          if (!seen.has(key) && !seen.has(t.id)) {
+            seen.add(key);
+            seen.add(t.id);
+            mix.push(t);
+          }
+        }
+      }
+    }
+    
+    // Add a few trending tracks as well to spice it up
+    const trending = await fetchTrending(5);
+    for (const t of trending) {
+       const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+       if (!seen.has(key) && !seen.has(t.id)) {
+         seen.add(key);
+         seen.add(t.id);
+         mix.push(t);
+       }
+    }
+
+    // Shuffle the mix
+    for (let i = mix.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [mix[i], mix[j]] = [mix[j], mix[i]];
+    }
+
+    return mix.slice(0, 20);
+  } catch (error) {
+    console.error("Error generating weekly mix", error);
+    return fetchTrending(20);
+  }
+}
+
 /**
  * Intelligent Next-Track / Queue Recommendation Algorithm
  * Analyzes the played song's artist, genre, and acoustic vibe to queue matching songs.
  * Ensures Rock stays with Rock/Metal, Bengali stays with Bengali, and prevents random EDM/DJ mixes!
  */
-export async function fetchRelatedQueue(track: Track, limit = 15): Promise<Track[]> {
+export async function fetchRelatedQueue(track: Track, limit = 15, recents: Track[] = []): Promise<Track[]> {
   try {
     if (track.id.startsWith("saavn_")) {
       const similar = await getSimilarSongsServerFn({ data: { id: track.id, limit } });
@@ -752,6 +827,17 @@ export async function fetchRelatedQueue(track: Track, limit = 15): Promise<Track
       ];
     } else {
       queries = [`${track.artist} songs`, `${track.genre || track.artist} popular`];
+      
+      if (recents && recents.length > 0) {
+        const artists = new Map<string, number>();
+        recents.forEach(t => {
+          if (t.artist && t.artist !== track.artist) {
+            artists.set(t.artist, (artists.get(t.artist) || 0) + 1);
+          }
+        });
+        const topArtists = Array.from(artists.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(e => e[0]);
+        topArtists.forEach(a => queries.push(`${a} hits`));
+      }
     }
 
     const results: Track[] = [];

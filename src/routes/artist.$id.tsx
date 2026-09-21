@@ -111,32 +111,33 @@ function ArtistPage() {
     const tracks = communityTracksQuery.data ?? [];
 
     return (
-      <div className="stagger-in px-4 py-6 md:px-8 space-y-10">
-        {/* Banner header if present */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-black/60 p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
-          {profile.bannerUrl ? (
-            <div className="absolute inset-0 -z-10">
-              <img
-                src={profile.bannerUrl}
-                alt={profile.displayName}
-                className="h-full w-full object-cover opacity-35 filter brightness-90 saturate-125"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-            </div>
+      <div className="relative min-h-dvh stagger-in">
+        {/* Background Aura (Mobile) */}
+        <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden md:hidden">
+          {profile.bannerUrl || profile.avatarUrl ? (
+            <img
+              src={profile.bannerUrl || profile.avatarUrl}
+              alt=""
+              className="w-full h-full object-cover opacity-50 blur-[80px] scale-125"
+            />
           ) : (
-            <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-accent/20 via-purple-900/20 to-black" />
+            <div className="h-full w-full bg-gradient-to-br from-accent/20 to-transparent" />
           )}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
+        </div>
 
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
+        <div className="px-4 py-6 md:px-8 pt-4 md:pt-12 space-y-10">
+          <div className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
             <Cover
               src={profile.avatarUrl}
               alt={profile.displayName}
               title={profile.displayName}
               rounded="full"
-              className="size-36 shrink-0 border-2 border-white/20 shadow-2xl sm:size-44"
+              className="size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
             />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+            
+            <div className="min-w-0 flex flex-col items-center md:items-start w-full">
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-2 md:mb-1">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-3 py-0.5 text-xs font-semibold text-accent border border-accent/30">
                   <Sparkles className="size-3.5" />
                   Independent Artist
@@ -149,12 +150,12 @@ function ArtistPage() {
                 ) : null}
               </div>
 
-              <h1 className="mt-2 text-3xl sm:text-5xl font-extrabold tracking-tight text-white drop-shadow-md">
+              <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white drop-shadow-md">
                 {profile.displayName}
               </h1>
-              <p className="mt-1 text-sm font-medium text-subtle">@{profile.handle}</p>
+              <p className="mt-1 text-sm font-medium text-white/60">@{profile.handle}</p>
 
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium text-muted">
+              <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-medium text-white/70">
                 <span>{trackCount} published {trackCount === 1 ? "track" : "tracks"}</span>
                 {totalPlays > 0 ? (
                   <>
@@ -165,25 +166,24 @@ function ArtistPage() {
               </div>
 
               {profile.bio ? (
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted line-clamp-3">
+                <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/50 line-clamp-3">
                   {profile.bio}
                 </p>
               ) : null}
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-8 flex items-center justify-center md:justify-start gap-3 w-full md:w-auto">
                 <Button
                   variant="solid"
-                  className="rounded-full px-6 shadow-lg hover:shadow-accent/25"
+                  className="rounded-full w-full max-w-[240px] md:w-auto md:px-10 h-14 text-base font-bold shadow-lg active:scale-95 transition-transform"
                   onClick={() => tracks.length && playTracks(tracks, 0)}
                   disabled={!tracks.length}
                 >
-                  <Play className="size-4 fill-current mr-1.5" />
+                  <Play className="size-6 fill-current mr-1.5" />
                   Play All
                 </Button>
               </div>
             </div>
           </div>
-        </div>
 
         {/* Tracks section */}
         <section className="space-y-4">
@@ -217,6 +217,7 @@ function ArtistPage() {
           )}
         </section>
       </div>
+    </div>
     );
   }
 
@@ -234,33 +235,49 @@ function ArtistPage() {
   const list = remoteTracksQuery.data ?? [];
 
   return (
-    <div className="stagger-in px-4 py-6 md:px-8 space-y-10">
-      <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-end">
-        <Cover
-          src={a.artworkLg || a.artwork}
-          alt={a.name}
-          title={a.name}
-          rounded="full"
-          className="size-36 shrink-0 sm:size-44 border border-white/10 shadow-xl"
-        />
-        <div className="min-w-0">
-          <p className="text-xs font-medium tracking-[0.16em] text-subtle uppercase">Artist</p>
-          <h1 className="mt-1 text-4xl font-semibold tracking-tight text-white">{a.name}</h1>
-          <p className="mt-2 text-sm text-muted">
-            {formatCount(a.followerCount)} followers
-            {a.trackCount ? ` · ${a.trackCount} tracks` : ""}
-          </p>
-          {a.bio ? <p className="mt-2 line-clamp-3 max-w-xl text-sm text-subtle">{a.bio}</p> : null}
-          <Button
-            variant="solid"
-            className="mt-5 rounded-full px-6"
-            onClick={() => list.length && playTracks(list, 0)}
-          >
-            <Play className="size-4 fill-current mr-1.5" />
-            Play
-          </Button>
-        </div>
+    <div className="relative min-h-dvh stagger-in">
+      {/* Background Aura (Mobile) */}
+      <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden md:hidden">
+        {a.artworkLg || a.artwork ? (
+          <img
+            src={a.artworkLg || a.artwork}
+            alt=""
+            className="w-full h-full object-cover opacity-50 blur-[80px] scale-125"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
       </div>
+
+      <div className="px-4 py-6 md:px-8 pt-4 md:pt-12 space-y-10">
+        <div className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
+          <Cover
+            src={a.artworkLg || a.artwork}
+            alt={a.name}
+            title={a.name}
+            rounded="full"
+            className="size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
+          />
+          <div className="min-w-0 flex flex-col items-center md:items-start w-full">
+            <p className="text-xs font-semibold tracking-[0.2em] text-white/60 uppercase mb-2 md:mb-1">Artist</p>
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">{a.name}</h1>
+            <p className="mt-2 text-sm text-white/70 font-medium">
+              {formatCount(a.followerCount)} followers
+              {a.trackCount ? ` · ${a.trackCount} tracks` : ""}
+            </p>
+            {a.bio ? <p className="mt-3 line-clamp-3 max-w-2xl text-sm text-white/50">{a.bio}</p> : null}
+            
+            <div className="mt-8 flex items-center justify-center md:justify-start gap-3 w-full md:w-auto">
+              <Button 
+                variant="solid" 
+                className="rounded-full w-full max-w-[240px] md:w-auto md:px-10 h-14 text-base font-bold shadow-lg active:scale-95 transition-transform" 
+                onClick={() => list.length && playTracks(list, 0)}
+              >
+                <Play className="size-6 fill-current mr-1.5" />
+                Play All
+              </Button>
+            </div>
+          </div>
+        </div>
 
       <section className="mt-10">
         <h2 className="mb-3 text-xl font-semibold tracking-tight">Popular</h2>
@@ -270,7 +287,7 @@ function ArtistPage() {
       </section>
 
       {(remoteAlbumsQuery.data ?? []).length ? (
-        <section className="mt-10">
+        <section className="mt-10 pb-8">
           <Rail title="Albums">
             {(remoteAlbumsQuery.data ?? []).map((album) => (
               <PlaylistCard key={album.id} playlist={album} />
@@ -278,6 +295,7 @@ function ArtistPage() {
           </Rail>
         </section>
       ) : null}
+      </div>
     </div>
   );
 }

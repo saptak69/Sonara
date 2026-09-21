@@ -42,8 +42,8 @@ function YouPage() {
       <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 mb-12">
         <div className="relative group">
           <Cover 
-            src={user.profileImageUrl} 
-            alt={user.displayName} 
+            src={user.profileImageUrl || ""} 
+            alt={user.displayName || "User"} 
             rounded="full" 
             className="size-32 md:size-40 lg:size-48 border-4 border-surface shadow-2xl transition-transform group-hover:scale-105" 
           />
@@ -105,7 +105,7 @@ function YouPage() {
             <User className="size-8 text-muted mb-3 opacity-50" />
             <p className="text-fg font-medium mb-1">No top artists yet</p>
             <p className="text-muted text-sm max-w-[200px]">Artists you listen to the most will appear here over time.</p>
-            <Link to="/search" className="mt-4 text-sm font-medium text-accent hover:underline">
+            <Link to="/explore" className="mt-4 text-sm font-medium text-accent hover:underline">
               Search for artists
             </Link>
           </div>

@@ -289,7 +289,7 @@ function SearchPage() {
             ) : null}
           </div>
           {(showAllSongs ? (tracks.data ?? []) : (tracks.data ?? []).slice(0, 6)).map((t, i) => (
-            <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
+            <TrackRow key={t.id} track={t} index={i} queue={[]} showPlays />
           ))}
         </section>
       ) : (

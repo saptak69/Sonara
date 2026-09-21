@@ -4,6 +4,7 @@ import type { RepeatMode, Track, UserPlaylist } from "./types";
 
 type PlayerState = {
   queue: Track[];
+  history: number[];
   index: number;
   isPlaying: boolean;
   currentTime: number;
@@ -66,13 +67,24 @@ function remember(list: Track[], track: Track): Track[] {
 }
 
 export function getNextIndex(state: PlayerState): number | null {
-  const { queue, index, repeat, shuffle } = state;
+  const { queue, index, repeat, shuffle, history } = state;
   if (queue.length === 0) return null;
   if (repeat === "one") return index;
   if (shuffle && queue.length > 1) {
-    let n = index;
-    while (n === index) n = Math.floor(Math.random() * queue.length);
-    return n;
+    const unplayed = Array.from({ length: queue.length }, (_, i) => i).filter(
+      (i) => i !== index && !history.includes(i)
+    );
+
+    if (unplayed.length === 0) {
+      if (repeat === "all") {
+        const allExceptCurrent = Array.from({ length: queue.length }, (_, i) => i).filter(
+          (i) => i !== index
+        );
+        return allExceptCurrent[Math.floor(Math.random() * allExceptCurrent.length)];
+      }
+      return null;
+    }
+    return unplayed[Math.floor(Math.random() * unplayed.length)];
   }
   if (index < queue.length - 1) return index + 1;
   if (repeat === "all") return 0;
@@ -83,6 +95,7 @@ export const usePlayer = create<PlayerState>()(
   persist(
     (set, get) => ({
       queue: [],
+      history: [],
       index: 0,
       isPlaying: false,
       currentTime: 0,
@@ -115,6 +128,7 @@ export const usePlayer = create<PlayerState>()(
         if (!start) return;
         set({
           queue: clean,
+          history: [],
           index: i,
           isPlaying: true,
           currentTime: 0,
@@ -127,7 +141,7 @@ export const usePlayer = create<PlayerState>()(
         // If queue is standalone (1-2 tracks), automatically fetch matching genre/artist songs
         if (queue.length <= 2) {
           void import("./music-api").then(({ fetchRelatedQueue }) => {
-            void fetchRelatedQueue(track, 12).then((related) => {
+            void fetchRelatedQueue(track, 12, get().recents).then((related) => {
               const currentS = get();
               if (currentS.queue[currentS.index]?.id === track.id) {
                 get().appendQueue(related);
@@ -149,8 +163,15 @@ export const usePlayer = create<PlayerState>()(
           set({ isPlaying: false });
           return;
         }
+
+        let newHistory = [...s.history, s.index];
+        if (s.shuffle && newHistory.length >= s.queue.length) {
+          newHistory = [s.index];
+        }
+
         const track = s.queue[n];
         set({
+          history: newHistory,
           index: n,
           currentTime: 0,
           isPlaying: true,
@@ -159,14 +180,29 @@ export const usePlayer = create<PlayerState>()(
       },
       prev: () => {
         const s = get();
-        if (s.currentTime > 3) {
+        if (s.currentTime > 3 || (s.shuffle && s.history.length === 0)) {
           set({ currentTime: 0 });
           return;
         }
+
+        if (s.shuffle) {
+          const lastIndex = s.history[s.history.length - 1];
+          const track = s.queue[lastIndex];
+          set({
+            history: s.history.slice(0, -1),
+            index: lastIndex,
+            currentTime: 0,
+            isPlaying: true,
+            recents: track ? remember(s.recents, track) : s.recents,
+          });
+          return;
+        }
+
         if (s.index > 0) {
           const n = s.index - 1;
           const track = s.queue[n];
           set({
+            history: [...s.history, s.index],
             index: n,
             currentTime: 0,
             isPlaying: true,
@@ -244,22 +280,23 @@ export const usePlayer = create<PlayerState>()(
         let index = s.index;
         if (i < s.index) index -= 1;
         if (i === s.index) index = Math.min(index, Math.max(0, queue.length - 1));
-        set({ queue, index, isPlaying: queue.length ? s.isPlaying : false });
+        set({ queue, index, history: [], isPlaying: queue.length ? s.isPlaying : false });
       },
       jumpTo: (i) => {
         const s = get();
         const track = s.queue[i];
         if (!track) return;
         set({
+          history: [...s.history, s.index],
           index: i,
           currentTime: 0,
           isPlaying: true,
           recents: remember(s.recents, track),
         });
       },
-      setExpanded: (v) => set({ expanded: v, queueOpen: v ? get().queueOpen : false }),
-      setQueueOpen: (v) => set({ queueOpen: v }),
-      setLyricsOpen: (v) => set({ lyricsOpen: v }),
+      setExpanded: (v) => set({ expanded: v, queueOpen: v ? (!get().lyricsOpen) : false }),
+      setQueueOpen: (v) => set({ queueOpen: v, lyricsOpen: v ? false : get().lyricsOpen }),
+      setLyricsOpen: (v) => set({ lyricsOpen: v, queueOpen: v ? false : get().queueOpen }),
       setSleepTimer: (minutes) => {
         set({ sleepTimer: minutes ? Date.now() + minutes * 60 * 1000 : null });
       },

@@ -24,23 +24,29 @@ export function TrackRow({
   const current = usePlayer((s) => s.queue[s.index]);
   const isPlaying = usePlayer((s) => s.isPlaying);
   const playTracks = usePlayer((s) => s.playTracks);
+  const playTrack = usePlayer((s) => s.playTrack);
   const toggle = usePlayer((s) => s.toggle);
   const active = current?.id === track.id;
   const startIndex = Math.max(0, queue.findIndex((t) => t.id === track.id));
 
   const handlePlayToggle = () => {
-    if (active) toggle();
-    else playTracks(queue.length ? queue : [track], startIndex < 0 ? 0 : startIndex);
+    if (active) {
+      toggle();
+    } else if (queue.length === 0) {
+      playTrack(track, []);
+    } else {
+      playTracks(queue, startIndex < 0 ? 0 : startIndex);
+    }
   };
 
   return (
     <div
       className={cn(
-        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-lg px-3 py-2 transition-all duration-150 select-none",
-        "border transition-colors",
+        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-2xl px-3 py-2 transition-all duration-150 select-none",
+        "border hover:scale-[1.02] active:scale-[0.98]",
         active
           ? "bg-[var(--color-hover)] border-brass/40"
-          : "border-transparent hover:border-brass/20 hover:bg-[var(--color-surface)]/70",
+          : "border-transparent hover:border-white/5 hover:bg-white/5",
       )}
     >
       {/* Active verdigris ping indicator on far left */}

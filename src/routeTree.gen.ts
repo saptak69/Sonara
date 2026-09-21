@@ -17,7 +17,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RadioRouteImport } from './routes/radio'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as StudioRouteImport } from './routes/studio'
+import { Route as WeeklyMixRouteImport } from './routes/weekly-mix'
 import { Route as YouRouteImport } from './routes/you'
+import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ArtistIdRouteImport } from './routes/artist.$id'
 import { Route as GenreSlugRouteImport } from './routes/genre.$slug'
 import { Route as PlaylistIdRouteImport } from './routes/playlist.$id'
@@ -65,9 +67,19 @@ const StudioRoute = StudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WeeklyMixRoute = WeeklyMixRouteImport.update({
+  id: '/weekly-mix',
+  path: '/weekly-mix',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const YouRoute = YouRouteImport.update({
   id: '/you',
   path: '/you',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArtistIdRoute = ArtistIdRouteImport.update({
@@ -110,7 +122,9 @@ export interface FileRoutesByFullPath {
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
@@ -127,7 +141,9 @@ export interface FileRoutesByTo {
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
@@ -145,7 +161,9 @@ export interface FileRoutesById {
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
   '/playlist/$id': typeof PlaylistIdRoute
@@ -164,7 +182,9 @@ export interface FileRouteTypes {
     | '/radio'
     | '/search'
     | '/studio'
+    | '/weekly-mix'
     | '/you'
+    | '/api/version'
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
@@ -181,7 +201,9 @@ export interface FileRouteTypes {
     | '/radio'
     | '/search'
     | '/studio'
+    | '/weekly-mix'
     | '/you'
+    | '/api/version'
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
@@ -198,7 +220,9 @@ export interface FileRouteTypes {
     | '/radio'
     | '/search'
     | '/studio'
+    | '/weekly-mix'
     | '/you'
+    | '/api/version'
     | '/artist/$id'
     | '/genre/$slug'
     | '/playlist/$id'
@@ -216,7 +240,9 @@ export interface RootRouteChildren {
   RadioRoute: typeof RadioRoute
   SearchRoute: typeof SearchRoute
   StudioRoute: typeof StudioRoute
+  WeeklyMixRoute: typeof WeeklyMixRoute
   YouRoute: typeof YouRoute
+  ApiVersionRoute: typeof ApiVersionRoute
   ArtistIdRoute: typeof ArtistIdRoute
   GenreSlugRoute: typeof GenreSlugRoute
   PlaylistIdRoute: typeof PlaylistIdRoute
@@ -283,11 +309,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/weekly-mix': {
+      id: '/weekly-mix'
+      path: '/weekly-mix'
+      fullPath: '/weekly-mix'
+      preLoaderRoute: typeof WeeklyMixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/you': {
       id: '/you'
       path: '/you'
       fullPath: '/you'
       preLoaderRoute: typeof YouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/artist/$id': {
@@ -344,7 +384,9 @@ const rootRouteChildren: RootRouteChildren = {
   RadioRoute: RadioRoute,
   SearchRoute: SearchRoute,
   StudioRoute: StudioRoute,
+  WeeklyMixRoute: WeeklyMixRoute,
   YouRoute: YouRoute,
+  ApiVersionRoute: ApiVersionRoute,
   ArtistIdRoute: ArtistIdRoute,
   GenreSlugRoute: GenreSlugRoute,
   PlaylistIdRoute: PlaylistIdRoute,

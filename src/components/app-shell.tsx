@@ -16,7 +16,10 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { Cover } from "@/components/cover";
 import { SearchSuggestions } from "@/components/search-suggestions";
-import { formatTime } from "@/lib/format";
+import { requestNotificationPermissions, scheduleWeeklyMix, scheduleRetentionNudge, cancelRetentionNudges } from "@/lib/notifications";
+import { App as CapacitorApp } from "@capacitor/app";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { UpdatePrompt } from "@/components/update-prompt";
 
 const SIDEBAR_NAV = [
   { to: "/", label: "Home", icon: Home },
@@ -47,9 +50,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggle = usePlayer((s) => s.toggle);
   const next = usePlayer((s) => s.next);
   const prev = usePlayer((s) => s.prev);
-  const progress = usePlayer((s) => s.progress);
+  const progress = usePlayer((s) => s.currentTime);
   const duration = usePlayer((s) => s.duration);
-  const seek = usePlayer((s) => s.seek);
+  const seek = usePlayer((s) => s.seekTo);
   const queue = usePlayer((s) => s.queue);
   const index = usePlayer((s) => s.index);
   
@@ -68,6 +71,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Setup Notifications
+    requestNotificationPermissions().then(() => {
+      scheduleWeeklyMix();
+    });
+
+    const appStateSub = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        cancelRetentionNudges();
+      } else {
+        const lastTrack = usePlayer.getState().current();
+        if (lastTrack) {
+          scheduleRetentionNudge(lastTrack.title);
+        }
+      }
+    });
+
+    const notifSub = LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+      const type = action.notification.extra?.action;
+      if (type === 'WEEKLY_MIX') {
+        void navigate({ to: '/weekly-mix' });
+      }
+    });
+
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
       const isSlash = e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement);
@@ -87,8 +113,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
     };
     window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, []);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+      appStateSub.then(s => s.remove());
+      notifSub.then(s => s.remove());
+    };
+  }, [navigate]);
 
   const executeSearch = (queryStr: string) => {
     const query = queryStr.trim();
@@ -112,13 +142,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const upNext = queue.slice(index + 1, index + 5);
 
   return (
-    <div className="min-h-dvh bg-bg text-fg relative isolate selection:bg-accent/30 selection:text-fg font-sans">
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none" aria-hidden="true">
-        <div className="absolute inset-0 bg-bg" />
-        <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-accent/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3" />
-      </div>
-
+    <div className="ambient-bg min-h-dvh text-fg relative isolate selection:bg-accent/30 selection:text-fg font-sans">
+      <UpdatePrompt />
       <PlayerEngine />
       <Toaster
         theme="dark"
@@ -130,7 +155,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className="fixed top-0 left-0 z-20 hidden h-dvh w-sidebar flex-col bg-bg border-r border-border px-6 pt-[calc(2rem+env(safe-area-inset-top,0px))] pb-[calc(var(--spacing-player)+env(safe-area-inset-bottom,0px))] md:flex">
+      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-surface/40 backdrop-blur-3xl border-r border-white/5 px-6 py-6 md:flex shadow-2xl">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -237,12 +262,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main
         id="main-scroll-area"
         className={cn(
-          "transition-all min-w-0 relative h-dvh overflow-y-auto",
+          "transition-all min-w-0 relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-surface/30 backdrop-blur-xl shadow-2xl",
           "md:ml-sidebar",
-          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-28" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
+          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex items-center h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all bg-bg/80 backdrop-blur-xl border-b border-border/50">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all bg-surface/40 backdrop-blur-2xl border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
@@ -332,11 +357,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none", hasTrack ? "" : "md:hidden")}>
-        <div className="pointer-events-auto">
+      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-center gap-3 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] px-4 md:pl-sidebar", hasTrack ? "" : "md:hidden")}>
+        <div className="pointer-events-auto w-full max-w-5xl">
           <PlayerBar />
         </div>
-        <nav className="pointer-events-auto flex items-center justify-around bg-surface/95 backdrop-blur-lg border-t border-border px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden">
+        <nav className="pointer-events-auto flex items-center justify-around bg-surface/60 backdrop-blur-3xl border border-white/10 rounded-full px-2 py-2 w-full max-w-md mx-auto shadow-pop md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
@@ -351,9 +376,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                     window.scrollTo({ top: 0, behavior: "instant" });
                   }
                 }}
-                className={cn("flex flex-1 flex-col items-center justify-center gap-1 transition-colors active:scale-95", active ? "text-accent" : "text-muted hover:text-fg")}
+                className={cn("flex flex-1 flex-col items-center justify-center gap-1 transition-transform active:scale-90", active ? "text-accent" : "text-muted hover:text-fg")}
               >
-                <Icon className={cn("size-6", active ? "fill-accent/20" : "")} strokeWidth={active ? 2.5 : 2} />
+                <div className={cn("p-1.5 rounded-full transition-colors", active ? "bg-accent/20 text-accent" : "")}>
+                  <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                </div>
                 <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
