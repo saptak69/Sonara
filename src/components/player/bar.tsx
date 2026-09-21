@@ -37,7 +37,7 @@ export function PlayerBar() {
   return (
     <>
       {/* Mobile Bar */}
-      <div className="md:hidden mx-2 mb-2 relative bg-surface/60 backdrop-blur-3xl rounded-[1.5rem] border border-white/10 shadow-2xl overflow-hidden">
+      <div className="md:hidden mx-2 relative bg-surface/60 backdrop-blur-3xl rounded-[1.5rem] border border-white/10 shadow-2xl overflow-hidden">
         {/* Mobile slim track progress line - removed transition to make it smooth */}
         {!live && duration > 0 ? (
           <div className="h-0.5 w-full bg-surface absolute top-0 left-0">

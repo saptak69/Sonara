@@ -357,7 +357,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-center gap-3 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] px-4 md:pl-sidebar", hasTrack ? "" : "md:hidden")}>
+      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-center gap-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] px-4 md:pl-sidebar", hasTrack ? "" : "md:hidden")}>
         <div className="pointer-events-auto w-full max-w-5xl">
           <PlayerBar />
         </div>
