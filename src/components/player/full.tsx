@@ -4,8 +4,6 @@ import {
   Heart,
   ListMusic,
   Mic2,
-  Pause,
-  Play,
   Repeat,
   Repeat1,
   Share2,
@@ -14,6 +12,7 @@ import {
   SkipForward,
   MoreHorizontal
 } from "lucide-react";
+import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
 import { LyricsPanel } from "@/components/player/lyrics";
 import { QueueList } from "@/components/player/queue";
@@ -66,11 +65,32 @@ export function FullPlayer() {
               <img
                 src={track.artworkLg || track.artwork || ""}
                 alt=""
-                className="h-full w-full scale-[1.5] object-cover opacity-30 blur-[100px]"
+                className={cn(
+                  "h-full w-full scale-[1.5] object-cover opacity-30 blur-[100px] transition-transform duration-[20s] ease-in-out",
+                  isPlaying && "scale-[1.8] rotate-3"
+                )}
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             ) : null}
             <div className="absolute inset-0 bg-black/40" />
+            
+            {/* Immersive Waveform Visualizer */}
+            {isPlaying && (
+              <div className="absolute bottom-0 left-0 right-0 h-1/3 mix-blend-screen opacity-40 flex items-end justify-between px-8 md:px-32 gap-1 md:gap-2">
+                 {Array.from({length: 40}).map((_, i) => (
+                    <div 
+                       key={i} 
+                       className="flex-1 bg-accent/50 rounded-t-full origin-bottom"
+                       style={{ 
+                          animation: `equalizer ${0.8 + Math.random() * 1.5}s ease-in-out infinite alternate`,
+                          animationDelay: `${Math.random()}s`,
+                          maxHeight: `${30 + Math.random() * 70}%`
+                       }}
+                    />
+                 ))}
+              </div>
+            )}
+            
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
           </div>
 
@@ -172,12 +192,12 @@ export function FullPlayer() {
                   <button className="text-white hover:text-white/80 transition-colors" onClick={prev}>
                     <SkipBack className="size-8 fill-current" />
                   </button>
-                  <button
-                    className="size-16 rounded-full bg-white text-black grid place-items-center hover:scale-105 active:scale-95 transition-transform shadow-lg"
+                  <PlayPauseButton
+                    isPlaying={isPlaying}
                     onClick={toggle}
-                  >
-                    {isPlaying ? <Pause className="size-6 fill-current" /> : <Play className="size-6 fill-current ml-1" />}
-                  </button>
+                    className="size-16 rounded-full bg-white text-black hover:scale-105 shadow-lg"
+                    iconClassName="size-7"
+                  />
                   <button className="text-white hover:text-white/80 transition-colors" onClick={next}>
                     <SkipForward className="size-8 fill-current" />
                   </button>

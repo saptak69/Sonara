@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
 import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Compass, Heart, History, ListMusic, Plus, Trash2 } from "lucide-react";
+import { Compass, Heart, History, ListMusic, Plus, Trash2, Ghost } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 type LibrarySearch = { tab?: "recents" | "favorites" | "playlists" | "radios" };
 
@@ -150,7 +151,7 @@ function LibraryPage() {
           </div>
         ) : (
           <Empty
-            icon={History}
+            icon={Ghost}
             title="No listening history yet"
             text="Songs and live stations you play will automatically appear here."
             action={{ label: "Explore trending tracks", to: "/explore" }}
@@ -249,18 +250,57 @@ function Empty({
   text: string;
   action?: { label: string; to: string };
 }) {
+  // Determine animation based on the icon
+  let animationProps = {};
+  let colorClass = "text-muted";
+  let bgClass = "bg-white/5 border-white/10";
+  
+  if (Icon === Heart) {
+    animationProps = {
+      animate: { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+    };
+    colorClass = "text-rose-400";
+    bgClass = "bg-rose-400/10 border-rose-400/20";
+  } else if (Icon === Ghost) {
+    animationProps = {
+      animate: { y: [0, -8, 0], x: [0, 4, -4, 0] },
+      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+    };
+    colorClass = "text-indigo-400";
+    bgClass = "bg-indigo-400/10 border-indigo-400/20";
+  } else if (Icon === ListMusic) {
+    animationProps = {
+      animate: { rotate: [0, -10, 10, 0], scale: [1, 1.05, 1] },
+      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+    };
+    colorClass = "text-emerald-400";
+    bgClass = "bg-emerald-400/10 border-emerald-400/20";
+  } else {
+    animationProps = {
+      animate: { y: [0, -5, 0] },
+      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+    };
+  }
+
   return (
-    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] px-6 py-14 text-center backdrop-blur-xl">
-      <div className="inline-grid size-12 place-items-center rounded-full bg-white/5 border border-white/10 text-muted mb-3">
-        <Icon className="size-6" />
-      </div>
-      <p className="text-base font-semibold text-fg">{title}</p>
-      <p className="mt-1 text-xs text-muted max-w-sm mx-auto">{text}</p>
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-16 text-center backdrop-blur-xl shadow-2xl">
+      {/* Decorative background glow */}
+      <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full", colorClass.replace("text-", "bg-"))} />
+      
+      <motion.div 
+        className={cn("relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4", bgClass, colorClass)}
+        {...animationProps}
+      >
+        <Icon className="size-8 drop-shadow-sm" />
+      </motion.div>
+      <h3 className="relative text-lg font-bold text-fg tracking-tight">{title}</h3>
+      <p className="relative mt-2 text-sm text-muted max-w-xs mx-auto leading-relaxed">{text}</p>
       {action ? (
-        <div className="mt-5">
+        <div className="relative mt-6">
           <Link
             to={action.to}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 text-fg text-xs font-semibold border border-white/15 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all active:scale-95"
           >
             {action.label}
           </Link>

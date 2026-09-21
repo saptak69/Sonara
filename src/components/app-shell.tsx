@@ -282,6 +282,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       setMobileSuggestionsOpen(true);
                     }}
                     onFocus={() => setMobileSuggestionsOpen(true)}
+                    onMouseDown={(e) => e.stopPropagation()}
                     placeholder="Search for songs, artists..."
                     className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
                   />
@@ -323,6 +324,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     setDesktopSuggestionsOpen(true);
                   }}
                   onFocus={() => setDesktopSuggestionsOpen(true)}
+                  onMouseDown={(e) => e.stopPropagation()}
                   placeholder="Search for songs, artists, albums, or moods..."
                   className="h-11 w-full rounded-full bg-surface hover:bg-hover focus:bg-surface pr-14 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
                 />

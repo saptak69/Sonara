@@ -87,12 +87,26 @@ function YouPage() {
           <h3 className="text-lg font-semibold flex items-center gap-2 text-fg">
             <PlayCircle className="size-5 text-accent" /> Recently Played
           </h3>
-          <div className="bg-surface/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center min-h-[220px]">
-            <PlayCircle className="size-8 text-muted mb-3 opacity-50" />
-            <p className="text-fg font-medium mb-1">No recent activity</p>
-            <p className="text-muted text-sm max-w-[200px]">Your recent listening history will appear here once you start playing music.</p>
-            <Link to="/explore" className="mt-4 text-sm font-medium text-accent hover:underline">
-              Discover new music
+          <div className="relative overflow-hidden bg-surface/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center min-h-[300px] group">
+            {/* Spinning Vinyl */}
+            <div className="relative size-32 mb-6 group-hover:scale-105 transition-transform duration-500">
+              <div className="absolute inset-0 bg-gradient-to-tr from-black via-zinc-900 to-black rounded-full shadow-2xl animate-[vinyl-spin_4s_linear_infinite]">
+                 <div className="absolute inset-2 border border-white/5 rounded-full" />
+                 <div className="absolute inset-4 border border-white/5 rounded-full" />
+                 <div className="absolute inset-6 border border-white/5 rounded-full" />
+                 <div className="absolute inset-8 border border-white/5 rounded-full" />
+                 <div className="absolute inset-10 bg-gradient-to-br from-accent to-[#ff8a6a] rounded-full flex items-center justify-center shadow-inner">
+                   <div className="size-3 bg-black rounded-full border border-white/20" />
+                 </div>
+              </div>
+            </div>
+            
+            <p className="text-fg font-medium mb-2 text-lg">It's a little quiet here</p>
+            <p className="text-muted text-sm max-w-[220px] mb-6">Your recent listening history will appear here once you start playing music.</p>
+            <Link to="/explore">
+              <button className="px-6 py-2.5 bg-accent text-white rounded-full font-medium shadow-lg shadow-accent/20 hover:scale-105 transition-all animate-pulse duration-2000">
+                Discover new music
+              </button>
             </Link>
           </div>
         </div>
@@ -101,12 +115,26 @@ function YouPage() {
           <h3 className="text-lg font-semibold flex items-center gap-2 text-fg">
             <Heart className="size-5 text-red-400" /> Top Artists
           </h3>
-          <div className="bg-surface/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center min-h-[220px]">
-            <User className="size-8 text-muted mb-3 opacity-50" />
-            <p className="text-fg font-medium mb-1">No top artists yet</p>
-            <p className="text-muted text-sm max-w-[200px]">Artists you listen to the most will appear here over time.</p>
-            <Link to="/explore" className="mt-4 text-sm font-medium text-accent hover:underline">
-              Search for artists
+          <div className="relative overflow-hidden bg-surface/30 backdrop-blur-sm border border-border/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center min-h-[300px] group">
+            {/* Spinning Vinyl */}
+            <div className="relative size-32 mb-6 group-hover:scale-105 transition-transform duration-500">
+              <div className="absolute inset-0 bg-gradient-to-tr from-black via-zinc-900 to-black rounded-full shadow-2xl animate-[vinyl-spin_4s_linear_infinite]" style={{ animationDirection: 'reverse' }}>
+                 <div className="absolute inset-2 border border-white/5 rounded-full" />
+                 <div className="absolute inset-4 border border-white/5 rounded-full" />
+                 <div className="absolute inset-6 border border-white/5 rounded-full" />
+                 <div className="absolute inset-8 border border-white/5 rounded-full" />
+                 <div className="absolute inset-10 bg-gradient-to-bl from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-inner">
+                   <div className="size-3 bg-black rounded-full border border-white/20" />
+                 </div>
+              </div>
+            </div>
+            
+            <p className="text-fg font-medium mb-2 text-lg">No top artists yet</p>
+            <p className="text-muted text-sm max-w-[220px] mb-6">Artists you listen to the most will appear here over time.</p>
+            <Link to="/explore">
+              <button className="px-6 py-2.5 bg-surface border border-white/10 text-white rounded-full font-medium hover:bg-white/5 transition-all">
+                Search for artists
+              </button>
             </Link>
           </div>
         </div>

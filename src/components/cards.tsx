@@ -1,7 +1,6 @@
 import { Play } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Cover } from "@/components/cover";
-import { Equalizer } from "@/components/equalizer";
 import { usePlayer } from "@/lib/player-store";
 import type { Artist, Playlist, RadioStation, Track } from "@/lib/types";
 import { radioToTrack } from "@/lib/music-api";
@@ -12,20 +11,26 @@ function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean })
   return (
     <span
       className={cn(
-        "absolute right-2.5 bottom-2.5 grid size-9 place-items-center rounded-full bg-brass text-abyss shadow-md",
-        "translate-y-2 opacity-0 transition-[opacity,transform] duration-200 ease-out",
-        "group-hover:translate-y-0 group-hover:opacity-100",
-        active && playing && "translate-y-0 opacity-100",
+        "absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[2px] opacity-0 transition-opacity duration-300",
+        "group-hover:opacity-100",
+        active && playing && "opacity-100 bg-black/60",
       )}
     >
+      <div className={cn(
+        "grid size-12 place-items-center rounded-full bg-accent/90 text-white shadow-xl transition-transform duration-300",
+        "translate-y-4 group-hover:translate-y-0",
+        active && playing && "translate-y-0 scale-100",
+      )}>
       {active && playing ? (
-        <span className="flex items-center gap-0.5">
-          <span className="size-1 rounded-full bg-abyss animate-bounce" />
-          <span className="size-1 rounded-full bg-abyss animate-bounce delay-100" />
+        <span className="flex items-center gap-1">
+          <div className="w-1 bg-white rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite] h-3" />
+          <div className="w-1 bg-white rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite] h-4" style={{ animationDelay: '0.2s' }} />
+          <div className="w-1 bg-white rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite] h-3" style={{ animationDelay: '0.4s' }} />
         </span>
       ) : (
-        <Play className="size-4 fill-current ml-0.5" />
+        <Play className="size-5 fill-current ml-1" />
       )}
+    </div>
     </span>
   );
 }
@@ -46,7 +51,7 @@ export function AlbumCard({
     <button
       type="button"
       onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
-      className="group relative w-36 shrink-0 snap-start text-left sm:w-44 rounded-xl p-2.5 transition-all duration-200 hover:bg-ink-2 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass"
+      className="group relative w-36 shrink-0 snap-start text-left sm:w-44 rounded-xl p-2.5 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className="relative aspect-square w-full">
         {/* Tactile vinyl disc sliding out on hover with etched label */}
@@ -70,23 +75,38 @@ export function AlbumCard({
 
         {/* Front Album Jacket Cover */}
         <div className={cn(
-          "relative z-10 block overflow-hidden rounded border border-brass/20 bg-abyss transition-all duration-200 group-hover:border-brass group-hover:shadow-lg",
-          active && "border-brass",
+          "relative z-10 block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
         )}>
           <Cover
             src={track.artworkLg || track.artwork}
             alt={track.title}
             title={track.title}
-            className="aspect-square w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+            className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
           />
+          
+          {/* Simulated Video Preview / Hover Visualizer Overlay */}
+          <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
+             {Array.from({length: 12}).map((_, i) => (
+                <div 
+                   key={i} 
+                   className="flex-1 bg-white/50 rounded-t-full origin-bottom"
+                   style={{ 
+                      animation: `equalizer ${0.5 + Math.random()}s ease-in-out infinite alternate`,
+                      animationDelay: `${Math.random()}s`,
+                      maxHeight: `${20 + Math.random() * 40}%`
+                   }}
+                />
+             ))}
+          </div>
+
           <PlayBadge active={active} playing={isPlaying} />
         </div>
       </div>
 
-      <div className="mt-2.5 flex items-baseline justify-between gap-2">
+      <div className="mt-3 flex items-baseline justify-between gap-2">
         <span className={cn(
-          "block truncate font-display font-medium text-sm transition-colors",
-          active ? "text-brass" : "text-paper group-hover:text-brass",
+          "block truncate font-medium text-sm transition-colors",
+          active ? "text-accent" : "text-fg group-hover:text-accent",
         )}>
           {track.title}
         </span>
@@ -106,18 +126,34 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
     <Link
       to="/playlist/$id"
       params={{ id: playlist.id }}
-      className="group w-36 shrink-0 snap-start sm:w-40 rounded-xl p-2.5 transition-all duration-200 hover:bg-ink-2 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass"
+      className="group w-36 shrink-0 snap-start sm:w-40 rounded-xl p-2.5 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
-      <div className="relative block overflow-hidden rounded border border-brass/20 bg-abyss transition-all duration-200 group-hover:border-brass group-hover:shadow-md">
+      <div className="relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
         <Cover
           src={playlist.artworkLg || playlist.artwork}
           alt={playlist.name}
           title={playlist.name}
-          className="aspect-square w-full transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+          className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
         />
+        
+        {/* Simulated Video Preview / Hover Visualizer Overlay */}
+        <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
+           {Array.from({length: 12}).map((_, i) => (
+              <div 
+                 key={i} 
+                 className="flex-1 bg-white/50 rounded-t-full origin-bottom"
+                 style={{ 
+                    animation: `equalizer ${0.5 + Math.random()}s ease-in-out infinite alternate`,
+                    animationDelay: `${Math.random()}s`,
+                    maxHeight: `${20 + Math.random() * 40}%`
+                 }}
+              />
+           ))}
+        </div>
+
         <PlayBadge />
       </div>
-      <span className="mt-2.5 block truncate font-display font-medium text-sm text-paper group-hover:text-brass transition-colors">
+      <span className="mt-3 block truncate font-medium text-sm text-fg group-hover:text-accent transition-colors">
         {playlist.name}
       </span>
       <span className="block truncate font-mono text-xs text-muted mt-0.5">
@@ -133,18 +169,18 @@ export function ArtistCard({ artist }: { artist: Artist }) {
     <Link
       to="/artist/$id"
       params={{ id: artist.id }}
-      className="group w-32 shrink-0 snap-start text-center sm:w-36 rounded-xl p-2 transition-all duration-200 hover:bg-ink-2 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass"
+      className="group w-32 shrink-0 snap-start text-center sm:w-36 rounded-xl p-2 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
-      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full border border-brass/20 bg-abyss transition-all duration-200 group-hover:border-brass group-hover:shadow-md">
+      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
         <Cover
           src={artist.artworkLg || artist.artwork}
           alt={artist.name}
           title={artist.name}
           rounded="full"
-          className="aspect-square w-full transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+          className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
         />
       </div>
-      <span className="mt-2.5 block truncate font-display font-medium text-sm text-paper group-hover:text-brass transition-colors">
+      <span className="mt-3 block truncate font-medium text-sm text-fg group-hover:text-accent transition-colors">
         {artist.name}
       </span>
       <span className="block font-mono text-xs text-muted">Surveyor</span>
@@ -163,21 +199,36 @@ export function RadioCard({ station }: { station: RadioStation }) {
     <button
       type="button"
       onClick={() => playTrack(track)}
-      className="group w-36 shrink-0 snap-start text-left sm:w-40 rounded-2xl p-2 transition-all duration-200 hover:bg-white/[0.04] active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70"
+      className="group w-36 shrink-0 snap-start text-left sm:w-40 rounded-xl p-2.5 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
-      <span className={cn(
-        "relative block overflow-hidden rounded-xl border border-white/10 transition-all duration-300 group-hover:border-white/25 group-hover:shadow-lg",
-        active && "border-accent/50 shadow-[0_0_18px_var(--color-glow)]",
+      <div className={cn(
+        "relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
+        active && "ring-1 ring-accent/50",
       )}>
         <Cover
           src={station.artwork}
           alt={station.name}
           title={station.name}
-          className="aspect-square w-full transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+          className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
         />
+        
+        {/* Simulated Video Preview / Hover Visualizer Overlay */}
+        <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
+           {Array.from({length: 12}).map((_, i) => (
+              <div 
+                 key={i} 
+                 className="flex-1 bg-white/50 rounded-t-full origin-bottom"
+                 style={{ 
+                    animation: `equalizer ${0.5 + Math.random()}s ease-in-out infinite alternate`,
+                    animationDelay: `${Math.random()}s`,
+                    maxHeight: `${20 + Math.random() * 40}%`
+                 }}
+              />
+           ))}
+        </div>
         <PlayBadge active={active} playing={isPlaying} />
-      </span>
-      <span className={cn("mt-2.5 block truncate text-sm font-semibold tracking-tight transition-colors", active ? "text-accent" : "text-fg group-hover:text-white")}>
+      </div>
+      <span className={cn("mt-3 block truncate text-sm font-medium transition-colors", active ? "text-accent" : "text-fg group-hover:text-accent")}>
         {station.name}
       </span>
       <span className="block truncate text-xs text-muted/80">

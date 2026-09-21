@@ -11,6 +11,8 @@ import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
 import { Search as SearchIcon, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { SearchSuggestions } from "@/components/search-suggestions";
 
 type Search = { q: string };
 
@@ -28,6 +30,7 @@ function SearchPage() {
   const rememberSearch = usePlayer((s) => s.rememberSearch);
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [localQ, setLocalQ] = useState(q);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   useEffect(() => {
     setLocalQ(q);
@@ -159,15 +162,35 @@ function SearchPage() {
             <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
             <input
               value={localQ}
-              onChange={(e) => setLocalQ(e.target.value)}
+              onChange={(e) => {
+                setLocalQ(e.target.value);
+                setSuggestionsOpen(true);
+              }}
+              onFocus={() => setSuggestionsOpen(true)}
+              onMouseDown={(e) => e.stopPropagation()}
               placeholder="Search for songs, artists..."
               className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
             />
             {localQ && (
-              <button type="button" onClick={() => setLocalQ("")} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
+              <button type="button" onClick={() => {
+                setLocalQ("");
+                setSuggestionsOpen(false);
+                void navigate({ to: "/search", search: { q: "" } });
+              }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
                 <X className="size-4" />
               </button>
             )}
+            <SearchSuggestions 
+              query={localQ} 
+              isOpen={suggestionsOpen} 
+              onClose={() => setSuggestionsOpen(false)} 
+              onSelectQuery={(newQ) => {
+                setLocalQ(newQ);
+                setSuggestionsOpen(false);
+                rememberSearch(newQ);
+                void navigate({ to: "/search", search: { q: newQ } });
+              }} 
+            />
           </form>
           <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase hidden md:block">Explore Everything</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight hidden md:block">Search</h1>
@@ -193,7 +216,20 @@ function SearchPage() {
               ))}
             </div>
           </section>
-        ) : null}
+        ) : (
+          <div className="py-12 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-700">
+            <motion.div 
+              animate={{ y: [0, -10, 0], rotate: [0, -5, 5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="relative size-24 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shadow-[0_0_40px_rgba(var(--accent-rgb),0.1)] mb-6"
+            >
+              <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full" />
+              <SearchIcon className="size-10 text-accent drop-shadow-md relative z-10" />
+            </motion.div>
+            <h2 className="text-xl font-bold text-fg tracking-tight">What are you looking for?</h2>
+            <p className="mt-2 text-sm text-muted max-w-sm">Search for artists, songs, podcasts, and more.</p>
+          </div>
+        )}
 
         {/* Trending culture & rock searches */}
         <section className="space-y-3">
@@ -237,18 +273,35 @@ function SearchPage() {
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
           <input
             value={localQ}
-            onChange={(e) => setLocalQ(e.target.value)}
+            onChange={(e) => {
+              setLocalQ(e.target.value);
+              setSuggestionsOpen(true);
+            }}
+            onFocus={() => setSuggestionsOpen(true)}
+            onMouseDown={(e) => e.stopPropagation()}
             placeholder="Search for songs, artists..."
             className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
           />
           {localQ && (
             <button type="button" onClick={() => {
               setLocalQ("");
+              setSuggestionsOpen(false);
               void navigate({ to: "/search", search: { q: "" } });
             }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
               <X className="size-4" />
             </button>
           )}
+          <SearchSuggestions 
+            query={localQ} 
+            isOpen={suggestionsOpen} 
+            onClose={() => setSuggestionsOpen(false)} 
+            onSelectQuery={(newQ) => {
+              setLocalQ(newQ);
+              setSuggestionsOpen(false);
+              rememberSearch(newQ);
+              void navigate({ to: "/search", search: { q: newQ } });
+            }} 
+          />
         </form>
         <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Results</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">“{q}”</h1>

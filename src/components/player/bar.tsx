@@ -1,10 +1,22 @@
-import { Heart, ListMusic, Mic2, MonitorSpeaker, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Heart, ListMusic, Mic2, MonitorSpeaker, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { formatTime } from "@/lib/format";
 import { Slider } from "@/components/ui/slider";
+
+function Equalizer({ isPlaying }: { isPlaying: boolean }) {
+  if (!isPlaying) return null;
+  return (
+    <div className="flex items-end gap-0.5 h-3">
+      <div className="w-1 bg-accent rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite]" />
+      <div className="w-1 bg-accent rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite]" style={{ animationDelay: '0.2s' }} />
+      <div className="w-1 bg-accent rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite]" style={{ animationDelay: '0.4s' }} />
+    </div>
+  );
+}
 
 export function PlayerBar() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -54,33 +66,35 @@ export function PlayerBar() {
             className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.98] transition-transform"
             onClick={() => setExpanded(true)}
           >
-            <div className="relative size-10 shrink-0">
+            <div className={cn("relative size-10 shrink-0", isPlaying && "animate-[spin_8s_linear_infinite]")}>
               <Cover
                 src={track.artwork}
                 alt={track.title}
                 title={track.title}
-                className="size-full rounded-md shadow-sm"
+                className="size-full rounded-full shadow-sm"
               />
             </div>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium text-fg">
+            <div className="flex flex-col min-w-0 flex-1 justify-center">
+              <span className="truncate text-sm font-medium text-fg flex items-center gap-2">
                 {track.title}
+                <Equalizer isPlaying={isPlaying} />
               </span>
-              <span className="block truncate text-xs text-muted">
+              <span className="truncate text-xs text-muted">
                 {track.artist}
               </span>
-            </span>
+            </div>
           </button>
 
           <div className="flex shrink-0 items-center gap-4 px-2">
-            <button
-              type="button"
-              aria-label={isPlaying ? "Pause" : "Play"}
-              className="active:scale-90 transition-transform text-fg"
-              onClick={toggle}
-            >
-              {isPlaying ? <Pause className="size-6 fill-current" /> : <Play className="size-6 fill-current ml-0.5" />}
-            </button>
+            <PlayPauseButton
+              isPlaying={isPlaying}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggle();
+              }}
+              className="text-fg"
+              iconClassName="size-6"
+            />
             <button
               type="button"
               aria-label="Next"
@@ -107,12 +121,15 @@ export function PlayerBar() {
           <button className="text-fg hover:text-accent transition-colors" onClick={prev}>
             <SkipBack className="size-5 fill-current" />
           </button>
-          <button
-            className="text-fg hover:scale-105 active:scale-95 transition-transform"
-            onClick={toggle}
-          >
-            {isPlaying ? <Pause className="size-6 fill-current" /> : <Play className="size-6 fill-current ml-0.5" />}
-          </button>
+          <PlayPauseButton
+            isPlaying={isPlaying}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle();
+            }}
+            className="text-fg hover:scale-105"
+            iconClassName="size-6"
+          />
           <button className="text-fg hover:text-accent transition-colors" onClick={next}>
             <SkipForward className="size-5 fill-current" />
           </button>
@@ -129,11 +146,14 @@ export function PlayerBar() {
           className="flex-1 h-[40px] bg-black/20 dark:bg-white/5 rounded-md flex items-center px-1.5 relative group overflow-hidden border border-white/5 shadow-inner cursor-pointer mx-2"
           onClick={() => setExpanded(true)}
         >
-          <Cover src={track.artwork} alt={track.title} className="size-[28px] rounded-[4px] shrink-0 mr-3 shadow-md pointer-events-none" />
+          <div className={cn("shrink-0 mr-3 pointer-events-none transition-transform duration-500", isPlaying && "scale-105")}>
+            <Cover src={track.artwork} alt={track.title} className="size-[28px] rounded-[4px] shadow-md" />
+          </div>
           
           <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none">
-            <span className="truncate font-semibold text-fg text-[12px] leading-tight">
-              {track.title}
+            <span className="flex items-center gap-2 font-semibold text-fg text-[12px] leading-tight">
+              <span className="truncate">{track.title}</span>
+              <Equalizer isPlaying={isPlaying} />
             </span>
             <span className="truncate text-[10px] text-muted leading-tight mt-0.5">
               {track.artist}

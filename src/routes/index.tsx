@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
 import { SiteFooter } from "@/components/site-footer";
 import { usePlayer } from "@/lib/player-store";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -36,25 +37,57 @@ function Home() {
     <div className="w-full pb-20">
       {/* Hero Banner Area */}
       <section className="relative w-full h-[55vh] min-h-[400px] max-h-[600px] flex flex-col justify-end p-8 md:p-12 overflow-hidden bg-surface group">
-        {/* Abstract Sunset Gradient Background */}
+        {/* Abstract Mesh Gradient Background */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1c0d0a] via-[#3d130f] to-[#ff4a3a] opacity-80" />
+          <div 
+            className="absolute inset-0 opacity-80"
+            style={{
+              background: 'radial-gradient(circle at 0% 0%, #3d130f 0%, transparent 50%), radial-gradient(circle at 100% 0%, #ff4a3a 0%, transparent 50%), radial-gradient(circle at 100% 100%, #1c0d0a 0%, transparent 50%), radial-gradient(circle at 0% 100%, #24110e 0%, transparent 50%)',
+              backgroundSize: '200% 200%',
+              animation: 'mesh 15s ease infinite alternate'
+            }}
+          />
           <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bg to-transparent opacity-60" />
           <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-bg to-transparent" />
           
           {/* Subtle glowing orbs */}
           <div className="absolute top-1/4 right-1/4 size-[40vw] bg-[#ff6a3a] rounded-full blur-[120px] mix-blend-screen opacity-40 animate-pulse duration-10000" />
           <div className="absolute bottom-1/4 left-1/3 size-[30vw] bg-[#ff4a3a] rounded-full blur-[100px] mix-blend-screen opacity-30" />
+          
+          {/* Floating Album Art Collage */}
+          <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
+            {topTracks.slice(0, 4).map((track, i) => {
+              const styles = [
+                "top-[10%] right-[10%] w-48 h-48 rotate-12",
+                "top-[40%] right-[25%] w-64 h-64 -rotate-6",
+                "bottom-[5%] right-[5%] w-56 h-56 rotate-6",
+                "-top-[5%] right-[35%] w-72 h-72 -rotate-12 opacity-50",
+              ];
+              const delays = ["0s", "-2s", "-5s", "-7s"];
+              return (
+                <div 
+                  key={track.id}
+                  className={cn("absolute rounded-2xl overflow-hidden shadow-2xl", styles[i])}
+                  style={{ animation: `float 8s ease-in-out infinite alternate ${delays[i]}` }}
+                >
+                  <img src={track.artwork} alt="" className="w-full h-full object-cover" />
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="relative z-10 w-full max-w-4xl">
           <p className="text-accent text-sm font-semibold tracking-[0.2em] uppercase mb-3 animate-in slide-in-from-bottom-4 fade-in duration-700">
             Memory Lanes Exclusive
           </p>
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-white font-medium leading-[1.1] tracking-tight mb-8 animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-150 fill-mode-both">
-            Music for a warmer tomorrow
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-white font-medium leading-[1.1] tracking-tight mb-8">
+            <span className="inline-block animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-150 fill-mode-both">Music</span>{" "}
+            <span className="inline-block animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-300 fill-mode-both">for</span>{" "}
+            <span className="inline-block animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-500 fill-mode-both">a</span>{" "}
+            <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#ff4a3a] to-[#ff8a6a] animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-700 fill-mode-both">warmer tomorrow</span>
           </h1>
-          <div className="flex items-center gap-4 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-300 fill-mode-both">
+          <div className="flex items-center gap-4 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-1000 fill-mode-both">
             <button
               onClick={() => {
                 if (topTracks.length) {
@@ -62,10 +95,12 @@ function Home() {
                   playTracks(topTracks, randomIndex);
                 }
               }}
-              className="px-8 py-3.5 bg-accent text-white rounded-full font-medium shadow-xl shadow-accent/20 hover:scale-105 active:scale-95 transition-all text-sm md:text-base flex items-center gap-2"
+              className="relative group px-8 py-3.5 bg-accent text-white rounded-full font-medium hover:scale-105 active:scale-95 transition-all text-sm md:text-base flex items-center gap-2 overflow-hidden"
             >
-              <Play className="size-5 fill-current" />
-              Listen Now
+              {/* Glow Pulse */}
+              <div className="absolute inset-0 bg-white/20 blur-md animate-pulse group-hover:opacity-100 opacity-0 transition-opacity duration-500" />
+              <Play className="size-5 fill-current relative z-10" />
+              <span className="relative z-10">Listen Now</span>
             </button>
             <button 
               onClick={() => {
