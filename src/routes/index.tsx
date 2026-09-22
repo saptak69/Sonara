@@ -39,13 +39,17 @@ function Home() {
   return (
     <div className="w-full pb-20">
       {/* Hero Banner Area */}
-      <AuroraBackground className="!h-[55vh] !min-h-[400px] !max-h-[600px] justify-end items-start p-8 md:p-12 overflow-hidden group border-b border-border/50">
-        <Meteors number={12} className="opacity-40" />
+      <AuroraBackground className="!h-[55vh] !min-h-[400px] !max-h-[600px] justify-end items-start p-8 md:p-12 overflow-hidden group border-b border-border/50 bg-gradient-to-tr max-md:from-bg max-md:via-bg max-md:to-accent/10">
+        <div className="max-md:hidden w-full h-full absolute inset-0">
+          <Meteors number={12} className="opacity-40" />
+        </div>
         
         {/* Abstract Dark Overlay (To ensure text readability over aurora) */}
         <div className="absolute inset-0 z-0">
-          {/* Endless Parallax Carousel */}
-          <ParallaxCarousel images={topTracks.map(t => t.artwork).filter(Boolean)} />
+          {/* Endless Parallax Carousel - Hidden on mobile for performance */}
+          <div className="max-md:hidden w-full h-full absolute inset-0">
+            <ParallaxCarousel images={topTracks.map(t => t.artwork).filter(Boolean)} />
+          </div>
 
           <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bg to-transparent opacity-60 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
@@ -97,12 +101,12 @@ function Home() {
         <section className="relative w-full py-12 -my-12">
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div 
-              className="absolute inset-0 bg-cover bg-center opacity-[0.04] mix-blend-screen scale-110"
+              className="absolute inset-0 bg-cover bg-center opacity-[0.04] md:mix-blend-screen md:scale-110"
               style={{ 
                 backgroundImage: 'url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop")',
-                animation: 'float 30s ease-in-out infinite alternate' 
               }} 
             />
+            <div className="md:animate-[float_30s_ease-in-out_infinite_alternate] absolute inset-0" />
             <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
           </div>
@@ -120,12 +124,12 @@ function Home() {
         <section className="relative w-full py-12 -my-12">
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div 
-              className="absolute inset-0 bg-cover bg-center opacity-[0.05] mix-blend-screen scale-110"
+              className="absolute inset-0 bg-cover bg-center opacity-[0.05] md:mix-blend-screen md:scale-110"
               style={{ 
                 backgroundImage: 'url("https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop")',
-                animation: 'float 25s ease-in-out infinite alternate-reverse' 
               }} 
             />
+            <div className="md:animate-[float_25s_ease-in-out_infinite_alternate-reverse] absolute inset-0" />
             <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
           </div>
@@ -143,12 +147,12 @@ function Home() {
         <section className="relative w-full py-12 -my-12">
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div 
-              className="absolute inset-0 bg-cover bg-center opacity-[0.04] mix-blend-screen scale-110"
+              className="absolute inset-0 bg-cover bg-center opacity-[0.04] md:mix-blend-screen md:scale-110"
               style={{ 
                 backgroundImage: 'url("https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2000&auto=format&fit=crop")',
-                animation: 'float 35s ease-in-out infinite alternate' 
               }} 
             />
+            <div className="md:animate-[float_35s_ease-in-out_infinite_alternate] absolute inset-0" />
             <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
           </div>

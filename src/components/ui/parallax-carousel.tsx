@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import AutoScroll from "embla-carousel-auto-scroll";
 
@@ -19,7 +19,7 @@ export const ParallaxCarousel = ({ images }: ParallaxCarouselProps) => {
     ]
   );
 
-  const [tweenValues, setTweenValues] = useState<number[]>([]);
+  const tweenNodes = useRef<HTMLElement[]>([]);
 
   const onScroll = useCallback(() => {
     if (!emblaApi) return;
@@ -27,7 +27,7 @@ export const ParallaxCarousel = ({ images }: ParallaxCarouselProps) => {
     const engine = emblaApi.internalEngine();
     const scrollProgress = emblaApi.scrollProgress();
 
-    const styles = emblaApi.scrollSnapList().map((scrollSnap, index) => {
+    emblaApi.scrollSnapList().forEach((scrollSnap, index) => {
       let diffToTarget = scrollSnap - scrollProgress;
 
       if (engine.options.loop) {
@@ -42,11 +42,14 @@ export const ParallaxCarousel = ({ images }: ParallaxCarouselProps) => {
       }
 
       // Calculate parallax translation value
-      return diffToTarget * -20; // 20% parallax effect
+      const translateX = diffToTarget * -20; // 20% parallax effect
+      
+      const node = tweenNodes.current[index];
+      if (node) {
+        node.style.transform = `translate3d(${translateX}%, 0px, 0px)`;
+      }
     });
-
-    setTweenValues(styles);
-  }, [emblaApi, setTweenValues]);
+  }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -76,11 +79,14 @@ export const ParallaxCarousel = ({ images }: ParallaxCarouselProps) => {
               <div className="w-full h-full flex items-center justify-center relative overflow-hidden bg-black">
                 {/* Parallax Image */}
                 <img
+                  ref={(el) => {
+                    if (el) tweenNodes.current[index] = el;
+                  }}
                   className="absolute block w-[150%] max-w-none h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   src={src}
                   alt="Music Cover"
                   style={{
-                    transform: `translate3d(${tweenValues[index] || 0}%, 0px, 0px)`,
+                    transform: `translate3d(0px, 0px, 0px)`,
                   }}
                 />
               </div>
