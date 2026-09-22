@@ -199,7 +199,7 @@ export function SearchSuggestions({
       ref={containerRef}
       onMouseDown={(e) => e.stopPropagation()}
       className={cn(
-        "absolute left-0 right-0 top-full mt-2 z-50 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto overscroll-contain rounded-2xl border border-white/15 bg-black/90 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 [scrollbar-width:thin] touch-pan-y",
+        "absolute left-0 right-0 top-full mt-2 z-50 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-bg p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-150 [scrollbar-width:thin] touch-pan-y",
         className,
       )}
     >

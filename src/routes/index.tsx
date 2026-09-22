@@ -10,6 +10,9 @@ import { fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
 import { SiteFooter } from "@/components/site-footer";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
+import { AuroraBackground } from "@/components/ui/aurora-background";
+import { Meteors } from "@/components/ui/meteors";
+import { ParallaxCarousel } from "@/components/ui/parallax-carousel";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -36,45 +39,16 @@ function Home() {
   return (
     <div className="w-full pb-20">
       {/* Hero Banner Area */}
-      <section className="relative w-full h-[55vh] min-h-[400px] max-h-[600px] flex flex-col justify-end p-8 md:p-12 overflow-hidden bg-surface group">
-        {/* Abstract Mesh Gradient Background */}
+      <AuroraBackground className="!h-[55vh] !min-h-[400px] !max-h-[600px] justify-end items-start p-8 md:p-12 overflow-hidden group border-b border-border/50">
+        <Meteors number={12} className="opacity-40" />
+        
+        {/* Abstract Dark Overlay (To ensure text readability over aurora) */}
         <div className="absolute inset-0 z-0">
-          <div 
-            className="absolute inset-0 opacity-80"
-            style={{
-              background: 'radial-gradient(circle at 0% 0%, #3d130f 0%, transparent 50%), radial-gradient(circle at 100% 0%, #ff4a3a 0%, transparent 50%), radial-gradient(circle at 100% 100%, #1c0d0a 0%, transparent 50%), radial-gradient(circle at 0% 100%, #24110e 0%, transparent 50%)',
-              backgroundSize: '200% 200%',
-              animation: 'mesh 15s ease infinite alternate'
-            }}
-          />
-          <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bg to-transparent opacity-60" />
-          <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-bg to-transparent" />
-          
-          {/* Subtle glowing orbs */}
-          <div className="absolute top-1/4 right-1/4 size-[40vw] bg-[#ff6a3a] rounded-full blur-[120px] mix-blend-screen opacity-40 animate-pulse duration-10000" />
-          <div className="absolute bottom-1/4 left-1/3 size-[30vw] bg-[#ff4a3a] rounded-full blur-[100px] mix-blend-screen opacity-30" />
-          
-          {/* Floating Album Art Collage */}
-          <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
-            {topTracks.slice(0, 4).map((track, i) => {
-              const styles = [
-                "top-[10%] right-[10%] w-48 h-48 rotate-12",
-                "top-[40%] right-[25%] w-64 h-64 -rotate-6",
-                "bottom-[5%] right-[5%] w-56 h-56 rotate-6",
-                "-top-[5%] right-[35%] w-72 h-72 -rotate-12 opacity-50",
-              ];
-              const delays = ["0s", "-2s", "-5s", "-7s"];
-              return (
-                <div 
-                  key={track.id}
-                  className={cn("absolute rounded-2xl overflow-hidden shadow-2xl", styles[i])}
-                  style={{ animation: `float 8s ease-in-out infinite alternate ${delays[i]}` }}
-                >
-                  <img src={track.artwork} alt="" className="w-full h-full object-cover" />
-                </div>
-              );
-            })}
-          </div>
+          {/* Endless Parallax Carousel */}
+          <ParallaxCarousel images={topTracks.map(t => t.artwork).filter(Boolean)} />
+
+          <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bg to-transparent opacity-60 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
         </div>
 
         <div className="relative z-10 w-full max-w-4xl">
@@ -115,44 +89,86 @@ function Home() {
             </button>
           </div>
         </div>
-      </section>
+      </AuroraBackground>
 
       {/* Main Content Rows */}
-      <div className="px-4 md:px-8 space-y-12 mt-12">
-        <section className="space-y-4">
-          <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Made for You</h2>
-          <Rail title="">
-            {topPlaylists.map((p) => (
-              <PlaylistCard key={p.id} playlist={p} />
-            ))}
-          </Rail>
+      <div className="flex flex-col mt-12 gap-16">
+        {/* Made for You - Chill Mood */}
+        <section className="relative w-full py-12 -my-12">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-[0.04] mix-blend-screen scale-110"
+              style={{ 
+                backgroundImage: 'url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop")',
+                animation: 'float 30s ease-in-out infinite alternate' 
+              }} 
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
+          </div>
+          <div className="relative z-10 px-4 md:px-8 space-y-4">
+            <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Made for You</h2>
+            <Rail title="">
+              {topPlaylists.map((p) => (
+                <PlaylistCard key={p.id} playlist={p} />
+              ))}
+            </Rail>
+          </div>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Trending Now</h2>
-          <Rail title="">
-            {topTracks.map((t) => (
-              <AlbumCard key={t.id} track={t} queue={topTracks} />
-            ))}
-          </Rail>
+        {/* Trending Now - Energetic Mood */}
+        <section className="relative w-full py-12 -my-12">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-[0.05] mix-blend-screen scale-110"
+              style={{ 
+                backgroundImage: 'url("https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop")',
+                animation: 'float 25s ease-in-out infinite alternate-reverse' 
+              }} 
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
+          </div>
+          <div className="relative z-10 px-4 md:px-8 space-y-4">
+            <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Trending Now</h2>
+            <Rail title="">
+              {topTracks.map((t) => (
+                <AlbumCard key={t.id} track={t} queue={topTracks} />
+              ))}
+            </Rail>
+          </div>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Artists You Might Like</h2>
-          <Rail title="">
-            {topTracks.map((t) => (
-              <div key={t.id} className="w-32 md:w-44 shrink-0 group cursor-pointer flex flex-col items-center">
-                <div className="w-full aspect-square rounded-full overflow-hidden mb-3 shadow-lg group-hover:shadow-accent/20 transition-all border border-border group-hover:border-accent/50 relative">
-                  <Cover src={t.artwork} alt={t.artist} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Play className="size-8 text-white fill-current" />
+        {/* Artists You Might Like - Nostalgic Mood */}
+        <section className="relative w-full py-12 -my-12">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-[0.04] mix-blend-screen scale-110"
+              style={{ 
+                backgroundImage: 'url("https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=2000&auto=format&fit=crop")',
+                animation: 'float 35s ease-in-out infinite alternate' 
+              }} 
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
+            <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
+          </div>
+          <div className="relative z-10 px-4 md:px-8 space-y-4">
+            <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Artists You Might Like</h2>
+            <Rail title="">
+              {topTracks.map((t) => (
+                <div key={t.id} className="w-32 md:w-44 shrink-0 group cursor-pointer flex flex-col items-center">
+                  <div className="w-full aspect-square rounded-full overflow-hidden mb-3 shadow-lg group-hover:shadow-accent/20 transition-all border border-border group-hover:border-accent/50 relative">
+                    <Cover src={t.artwork} alt={t.artist} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Play className="size-8 text-white fill-current" />
+                    </div>
                   </div>
+                  <p className="text-center font-medium text-fg text-sm truncate w-full group-hover:text-accent transition-colors">{t.artist}</p>
+                  <p className="text-center text-xs text-muted mt-1 uppercase tracking-widest">Artist</p>
                 </div>
-                <p className="text-center font-medium text-fg text-sm truncate w-full group-hover:text-accent transition-colors">{t.artist}</p>
-                <p className="text-center text-xs text-muted mt-1 uppercase tracking-widest">Artist</p>
-              </div>
-            ))}
-          </Rail>
+              ))}
+            </Rail>
+          </div>
         </section>
       </div>
 
