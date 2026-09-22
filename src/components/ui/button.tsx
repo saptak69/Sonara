@@ -2,9 +2,10 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 font-medium transition-[transform,background-color,opacity,color] duration-150 ease-out select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg/40 disabled:pointer-events-none disabled:opacity-40 active:enabled:scale-[0.96]",
+  "inline-flex items-center justify-center gap-2 font-medium transition-[background-color,opacity,color,transform] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg/40 disabled:pointer-events-none disabled:opacity-40 active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out",
   {
     variants: {
       variant: {
@@ -34,11 +35,26 @@ export function Button({
   variant,
   size,
   asChild,
+  onPointerDown,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot : "button";
+  
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    try {
+      Haptics.impact({ style: ImpactStyle.Light });
+    } catch (err) {
+      // Ignore if not on a device that supports haptics
+    }
+    onPointerDown?.(e);
+  };
+
   return (
-    <Comp className={cn(buttonVariants({ variant, size }), className)} {...props} />
+    <Comp 
+      className={cn(buttonVariants({ variant, size }), className)} 
+      onPointerDown={handlePointerDown}
+      {...props} 
+    />
   );
 }

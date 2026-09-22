@@ -96,7 +96,7 @@ function Home() {
       </AuroraBackground>
 
       {/* Main Content Rows */}
-      <div className="flex flex-col mt-12 gap-16">
+      <div className="flex flex-col mt-16 md:mt-24 gap-20 md:gap-24">
         {/* Made for You - Chill Mood */}
         <section className="relative w-full py-12 -my-12">
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -110,8 +110,8 @@ function Home() {
             <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
           </div>
-          <div className="relative z-10 px-4 md:px-8 space-y-4">
-            <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Made for You</h2>
+          <div className="relative z-10 px-4 md:px-12 space-y-6">
+            <h2 className="font-display text-2xl md:text-4xl font-medium text-white tracking-tight">Made for You</h2>
             <Rail title="">
               {topPlaylists.map((p) => (
                 <PlaylistCard key={p.id} playlist={p} />
@@ -133,8 +133,8 @@ function Home() {
             <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
           </div>
-          <div className="relative z-10 px-4 md:px-8 space-y-4">
-            <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Trending Now</h2>
+          <div className="relative z-10 px-4 md:px-12 space-y-6">
+            <h2 className="font-display text-2xl md:text-4xl font-medium text-white tracking-tight">Trending Now</h2>
             <Rail title="">
               {topTracks.map((t) => (
                 <AlbumCard key={t.id} track={t} queue={topTracks} />
@@ -156,11 +156,20 @@ function Home() {
             <div className="absolute inset-0 bg-gradient-to-b from-bg via-bg/80 to-bg" />
             <div className="absolute inset-0 bg-gradient-to-r from-bg via-transparent to-bg" />
           </div>
-          <div className="relative z-10 px-4 md:px-8 space-y-4">
-            <h2 className="font-display text-2xl md:text-3xl font-medium text-white px-2">Artists You Might Like</h2>
+          <div className="relative z-10 px-4 md:px-12 space-y-6">
+            <h2 className="font-display text-2xl md:text-4xl font-medium text-white tracking-tight">Artists You Might Like</h2>
             <Rail title="">
               {topTracks.map((t) => (
-                <div key={t.id} className="w-32 md:w-44 shrink-0 group cursor-pointer flex flex-col items-center">
+                <div 
+                  key={t.id} 
+                  onPointerDown={() => {
+                    try {
+                      const { Haptics, ImpactStyle } = require("@capacitor/haptics");
+                      Haptics.impact({ style: ImpactStyle.Light });
+                    } catch(e) {}
+                  }}
+                  className="w-32 md:w-44 shrink-0 group cursor-pointer flex flex-col items-center transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92] active:duration-100"
+                >
                   <div className="w-full aspect-square rounded-full overflow-hidden mb-3 shadow-lg group-hover:shadow-accent/20 transition-all border border-border group-hover:border-accent/50 relative">
                     <Cover src={t.artwork} alt={t.artist} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

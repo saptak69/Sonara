@@ -6,6 +6,15 @@ import type { Artist, Playlist, RadioStation, Track } from "@/lib/types";
 import { radioToTrack } from "@/lib/music-api";
 import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Haptics, ImpactStyle } from "@capacitor/haptics";
+
+const triggerHaptic = () => {
+  try {
+    Haptics.impact({ style: ImpactStyle.Light });
+  } catch (err) {
+    // Ignore on web
+  }
+};
 
 function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean }) {
   return (
@@ -51,7 +60,8 @@ export function AlbumCard({
     <button
       type="button"
       onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
-      className="group relative w-36 shrink-0 snap-start text-left sm:w-44 rounded-xl p-2.5 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      onPointerDown={triggerHaptic}
+      className="group relative w-36 shrink-0 snap-start text-left sm:w-44 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className="relative aspect-square w-full">
         {/* Tactile vinyl disc sliding out on hover with etched label */}
@@ -126,7 +136,8 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
     <Link
       to="/playlist/$id"
       params={{ id: playlist.id }}
-      className="group w-36 shrink-0 snap-start sm:w-40 rounded-xl p-2.5 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      onPointerDown={triggerHaptic}
+      className="group w-36 shrink-0 snap-start sm:w-40 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className="relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
         <Cover
@@ -169,7 +180,8 @@ export function ArtistCard({ artist }: { artist: Artist }) {
     <Link
       to="/artist/$id"
       params={{ id: artist.id }}
-      className="group w-32 shrink-0 snap-start text-center sm:w-36 rounded-xl p-2 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      onPointerDown={triggerHaptic}
+      className="group w-32 shrink-0 snap-start text-center sm:w-36 rounded-xl p-2 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
         <Cover
@@ -199,7 +211,8 @@ export function RadioCard({ station }: { station: RadioStation }) {
     <button
       type="button"
       onClick={() => playTrack(track)}
-      className="group w-36 shrink-0 snap-start text-left sm:w-40 rounded-xl p-2.5 transition-all duration-300 hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      onPointerDown={triggerHaptic}
+      className="group w-36 shrink-0 snap-start text-left sm:w-40 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className={cn(
         "relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
@@ -253,7 +266,8 @@ export function MoodCard({
     <Link
       to="/search"
       search={{ q: query }}
-      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 border border-white/10 hover:border-white/30 shadow-lg hover:shadow-2xl transition-all duration-300 active:scale-98"
+      onPointerDown={triggerHaptic}
+      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 border border-white/10 hover:border-white/30 shadow-lg hover:shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out"
     >
       {image ? (
         <img

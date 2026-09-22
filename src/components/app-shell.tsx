@@ -359,11 +359,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-center gap-2 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] px-4 md:pl-sidebar", hasTrack ? "" : "md:hidden")}>
+      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-center gap-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] px-5 md:pl-sidebar", hasTrack ? "" : "md:hidden")}>
         <div className="pointer-events-auto w-full max-w-5xl">
           <PlayerBar />
         </div>
-        <nav className="pointer-events-auto flex items-center justify-around max-md:bg-surface/95 bg-surface/60 backdrop-blur-3xl border border-white/10 rounded-full px-2 py-2 w-full max-w-md mx-auto shadow-pop md:hidden">
+        <nav className="pointer-events-auto flex items-center justify-around max-md:bg-surface/95 bg-surface/60 backdrop-blur-3xl border border-white/10 rounded-full px-3 py-2.5 w-full max-w-md mx-auto shadow-[0_16px_40px_rgba(0,0,0,0.8)] md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
@@ -371,6 +371,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link 
                 key={item.to} 
                 to={item.to} 
+                onPointerDown={() => {
+                  try {
+                    const { Haptics, ImpactStyle } = require("@capacitor/haptics");
+                    Haptics.impact({ style: ImpactStyle.Light });
+                  } catch(e) {}
+                }}
                 onClick={() => {
                   if (item.to === "/") {
                     const main = document.getElementById("main-scroll-area");
@@ -378,7 +384,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     window.scrollTo({ top: 0, behavior: "instant" });
                   }
                 }}
-                className={cn("flex flex-1 flex-col items-center justify-center gap-1 transition-transform active:scale-90", active ? "text-accent" : "text-muted hover:text-fg")}
+                className={cn("flex flex-1 flex-col items-center justify-center gap-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92] active:duration-100", active ? "text-accent" : "text-muted hover:text-fg")}
               >
                 <div className={cn("p-1.5 rounded-full transition-colors", active ? "bg-accent/20 text-accent" : "")}>
                   <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
