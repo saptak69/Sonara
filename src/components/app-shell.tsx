@@ -7,6 +7,7 @@ import { PlayerEngine } from "@/components/player/engine";
 import { PlayerBar } from "@/components/player/bar";
 import { FullPlayer } from "@/components/player/full";
 import { QueuePanel } from "@/components/player/queue";
+import { LyricsDrawer } from "@/components/player/lyrics";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { usePlayer } from "@/lib/player-store";
@@ -34,7 +35,7 @@ const SIDEBAR_DISCOVER = [
 
 const MOBILE_NAV = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/search", label: "Search", icon: Search },
+  { to: "/radio", label: "Radio", icon: Radio },
   { to: "/library", label: "Library", icon: Library },
   { to: "/you", label: "You", icon: User },
 ] as const;
@@ -363,10 +364,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
       <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:pl-sidebar", hasTrack ? "" : "lg:hidden")}>
-        <div className="pointer-events-auto w-full max-w-5xl px-3 flex justify-center mb-[env(safe-area-inset-bottom,0px)]">
+        <div className="pointer-events-auto w-full max-w-5xl px-2 flex justify-center mb-1.5">
           <PlayerBar />
         </div>
-        <nav className="pointer-events-auto flex items-center justify-around max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/60 lg:backdrop-blur-3xl border-t border-white/10 px-3 py-2 w-full lg:hidden">
+        <div className="pointer-events-auto px-2 pb-2 w-full lg:hidden">
+          <nav className="flex items-center justify-around max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/60 lg:backdrop-blur-3xl border border-white/10 px-3 py-2 w-full rounded-2xl shadow-2xl">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
@@ -397,10 +399,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+        </div>
       </div>
 
       <FullPlayer />
       <QueuePanel />
+      <LyricsDrawer />
     </div>
   );
 }

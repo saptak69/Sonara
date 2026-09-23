@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import { fetchLyrics } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export function LyricsPanel() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -62,5 +64,28 @@ export function LyricsPanel() {
         <p className="text-sm text-muted">Lyrics not available for this track.</p>
       )}
     </div>
+  );
+}
+
+export function LyricsDrawer() {
+  const open = usePlayer((s) => s.lyricsOpen);
+  const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
+
+  return (
+    <aside
+      data-open={open}
+      className={cn(
+        "fixed top-0 right-0 z-50 flex h-[100dvh] lg:hidden w-full flex-col bg-bg/95 backdrop-blur-3xl transition-transform duration-300",
+        "data-[open=false]:translate-y-full" // slide from bottom since it's lyrics
+      )}
+    >
+      <div className="flex items-center justify-between px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-4 border-b border-white/5 bg-transparent shrink-0">
+        <h2 className="text-lg font-bold text-white tracking-tight">Lyrics</h2>
+        <Button variant="icon" size="iconSm" aria-label="Close lyrics" onClick={() => setLyricsOpen(false)} className="text-white/60 hover:text-white bg-white/10 rounded-full">
+          <X className="size-5" />
+        </Button>
+      </div>
+      <LyricsPanel />
+    </aside>
   );
 }
