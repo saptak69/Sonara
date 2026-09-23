@@ -51,7 +51,8 @@
     -moz-osx-font-smoothing: grayscale;
     background: var(--color-bg);
     color: var(--color-fg);
-    overflow-x: hidden;
+    overflow-x: clip;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -59,7 +60,8 @@
     background: var(--color-bg);
     color: var(--color-fg);
     font-family: var(--font-sans);
-    overflow-x: hidden;
+    overflow-x: clip;
+    -webkit-tap-highlight-color: transparent;
   }
 
   @keyframes float {

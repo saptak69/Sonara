@@ -25,7 +25,8 @@ export type RawSaavnSong = {
 };
 
 export type RawSaavnPlaylist = {
-  id: string;
+  id?: string;
+  listid?: string;
   title?: string;
   listname?: string;
   image?: string;
@@ -142,14 +143,15 @@ export function mapSaavnTrack(s: RawSaavnSong): Track | null {
 }
 
 export function mapSaavnPlaylist(p: RawSaavnPlaylist): Playlist | null {
-  if (!p.id) return null;
+  const id = p.id || p.listid;
+  if (!id) return null;
   const name = cleanHtmlEntities(p.title || p.listname || "Curated Playlist");
   const { artwork, artworkLg } = formatArtwork(p.image);
   const trackCount = Number(p.count || p.more_info?.song_count) || 20;
   const owner = cleanHtmlEntities(p.firstname || p.more_info?.firstname || "Music Editor");
 
   return {
-    id: `saavn_pl_${p.id}`,
+    id: `saavn_pl_${id}`,
     name,
     artwork,
     artworkLg,

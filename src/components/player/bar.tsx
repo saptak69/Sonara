@@ -1,3 +1,4 @@
+import React from "react";
 import { Heart, ListMusic, Mic2, MonitorSpeaker, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
@@ -7,7 +8,7 @@ import { Link } from "@tanstack/react-router";
 import { formatTime } from "@/lib/format";
 import { Slider } from "@/components/ui/slider";
 
-function Equalizer({ isPlaying }: { isPlaying: boolean }) {
+const Equalizer = React.memo(function Equalizer({ isPlaying }: { isPlaying: boolean }) {
   if (!isPlaying) return null;
   return (
     <div className="flex items-end gap-0.5 h-3">
@@ -16,7 +17,7 @@ function Equalizer({ isPlaying }: { isPlaying: boolean }) {
       <div className="w-1 bg-accent rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite]" style={{ animationDelay: '0.4s' }} />
     </div>
   );
-}
+});
 
 export function PlayerBar() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -49,7 +50,7 @@ export function PlayerBar() {
   return (
     <>
       {/* Mobile Bar */}
-      <div className="md:hidden mx-2 relative max-md:bg-surface/95 max-md:backdrop-blur-none bg-surface/60 md:backdrop-blur-3xl rounded-[1.5rem] border border-white/10 shadow-2xl overflow-hidden">
+      <div className="lg:hidden mx-2 relative max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/60 lg:backdrop-blur-3xl rounded-[1.5rem] border border-white/10 shadow-2xl overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
         {/* Mobile slim track progress line - removed transition to make it smooth */}
         {!live && duration > 0 ? (
           <div className="h-0.5 w-full bg-surface absolute top-0 left-0">
@@ -108,7 +109,7 @@ export function PlayerBar() {
       </div>
 
       {/* Desktop Bottom Bar - Apple Music Style */}
-      <div className="hidden md:flex h-[60px] w-[740px] max-w-[95%] mx-auto items-center justify-between px-6 bg-surface/70 backdrop-blur-[40px] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-full">
+      <div className="hidden lg:flex h-[60px] w-[740px] max-w-[95%] mx-auto items-center justify-between px-6 bg-surface/70 backdrop-blur-[40px] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-full mb-[env(safe-area-inset-bottom,0px)]">
         
         {/* Left: Playback Controls */}
         <div className="flex items-center gap-5 w-[200px]">

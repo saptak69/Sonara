@@ -43,10 +43,10 @@ export function TrackRow({
     <div
       className={cn(
         "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-2xl px-3 py-2 transition-all duration-150 select-none",
-        "border hover:scale-[1.02] active:scale-[0.98]",
+        "border lg:hover:scale-[1.02] active:scale-[0.98]",
         active
           ? "bg-[var(--color-hover)] border-brass/40"
-          : "border-transparent hover:border-white/5 hover:bg-white/5",
+          : "border-transparent lg:hover:border-white/5 lg:hover:bg-white/5",
       )}
     >
       {/* Active verdigris ping indicator on far left */}
@@ -74,7 +74,7 @@ export function TrackRow({
             <span
               className={cn(
                 "absolute inset-0 grid place-items-center bg-black/60 transition-opacity duration-150",
-                active ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+                active ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100",
               )}
             >
               {active && isPlaying ? (
@@ -96,14 +96,14 @@ export function TrackRow({
       >
         <div className="flex items-center gap-2">
           {typeof index === "number" ? (
-            <span className="w-5 text-right font-mono text-xs tabular-nums text-brass-dim shrink-0">
+            <span className="hidden lg:inline-block w-5 text-right font-mono text-xs tabular-nums text-brass-dim shrink-0">
               {String(index + 1).padStart(2, "0")}
             </span>
           ) : null}
           <p
             className={cn(
               "truncate text-sm font-medium transition-colors",
-              active ? "text-brass font-medium" : "text-paper group-hover:text-brass",
+              active ? "text-brass font-medium" : "text-paper lg:group-hover:text-brass",
             )}
           >
             {track.title}
@@ -119,7 +119,7 @@ export function TrackRow({
             <Link
               to="/artist/$id"
               params={{ id: track.artistId }}
-              className="hover:text-paper hover:underline transition-colors"
+              className="lg:hover:text-paper lg:hover:underline transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {track.artist}
@@ -151,7 +151,7 @@ export function TrackRow({
                 variant="icon"
                 size="iconSm"
                 aria-label={`Options for ${track.title}`}
-                className="opacity-70 group-hover:opacity-100 transition-opacity hover:bg-brass/10 hover:text-paper"
+                className="opacity-70 lg:group-hover:opacity-100 transition-opacity lg:hover:bg-brass/10 lg:hover:text-paper"
               >
                 <MoreVertical className="size-4 text-brass-dim" />
               </Button>

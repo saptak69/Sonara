@@ -155,7 +155,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-surface/40 backdrop-blur-3xl border-r border-white/5 px-6 py-6 md:flex shadow-2xl">
+      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-surface/40 backdrop-blur-3xl border-r border-white/5 px-6 py-6 lg:flex shadow-2xl">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -262,15 +262,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main
         id="main-scroll-area"
         className={cn(
-          "transition-all min-w-0 relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-surface max-md:bg-surface/90 md:bg-surface/30 md:backdrop-blur-xl shadow-2xl",
-          "md:ml-sidebar",
-          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
+          "transition-all min-w-0 relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-surface max-lg:bg-surface/90 lg:bg-surface/30 lg:backdrop-blur-xl shadow-2xl",
+          "lg:ml-sidebar",
+          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] md:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all max-md:bg-surface/95 max-md:backdrop-blur-none bg-surface/40 md:backdrop-blur-2xl border-b border-white/5">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] lg:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/40 lg:backdrop-blur-2xl border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
-              <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
+              <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 lg:hidden">
                 <form onSubmit={onSearch} className="relative z-50 flex-1">
                   <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
                   <input
@@ -284,36 +284,39 @@ export function AppShell({ children }: { children: ReactNode }) {
                     onFocus={() => setMobileSuggestionsOpen(true)}
                     onMouseDown={(e) => e.stopPropagation()}
                     placeholder="Search for songs, artists..."
-                    className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
+                    className="h-11 w-full rounded-full bg-surface pr-10 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50 text-[16px]"
                   />
                   {q && (
-                    <button type="button" onClick={() => { setQ(""); setMobileSuggestionsOpen(false); }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg">
+                    <button type="button" onClick={() => { setQ(""); setMobileSuggestionsOpen(false); }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg min-h-[44px] min-w-[44px] flex items-center justify-center">
                       <X className="size-4" />
                     </button>
                   )}
                   <SearchSuggestions query={q} isOpen={mobileSuggestionsOpen} onClose={() => setMobileSuggestionsOpen(false)} onSelectQuery={executeSearch} />
                 </form>
-                <button type="button" onClick={() => { setMobileSearchOpen(false); setMobileSuggestionsOpen(false); }} className="text-sm font-medium text-muted hover:text-fg px-2">Cancel</button>
+                <button type="button" onClick={() => { setMobileSearchOpen(false); setMobileSuggestionsOpen(false); }} className="text-sm font-medium text-muted hover:text-fg min-h-[44px] px-2 flex items-center justify-center">Cancel</button>
               </div>
             ) : (
-              <div className="flex items-center justify-between w-full md:hidden">
+              <div className="flex items-center justify-between w-full lg:hidden">
                 <Logo compact={false} />
-                <div className="flex items-center gap-3">
-                  <Link to="/about" className="text-muted hover:text-fg p-2">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setMobileSearchOpen(true)} className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <Search className="size-5" />
+                  </button>
+                  <Link to="/about" className="text-muted hover:text-fg min-h-[44px] min-w-[44px] flex items-center justify-center">
                     <Info className="size-5" />
                   </Link>
                   {user && !user.isDevFallback ? (
-                    <Link to="/studio">
+                    <Link to="/studio" className="flex items-center justify-center min-h-[44px] min-w-[44px]">
                       <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8" />
                     </Link>
                   ) : (
-                    <Link to="/login" className="text-sm font-medium text-accent">Sign In</Link>
+                    <Link to="/login" className="flex items-center justify-center min-h-[44px] px-5 rounded-full bg-accent text-white font-medium text-sm hover:bg-accent/90 transition-colors">Sign In</Link>
                   )}
                 </div>
               </div>
             )}
 
-            <div className="hidden md:flex items-center gap-6 flex-1">
+            <div className="hidden lg:flex items-center gap-6 flex-1">
               <form onSubmit={onSearch} className="relative z-50 w-full max-w-md">
                 <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
                 <input
@@ -359,11 +362,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col items-center gap-3 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] px-5 md:pl-sidebar", hasTrack ? "" : "md:hidden")}>
-        <div className="pointer-events-auto w-full max-w-5xl">
+      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:pl-sidebar", hasTrack ? "" : "lg:hidden")}>
+        <div className="pointer-events-auto w-full max-w-5xl px-3 flex justify-center mb-[env(safe-area-inset-bottom,0px)]">
           <PlayerBar />
         </div>
-        <nav className="pointer-events-auto flex items-center justify-around max-md:bg-surface/95 max-md:backdrop-blur-none bg-surface/60 md:backdrop-blur-3xl border border-white/10 rounded-full px-3 py-2.5 w-full max-w-md mx-auto shadow-[0_16px_40px_rgba(0,0,0,0.8)] md:hidden">
+        <nav className="pointer-events-auto flex items-center justify-around max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/60 lg:backdrop-blur-3xl border-t border-white/10 px-3 py-2 w-full lg:hidden">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;

@@ -21,13 +21,13 @@ function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean })
     <span
       className={cn(
         "absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[2px] opacity-0 transition-opacity duration-300",
-        "group-hover:opacity-100",
+        "lg:group-hover:opacity-100",
         active && playing && "opacity-100 bg-black/60",
       )}
     >
       <div className={cn(
         "grid size-12 place-items-center rounded-full bg-accent/90 text-white shadow-xl transition-transform duration-300",
-        "translate-y-4 group-hover:translate-y-0",
+        "translate-y-4 lg:group-hover:translate-y-0",
         active && playing && "translate-y-0 scale-100",
       )}>
       {active && playing ? (
@@ -61,14 +61,14 @@ export function AlbumCard({
       type="button"
       onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
       onPointerDown={triggerHaptic}
-      className="group relative w-36 shrink-0 snap-start text-left sm:w-44 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      className="group relative w-36 shrink-0 snap-start text-left sm:w-44 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] lg:hover:bg-surface lg:hover:-translate-y-1 lg:hover:shadow-2xl active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className="relative aspect-square w-full">
         {/* Tactile vinyl disc sliding out on hover with etched label */}
         <div
           className={cn(
             "vinyl-etched absolute inset-y-1 right-0 w-[92%] rounded-full transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] pointer-events-none",
-            "group-hover:translate-x-6 group-hover:rotate-12 shadow-xl",
+            "lg:group-hover:translate-x-6 lg:group-hover:rotate-12 shadow-xl",
             active && isPlaying && "translate-x-5 rotate-12",
           )}
           aria-hidden="true"
@@ -85,17 +85,17 @@ export function AlbumCard({
 
         {/* Front Album Jacket Cover */}
         <div className={cn(
-          "relative z-10 block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
+          "relative z-10 block overflow-hidden rounded-lg bg-surface transition-all duration-300 lg:group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
         )}>
           <Cover
             src={track.artworkLg || track.artwork}
             alt={track.title}
             title={track.title}
-            className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
+            className="aspect-square w-full transition-transform duration-[3s] ease-out lg:group-hover:scale-110"
           />
           
           {/* Simulated Video Preview / Hover Visualizer Overlay */}
-          <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
+          <div className="absolute inset-0 z-10 opacity-0 lg:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
              {Array.from({length: 12}).map((_, i) => (
                 <div 
                    key={i} 
@@ -116,7 +116,7 @@ export function AlbumCard({
       <div className="mt-3 flex items-baseline justify-between gap-2">
         <span className={cn(
           "block truncate font-medium text-sm transition-colors",
-          active ? "text-accent" : "text-fg group-hover:text-accent",
+          active ? "text-accent" : "text-fg lg:group-hover:text-accent",
         )}>
           {track.title}
         </span>
@@ -137,18 +137,18 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
       to="/playlist/$id"
       params={{ id: playlist.id }}
       onPointerDown={triggerHaptic}
-      className="group w-36 shrink-0 snap-start sm:w-40 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      className="group w-36 shrink-0 snap-start sm:w-40 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] lg:hover:bg-surface lg:hover:-translate-y-1 lg:hover:shadow-2xl active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
-      <div className="relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
+      <div className="relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 lg:group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
         <Cover
           src={playlist.artworkLg || playlist.artwork}
           alt={playlist.name}
           title={playlist.name}
-          className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
+          className="aspect-square w-full transition-transform duration-[3s] ease-out lg:group-hover:scale-110"
         />
         
         {/* Simulated Video Preview / Hover Visualizer Overlay */}
-        <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
+        <div className="absolute inset-0 z-10 opacity-0 lg:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
            {Array.from({length: 12}).map((_, i) => (
               <div 
                  key={i} 
@@ -164,7 +164,7 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
 
         <PlayBadge />
       </div>
-      <span className="mt-3 block truncate font-medium text-sm text-fg group-hover:text-accent transition-colors">
+      <span className="mt-3 block truncate font-medium text-sm text-fg lg:group-hover:text-accent transition-colors">
         {playlist.name}
       </span>
       <span className="block truncate font-mono text-xs text-muted mt-0.5">
@@ -181,18 +181,18 @@ export function ArtistCard({ artist }: { artist: Artist }) {
       to="/artist/$id"
       params={{ id: artist.id }}
       onPointerDown={triggerHaptic}
-      className="group w-32 shrink-0 snap-start text-center sm:w-36 rounded-xl p-2 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      className="group w-32 shrink-0 snap-start text-center sm:w-36 rounded-xl p-2 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] lg:hover:bg-surface lg:hover:-translate-y-1 lg:hover:shadow-2xl active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
-      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
+      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface transition-all duration-300 lg:group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
         <Cover
           src={artist.artworkLg || artist.artwork}
           alt={artist.name}
           title={artist.name}
           rounded="full"
-          className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
+          className="aspect-square w-full transition-transform duration-[3s] ease-out lg:group-hover:scale-110"
         />
       </div>
-      <span className="mt-3 block truncate font-medium text-sm text-fg group-hover:text-accent transition-colors">
+      <span className="mt-3 block truncate font-medium text-sm text-fg lg:group-hover:text-accent transition-colors">
         {artist.name}
       </span>
       <span className="block font-mono text-xs text-muted">Surveyor</span>
@@ -212,21 +212,21 @@ export function RadioCard({ station }: { station: RadioStation }) {
       type="button"
       onClick={() => playTrack(track)}
       onPointerDown={triggerHaptic}
-      className="group w-36 shrink-0 snap-start text-left sm:w-40 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-surface hover:-translate-y-1 hover:shadow-2xl active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+      className="group w-36 shrink-0 snap-start text-left sm:w-40 rounded-xl p-2.5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] lg:hover:bg-surface lg:hover:-translate-y-1 lg:hover:shadow-2xl active:enabled:scale-[0.95] active:enabled:transition-transform active:enabled:duration-100 active:enabled:ease-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
     >
       <div className={cn(
-        "relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
+        "relative block overflow-hidden rounded-lg bg-surface transition-all duration-300 lg:group-hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)]",
         active && "ring-1 ring-accent/50",
       )}>
         <Cover
           src={station.artwork}
           alt={station.name}
           title={station.name}
-          className="aspect-square w-full transition-transform duration-[3s] ease-out group-hover:scale-110"
+          className="aspect-square w-full transition-transform duration-[3s] ease-out lg:group-hover:scale-110"
         />
         
         {/* Simulated Video Preview / Hover Visualizer Overlay */}
-        <div className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
+        <div className="absolute inset-0 z-10 opacity-0 lg:group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-screen bg-gradient-to-tr from-accent/40 via-transparent to-transparent flex items-end justify-between px-2 pb-2 gap-0.5">
            {Array.from({length: 12}).map((_, i) => (
               <div 
                  key={i} 
@@ -241,7 +241,7 @@ export function RadioCard({ station }: { station: RadioStation }) {
         </div>
         <PlayBadge active={active} playing={isPlaying} />
       </div>
-      <span className={cn("mt-3 block truncate text-sm font-medium transition-colors", active ? "text-accent" : "text-fg group-hover:text-accent")}>
+      <span className={cn("mt-3 block truncate text-sm font-medium transition-colors", active ? "text-accent" : "text-fg lg:group-hover:text-accent")}>
         {station.name}
       </span>
       <span className="block truncate text-xs text-muted/80">
@@ -267,19 +267,19 @@ export function MoodCard({
       to="/search"
       search={{ q: query }}
       onPointerDown={triggerHaptic}
-      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 border border-white/10 hover:border-white/30 shadow-lg hover:shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out"
+      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 border border-white/10 lg:hover:border-white/30 shadow-lg lg:hover:shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.95] active:transition-transform active:duration-100 active:ease-out"
     >
       {image ? (
         <img
           src={image}
           alt={label}
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.75] contrast-[1.08] saturate-[1.15] transition-transform duration-500 ease-out group-hover:scale-110 group-hover:brightness-[0.85]"
+          className="absolute inset-0 h-full w-full object-cover brightness-[0.75] contrast-[1.08] saturate-[1.15] transition-transform duration-500 ease-out lg:group-hover:scale-110 lg:group-hover:brightness-[0.85]"
           loading="lazy"
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 transition-opacity duration-300 group-hover:opacity-85" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 transition-opacity duration-300 lg:group-hover:opacity-85" />
       <div className="relative z-10 flex flex-col">
-        <span className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-md group-hover:text-accent transition-colors">
+        <span className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-md lg:group-hover:text-accent transition-colors">
           {label}
         </span>
         {subtitle ? (
@@ -288,7 +288,7 @@ export function MoodCard({
           </span>
         ) : null}
       </div>
-      <span className="absolute top-3 right-3 grid size-7 place-items-center rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100 scale-75">
+      <span className="absolute top-3 right-3 grid size-7 place-items-center rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white opacity-0 transition-all duration-200 lg:group-hover:opacity-100 lg:group-hover:scale-100 scale-75">
         <Play className="size-3.5 fill-current ml-0.5" />
       </span>
     </Link>

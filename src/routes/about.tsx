@@ -34,7 +34,7 @@ function AboutPage() {
         <section className="space-y-6">
           <h2 className="font-display text-3xl text-white">Our Mission</h2>
           <p className="text-lg text-muted leading-relaxed">
-            Memory Lanes was built with a simple idea: music is the most powerful time machine we have. 
+            Sonara was built with a simple idea: music is the most powerful time machine we have. 
             We wanted to create a player that feels less like a spreadsheet of files, and more like a carefully curated vinyl collection in a warm, dimly lit room.
           </p>
         </section>
@@ -56,7 +56,7 @@ function AboutPage() {
             </div>
             <h3 className="font-display text-xl text-white mb-3">Immersive Design</h3>
             <p className="text-muted leading-relaxed">
-              Every pixel is crafted to bring warmth to your screen. From the fluid animations to the deep sunset glows, Memory Lanes is designed to be a visual treat.
+              Every pixel is crafted to bring warmth to your screen. From the fluid animations to the deep sunset glows, Sonara is designed to be a visual treat.
             </p>
           </div>
         </section>
@@ -65,7 +65,7 @@ function AboutPage() {
           <Heart className="size-12 text-accent mx-auto mb-6 opacity-80" />
           <h2 className="font-display text-3xl text-white">Crafted for You</h2>
           <p className="text-lg text-muted leading-relaxed max-w-2xl mx-auto">
-            Whether you are discovering new independent artists or revisiting old classics, we hope Memory Lanes brings a little more warmth into your everyday life.
+            Whether you are discovering new independent artists or revisiting old classics, we hope Sonara brings a little more warmth into your everyday life.
           </p>
         </section>
       </div>

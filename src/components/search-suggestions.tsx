@@ -217,15 +217,15 @@ export function SearchSuggestions({
                   key={match.id}
                   onSelect={() => handleSelectMatch(match)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors cursor-pointer",
-                    isSelected ? "bg-white/15 text-white" : "hover:bg-white/10 text-fg",
+                    "flex w-full items-center gap-3 rounded-xl px-2.5 py-3 lg:py-2 text-left transition-colors cursor-pointer",
+                    isSelected ? "bg-white/15 text-white" : "lg:hover:bg-white/10 text-fg",
                   )}
                 >
                   <Cover
                     src={match.artwork}
                     alt={match.title}
                     title={match.title}
-                    className="size-9 shrink-0 rounded-lg"
+                    className="size-11 lg:size-9 shrink-0 rounded-lg"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate leading-tight text-white">{match.title}</p>
@@ -274,8 +274,8 @@ export function SearchSuggestions({
                     onClose();
                   }}
                   className={cn(
-                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-sm transition-colors cursor-pointer",
-                    isSelected ? "bg-white/15 text-white font-medium" : "hover:bg-white/10 text-fg/90",
+                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 lg:py-2 text-left text-base lg:text-sm transition-colors cursor-pointer",
+                    isSelected ? "bg-white/15 text-white font-medium" : "lg:hover:bg-white/10 text-fg/90",
                   )}
                 >
                   <div className="flex items-center gap-3 truncate">
@@ -291,7 +291,7 @@ export function SearchSuggestions({
       ) : null}
 
       {/* Footer Navigation Hints */}
-      <div className="mt-2 flex items-center justify-between border-t border-white/10 px-3 pt-2 text-[10px] text-muted/70">
+      <div className="mt-2 hidden lg:flex items-center justify-between border-t border-white/10 px-3 pt-2 text-[10px] text-muted/70">
         <span className="flex items-center gap-1.5">
           <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↑</kbd>
           <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↓</kbd>

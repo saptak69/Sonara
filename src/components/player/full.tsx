@@ -76,15 +76,15 @@ export function FullPlayer() {
             
             {/* Immersive Waveform Visualizer */}
             {isPlaying && (
-              <div className="absolute bottom-0 left-0 right-0 h-1/3 mix-blend-screen opacity-40 flex items-end justify-between px-8 md:px-32 gap-1 md:gap-2">
+              <div className="absolute bottom-0 left-0 right-0 h-1/3 mix-blend-screen opacity-40 flex items-end justify-between px-8 lg:px-32 gap-1 lg:gap-2">
                  {Array.from({length: 40}).map((_, i) => (
                     <div 
                        key={i} 
-                       className="flex-1 bg-accent/50 rounded-t-full origin-bottom"
+                       className={cn("flex-1 bg-accent/50 rounded-t-full origin-bottom", i >= 16 ? "hidden lg:block" : "block")}
                        style={{ 
-                          animation: `equalizer ${0.8 + Math.random() * 1.5}s ease-in-out infinite alternate`,
-                          animationDelay: `${Math.random()}s`,
-                          maxHeight: `${30 + Math.random() * 70}%`
+                          animation: `equalizer ${0.8 + (i % 3) * 0.3}s ease-in-out infinite alternate`,
+                          animationDelay: `${(i % 5) * 0.2}s`,
+                          maxHeight: `${30 + (i % 7) * 10}%`
                        }}
                     />
                  ))}
@@ -95,7 +95,7 @@ export function FullPlayer() {
           </div>
 
           {/* Header - Floating over content */}
-          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-4 pt-[max(env(safe-area-inset-top),16px)] md:px-8 md:py-6 pointer-events-none">
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-4 pt-[max(env(safe-area-inset-top),16px)] lg:px-8 lg:py-6 pointer-events-none">
             <button
               aria-label="Close player"
               onClick={() => setExpanded(false)}
@@ -104,11 +104,11 @@ export function FullPlayer() {
               <ChevronDown className="size-7" strokeWidth={1.5} />
             </button>
             
-            <p className="pointer-events-auto text-[10px] font-semibold tracking-widest text-white/90 uppercase md:hidden bg-black/20 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 shadow-lg truncate max-w-[50%]">
+            <p className="pointer-events-auto text-[10px] font-semibold tracking-widest text-white/90 uppercase lg:hidden bg-black/20 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 shadow-lg truncate max-w-[50%]">
               {track.album || "Now Playing"}
             </p>
 
-            <div className="pointer-events-auto flex md:hidden items-center gap-1 bg-black/20 backdrop-blur-xl rounded-full p-1 shadow-lg border border-white/10">
+            <div className="pointer-events-auto flex lg:hidden items-center gap-1 bg-black/20 backdrop-blur-xl rounded-full p-1 shadow-lg border border-white/10">
               <button
                 aria-label="Options"
                 className="p-1.5 rounded-full text-white/90 hover:text-white transition-colors"
@@ -121,16 +121,16 @@ export function FullPlayer() {
 
           {/* Main Layout Area */}
           <div className={cn(
-            "relative flex-1 flex flex-col md:flex-row px-6 md:px-12 pt-[calc(env(safe-area-inset-top)+80px)] pb-[max(env(safe-area-inset-bottom),32px)] md:pt-12 md:pb-8 overflow-y-auto md:overflow-hidden [scrollbar-width:none] w-full max-w-7xl mx-auto gap-8 md:gap-12 items-center md:items-stretch md:justify-between",
+            "relative flex-1 flex flex-col lg:flex-row px-6 lg:px-12 pt-[calc(env(safe-area-inset-top)+80px)] pb-[max(env(safe-area-inset-bottom),32px)] lg:pt-12 lg:pb-8 overflow-y-auto lg:overflow-hidden [scrollbar-width:none] w-full max-w-7xl mx-auto gap-8 lg:gap-12 items-center lg:items-stretch lg:justify-between",
             panelOpen ? "justify-start" : "justify-center"
           )}>
             
             {/* Left Side: Artwork & Info */}
             <div className={cn(
-              "flex flex-col w-full transition-all duration-500 md:justify-center min-h-min md:py-4 md:w-1/2 md:max-w-[420px]"
+              "flex flex-col w-full transition-all duration-500 lg:justify-center min-h-min lg:py-4 lg:w-1/2 lg:max-w-[420px]"
             )}>
               {/* Artwork */}
-              <div className="w-[70%] md:w-full aspect-square mt-auto md:mt-0 mb-6 md:mb-8 max-h-[65vh] md:max-w-[360px] md:max-h-[360px] mx-auto rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 flex-shrink-0">
+              <div className="w-[min(76vw,320px)] lg:w-full aspect-square mt-auto lg:mt-0 mb-6 lg:mb-8 max-h-[42vh] lg:max-w-[360px] lg:max-h-[360px] mx-auto rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 flex-shrink-0">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
@@ -139,12 +139,12 @@ export function FullPlayer() {
               </div>
 
               {/* Info & Like */}
-              <div className="flex items-center justify-between gap-4 mb-6 md:mb-0">
+              <div className="flex items-center justify-between gap-4 mb-6 lg:mb-0">
                 <div className="min-w-0 flex-1">
-                  <h1 className="font-bold text-white truncate mb-1 transition-all text-2xl md:text-3xl">
+                  <h1 className="font-bold text-white truncate mb-1 transition-all text-2xl lg:text-3xl">
                     {track.title}
                   </h1>
-                  <p className="text-white/60 truncate transition-all text-lg md:text-xl">
+                  <p className="text-white/60 truncate transition-all text-lg lg:text-xl">
                     {track.artist}
                   </p>
                 </div>
@@ -156,7 +156,7 @@ export function FullPlayer() {
                   >
                     <Heart className={cn("size-5", liked && "fill-white text-white")} strokeWidth={1.5} />
                   </button>
-                  <button className="p-2.5 rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-all active:scale-95 hidden md:block">
+                  <button className="p-2.5 rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-all active:scale-95 hidden lg:block">
                     <MoreHorizontal className="size-5" />
                   </button>
                 </div>
@@ -182,36 +182,36 @@ export function FullPlayer() {
                 </div>
 
                 {/* Main Buttons */}
-                <div className="flex items-center justify-between w-full max-w-[280px] md:max-w-[300px] mx-auto mb-8">
+                <div className="flex items-center justify-between w-full max-w-[280px] lg:max-w-[300px] mx-auto mb-8">
                   <button
-                    className={cn("text-white/60 hover:text-white transition-colors", shuffle && "text-accent")}
+                    className={cn("text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-accent")}
                     onClick={toggleShuffle}
                   >
-                    <Shuffle className="size-5 md:size-6" strokeWidth={1.5} />
+                    <Shuffle className="size-5 lg:size-6" strokeWidth={1.5} />
                   </button>
-                  <button className="text-white hover:text-white/80 transition-colors" onClick={prev}>
+                  <button className="text-white hover:text-white/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={prev}>
                     <SkipBack className="size-8 fill-current" />
                   </button>
                   <PlayPauseButton
                     isPlaying={isPlaying}
                     onClick={toggle}
-                    className="size-16 rounded-full bg-white text-black hover:scale-105 shadow-lg"
+                    className="size-16 rounded-full bg-white text-black hover:scale-105 shadow-lg flex items-center justify-center"
                     iconClassName="size-7"
                   />
-                  <button className="text-white hover:text-white/80 transition-colors" onClick={next}>
+                  <button className="text-white hover:text-white/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={next}>
                     <SkipForward className="size-8 fill-current" />
                   </button>
                   <button
-                    className={cn("text-white/60 hover:text-white transition-colors", repeat !== "off" && "text-accent")}
+                    className={cn("text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", repeat !== "off" && "text-accent")}
                     onClick={cycleRepeat}
                   >
-                    {repeat === "one" ? <Repeat1 className="size-5 md:size-6" strokeWidth={1.5} /> : <Repeat className="size-5 md:size-6" strokeWidth={1.5} />}
+                    {repeat === "one" ? <Repeat1 className="size-5 lg:size-6" strokeWidth={1.5} /> : <Repeat className="size-5 lg:size-6" strokeWidth={1.5} />}
                   </button>
                 </div>
 
                 {/* Action Row - Mobile Only */}
-                <div className="flex md:hidden items-center justify-between w-full mt-auto pt-4 border-t border-white/10">
-                  <button className="text-white/60 hover:text-white p-2 transition-colors" onClick={() => {
+                <div className="flex lg:hidden items-center justify-between w-full mt-auto pt-4 border-t border-white/10">
+                  <button className="text-white/60 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => {
                     if (navigator.share) {
                       navigator.share({ title: track.title, text: `Listen to ${track.title} by ${track.artist} on Sonara`, url: window.location.href });
                     }
@@ -219,12 +219,12 @@ export function FullPlayer() {
                     <Share2 className="size-5" />
                   </button>
                   <button 
-                    className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors", lyricsOpen && "bg-accent/20 text-accent hover:bg-accent/30")}
+                    className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors min-h-[44px]", lyricsOpen && "bg-accent/20 text-accent hover:bg-accent/30")}
                     onClick={() => setLyricsOpen(!lyricsOpen)}
                   >
                     <Mic2 className="size-4" /> Lyrics
                   </button>
-                  <button className="text-white/60 hover:text-white p-2 transition-colors" onClick={() => setQueueOpen(true)}>
+                  <button className="text-white/60 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => setQueueOpen(true)}>
                     <ListMusic className="size-5" />
                   </button>
                 </div>
@@ -234,10 +234,10 @@ export function FullPlayer() {
             {/* Right Side: Lyrics or Queue */}
             <div className={cn(
               "w-full transition-all duration-500 relative",
-              "hidden md:block md:w-1/2 md:h-full md:flex md:flex-col" // Always visible on desktop
+              "hidden lg:block lg:w-1/2 lg:h-full lg:flex lg:flex-col" // Always visible on desktop
             )}>
               {/* Desktop Tabs */}
-              <div className="hidden md:flex items-center justify-center mb-6 mt-4">
+              <div className="hidden lg:flex items-center justify-center mb-6 mt-4">
                 <div className="flex bg-white/10 p-1 rounded-full text-sm font-medium shadow-inner">
                   <button
                     className={cn("px-8 py-1.5 rounded-full transition-colors", !lyricsOpen ? "bg-white text-black shadow-md" : "text-white/60 hover:text-white")}
@@ -254,7 +254,7 @@ export function FullPlayer() {
                 </div>
               </div>
 
-              {lyricsOpen ? <LyricsPanel /> : <QueueList className="hidden md:block !pt-0" />}
+              {lyricsOpen ? <LyricsPanel /> : <QueueList className="hidden lg:block !pt-0" />}
             </div>
 
           </div>

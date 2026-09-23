@@ -70,9 +70,9 @@ function Home() {
 
         <div className="relative z-10 w-full max-w-4xl">
           <p className="text-accent text-sm font-semibold tracking-[0.2em] uppercase mb-3 animate-in slide-in-from-bottom-4 fade-in duration-700">
-            Memory Lanes Exclusive
+            Sonara Exclusive
           </p>
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-white font-medium leading-[1.1] tracking-tight mb-8">
+          <h1 className="font-display text-[clamp(3.25rem,8vw,5.5rem)] text-white font-medium leading-[1.05] tracking-tight mb-8">
             <span className="inline-block animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-150 fill-mode-both">Music</span>{" "}
             <span className="inline-block animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-300 fill-mode-both">for</span>{" "}
             <span className="inline-block animate-in slide-in-from-bottom-8 fade-in duration-1000 delay-500 fill-mode-both">a</span>{" "}

@@ -1,0 +1,1 @@
+fetch('https://www.jiosaavn.com/api.php?_format=json&__call=playlist.getDetails&listid=1582205').then(r=>r.json()).then(j=>console.log('songs is array:', Array.isArray(j.songs), 'length:', j.songs?.length, typeof j.songs))

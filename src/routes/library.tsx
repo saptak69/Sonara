@@ -284,7 +284,7 @@ function Empty({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-16 text-center backdrop-blur-xl shadow-2xl">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
       {/* Decorative background glow */}
       <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full", colorClass.replace("text-", "bg-"))} />
       

@@ -42,7 +42,7 @@ export const Route = createRootRoute({
       <head>
         <HeadContent />
       </head>
-      <body className="bg-bg text-fg">
+      <body className="bg-bg text-fg" style={{ backgroundColor: "#070302", color: "#fcfaf9" }}>
         <PreviewHostBridge />
         <PushNotificationsSetup />
         <AuthProvider>
