@@ -262,12 +262,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main
         id="main-scroll-area"
         className={cn(
-          "transition-all min-w-0 relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-surface/30 backdrop-blur-xl shadow-2xl",
+          "transition-all min-w-0 relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-surface max-md:bg-surface/90 md:bg-surface/30 md:backdrop-blur-xl shadow-2xl",
           "md:ml-sidebar",
           hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+1rem)] md:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+1rem)] md:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] md:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all bg-surface/40 backdrop-blur-2xl border-b border-white/5">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] md:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] px-4 md:px-8 transition-all max-md:bg-surface/95 max-md:backdrop-blur-none bg-surface/40 md:backdrop-blur-2xl border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 md:hidden">
@@ -363,7 +363,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto w-full max-w-5xl">
           <PlayerBar />
         </div>
-        <nav className="pointer-events-auto flex items-center justify-around max-md:bg-surface/95 bg-surface/60 backdrop-blur-3xl border border-white/10 rounded-full px-3 py-2.5 w-full max-w-md mx-auto shadow-[0_16px_40px_rgba(0,0,0,0.8)] md:hidden">
+        <nav className="pointer-events-auto flex items-center justify-around max-md:bg-surface/95 max-md:backdrop-blur-none bg-surface/60 md:backdrop-blur-3xl border border-white/10 rounded-full px-3 py-2.5 w-full max-w-md mx-auto shadow-[0_16px_40px_rgba(0,0,0,0.8)] md:hidden">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
