@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
 import { AlbumCard, PlaylistCard } from "@/components/cards";
@@ -19,6 +20,14 @@ export const Route = createFileRoute("/")({ component: Home });
 function Home() {
   const playTracks = usePlayer((s) => s.playTracks);
   const recents = usePlayer((s) => s.recents);
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkIsDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkIsDesktop();
+    window.addEventListener("resize", checkIsDesktop);
+    return () => window.removeEventListener("resize", checkIsDesktop);
+  }, []);
 
   const trending = useQuery({
     queryKey: ["trending"],
@@ -40,16 +49,20 @@ function Home() {
     <div className="w-full pb-20">
       {/* Hero Banner Area */}
       <AuroraBackground className="!h-[55vh] !min-h-[400px] !max-h-[600px] justify-end items-start p-8 md:p-12 overflow-hidden group border-b border-border/50 bg-gradient-to-tr max-md:from-bg max-md:via-bg max-md:to-accent/10">
-        <div className="max-md:hidden w-full h-full absolute inset-0">
-          <Meteors number={12} className="opacity-40" />
-        </div>
+        {isDesktop && (
+          <div className="max-md:hidden w-full h-full absolute inset-0">
+            <Meteors number={12} className="opacity-40" />
+          </div>
+        )}
         
         {/* Abstract Dark Overlay (To ensure text readability over aurora) */}
         <div className="absolute inset-0 z-0">
-          {/* Endless Parallax Carousel - Hidden on mobile for performance */}
-          <div className="max-md:hidden w-full h-full absolute inset-0">
-            <ParallaxCarousel images={topTracks.map(t => t.artwork).filter(Boolean)} />
-          </div>
+          {/* Endless Parallax Carousel - Unmounted on mobile for performance */}
+          {isDesktop && (
+            <div className="max-md:hidden w-full h-full absolute inset-0">
+              <ParallaxCarousel images={topTracks.map(t => t.artwork).filter(Boolean)} />
+            </div>
+          )}
 
           <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bg to-transparent opacity-60 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
