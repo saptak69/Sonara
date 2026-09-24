@@ -143,8 +143,8 @@ export function FullPlayer() {
               {/* Info & Controls Panel */}
               <div className="w-full sonara-glass-strong rounded-t-3xl lg:rounded-3xl border-t lg:border border-white/10 p-6 max-lg:-mx-6 max-lg:px-6 max-lg:w-[100vw] mt-auto lg:mt-0 flex-shrink-0">
                 {/* Info & Like */}
-                <div className="flex items-center justify-between gap-4 mb-4 lg:mb-6">
-                    <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-4 mb-4 lg:mb-6 overflow-hidden">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                     <MarqueeText text={track.title} className="font-bold text-white mb-1 transition-all text-2xl lg:text-3xl" />
                     <MarqueeText text={track.artist} className="text-white/60 transition-all text-lg lg:text-xl" />
                 </div>

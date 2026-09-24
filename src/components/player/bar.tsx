@@ -77,7 +77,7 @@ export function PlayerBar() {
               />
             </div>
             <div className="flex flex-col min-w-0 flex-1 justify-center overflow-hidden">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-hidden w-full">
                 <MarqueeText text={track.title} className="text-sm font-medium text-fg flex-1 min-w-0" />
                 <Equalizer isPlaying={isPlaying} />
               </div>
@@ -153,7 +153,7 @@ export function PlayerBar() {
           </div>
           
           <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none overflow-hidden">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-hidden w-full">
               <MarqueeText text={track.title} className="font-semibold text-fg text-[12px] leading-tight flex-1 min-w-0" />
               <Equalizer isPlaying={isPlaying} />
             </div>
