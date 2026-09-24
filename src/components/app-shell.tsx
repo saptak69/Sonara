@@ -21,6 +21,7 @@ import { requestNotificationPermissions, scheduleWeeklyMix, scheduleRetentionNud
 import { App as CapacitorApp } from "@capacitor/app";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { UpdatePrompt } from "@/components/update-prompt";
+import { motion } from "framer-motion";
 
 const SIDEBAR_NAV = [
   { to: "/", label: "Home", icon: Home },
@@ -174,13 +175,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                     window.scrollTo({ top: 0, behavior: "instant" });
                   }
                 }}
-                className={cn(
-                  "flex h-10 items-center gap-4 rounded-lg px-3 text-sm font-medium transition-all duration-150 active:scale-[0.98]",
-                  active ? "text-accent bg-accent/10" : "text-muted hover:text-fg hover:bg-hover",
-                )}
+                className="group relative isolate flex h-10 items-center gap-4 rounded-lg px-3 text-sm font-medium transition-all duration-150 active:scale-[0.98]"
               >
-                <Icon className="size-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
-                {item.label}
+                {active && (
+                  <motion.div
+                    layoutId="desktop-nav-glow"
+                    className="absolute inset-0 z-[-1] rounded-lg"
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <Icon className={cn("size-5 shrink-0 transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")} strokeWidth={active ? 2.5 : 2} />
+                <span className={cn("transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")}>{item.label}</span>
               </Link>
             );
           })}
@@ -198,13 +204,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={item.label}
                   to={item.to}
                   search={"search" in item ? item.search : undefined}
-                  className={cn(
-                    "flex h-10 items-center gap-4 rounded-lg px-3 text-sm font-medium transition-all duration-150 active:scale-[0.98]",
-                    active ? "text-accent bg-accent/10" : "text-muted hover:text-fg hover:bg-hover",
-                  )}
+                  className="group relative isolate flex h-10 items-center gap-4 rounded-lg px-3 text-sm font-medium transition-all duration-150 active:scale-[0.98]"
                 >
-                  <Icon className="size-5 shrink-0" strokeWidth={active ? 2.5 : 2} />
-                  {item.label}
+                  {active && (
+                    <motion.div
+                      layoutId="desktop-nav-glow"
+                      className="absolute inset-0 z-[-1] rounded-lg"
+                      style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    />
+                  )}
+                  <Icon className={cn("size-5 shrink-0 transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")} strokeWidth={active ? 2.5 : 2} />
+                  <span className={cn("transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")}>{item.label}</span>
                 </Link>
               );
             })}
@@ -368,8 +379,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <PlayerBar />
         </div>
         <div className="pointer-events-auto px-2 pb-2 w-full lg:hidden">
-          <nav className="flex items-center justify-around sonara-glass-strong border border-white/10 px-3 py-2 w-full rounded-2xl shadow-2xl">
-          {MOBILE_NAV.map((item) => {
+          <nav className="relative isolate flex items-center justify-around sonara-glass-strong border border-white/10 px-2 py-2 w-full rounded-full shadow-2xl">
+          {MOBILE_NAV.map((item, i) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
             return (
@@ -389,12 +400,27 @@ export function AppShell({ children }: { children: ReactNode }) {
                     window.scrollTo({ top: 0, behavior: "instant" });
                   }
                 }}
-                className={cn("flex flex-1 flex-col items-center justify-center gap-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92] active:duration-100", active ? "text-accent" : "text-muted hover:text-fg")}
+                className="group relative isolate flex flex-1 flex-col items-center justify-center gap-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92] active:duration-100 py-1"
               >
-                <div className={cn("p-1.5 rounded-full transition-colors", active ? "bg-accent/20 text-accent" : "")}>
+                {active && (
+                  <motion.div
+                    layoutId="mobile-nav-glow"
+                    className={cn(
+                      "absolute -inset-y-1 rounded-full z-[-1]",
+                      i === 0 ? "-left-2 -right-1" : i === MOBILE_NAV.length - 1 ? "-left-1 -right-2" : "-inset-x-1"
+                    )}
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <motion.div
+                  animate={{ scale: active ? 1.15 : 1, y: active ? -1 : 0 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  className={cn("transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")}
+                >
                   <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
-                </div>
-                <span className="text-[10px] font-medium">{item.label}</span>
+                </motion.div>
+                <span className={cn("text-[10px] font-medium transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")}>{item.label}</span>
               </Link>
             );
           })}

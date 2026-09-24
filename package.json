@@ -70,7 +70,7 @@
     "embla-carousel-auto-scroll": "^8.6.0",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^13.4.0",
+    "framer-motion": "^13.4.2",
     "jose": "6.2.9",
     "kysely": "^0.28.5",
     "lucide-react": "^0.510.0",

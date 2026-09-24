@@ -61,12 +61,12 @@ function Explore() {
     <div className="stagger-in space-y-10 px-4 py-6 md:px-8">
       <header>
         <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Discover</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Explore</h1>
+        <h1 className="mt-1 font-display text-3xl md:text-4xl font-medium tracking-tight">Explore</h1>
       </header>
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Featured genres</h2>
+          <h2 className="font-display text-xl md:text-2xl font-medium tracking-tight text-white">Featured genres</h2>
           <p className="text-xs text-muted">Explore distinct sounds and musical sub-cultures</p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

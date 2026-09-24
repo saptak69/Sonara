@@ -100,7 +100,7 @@ function Home() {
                 const shuffled = [...pool].sort(() => Math.random() - 0.5);
                 playTracks(shuffled, 0);
               }}
-              className="px-8 py-3.5 bg-white/10 backdrop-blur-md text-white rounded-full font-medium hover:bg-white/20 transition-colors text-sm md:text-base border border-white/10"
+              className="px-8 py-3.5 sonara-glass-light text-white rounded-full font-medium hover:brightness-110 transition-all text-sm md:text-base"
             >
               Shuffle
             </button>

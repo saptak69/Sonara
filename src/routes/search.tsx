@@ -208,7 +208,7 @@ function SearchPage() {
                   key={s}
                   to="/search"
                   search={{ q: s }}
-                  className="rounded-full bg-white/5 border border-white/10 px-3.5 py-1.5 text-xs text-fg/80 hover:text-white hover:bg-white/15 transition-all"
+                  className="rounded-full sonara-glass-light px-3.5 py-1.5 text-xs text-fg/80 hover:text-white hover:brightness-110 transition-all"
                   onClick={() => rememberSearch(s)}
                 >
                   {s}
@@ -240,7 +240,7 @@ function SearchPage() {
                 key={item.label}
                 to="/search"
                 search={{ q: item.label }}
-                className="group inline-flex items-center gap-2 rounded-xl border border-white/10 bg-surface/60 hover:bg-white/10 px-3.5 py-2 text-sm transition-all duration-200 active:scale-95 shadow-sm"
+                className="group inline-flex items-center gap-2 rounded-xl sonara-glass-light hover:brightness-110 px-3.5 py-2 text-sm transition-all duration-200 active:scale-95 shadow-sm"
                 onClick={() => rememberSearch(item.label)}
               >
                 <span className="font-medium text-fg group-hover:text-accent transition-colors">{item.label}</span>

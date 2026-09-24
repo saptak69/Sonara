@@ -12,7 +12,7 @@ export function SectionHeader({
   title: string;
   to?: RailTo;
 }) {
-  const heading = <h2 className="text-xl font-semibold tracking-tight">{title}</h2>;
+  const heading = <h2 className="font-display text-xl md:text-2xl font-medium tracking-tight">{title}</h2>;
   if (!to) return heading;
   return (
     <Link to={to} className="hover:underline">

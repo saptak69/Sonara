@@ -81,7 +81,7 @@ function LibraryPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Yours</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">Library</h1>
+          <h1 className="mt-1 font-display text-3xl md:text-4xl font-medium tracking-tight">Library</h1>
         </div>
         <Button
           variant="chip"
@@ -109,17 +109,20 @@ function LibraryPage() {
           <button
             key={id}
             type="button"
-            className={cn(
-              "rounded-full px-4 py-2 text-xs md:text-sm font-semibold transition-all duration-150 active:scale-95 shrink-0 flex items-center gap-2",
-              tab === id
-                ? "bg-white/15 text-fg border border-white/20 shadow-sm backdrop-blur-md"
-                : "bg-white/5 text-muted hover:bg-white/10 hover:text-fg",
-            )}
+            className="group relative isolate flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-150 md:text-sm active:scale-95"
             onClick={() => handleTabChange(id)}
           >
-            <span>{label}</span>
+            {tab === id && (
+              <motion.div
+                layoutId="library-tab-glow"
+                className="absolute inset-0 z-[-1] rounded-full"
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              />
+            )}
+            <span className={cn("transition-colors relative z-10", tab === id ? "text-fg" : "text-muted group-hover:text-fg")}>{label}</span>
             {count > 0 ? (
-              <span className="text-[10px] opacity-60 font-mono">({count})</span>
+              <span className={cn("text-[10px] font-mono transition-colors relative z-10", tab === id ? "text-fg/80" : "text-muted/60 group-hover:text-fg/80")}>({count})</span>
             ) : null}
           </button>
         ))}

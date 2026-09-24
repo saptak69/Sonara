@@ -45,14 +45,14 @@ export function TrackRow({
         "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-2xl px-3 py-2 transition-all duration-150 select-none",
         "border lg:hover:scale-[1.02] active:scale-[0.98]",
         active
-          ? "bg-[var(--color-hover)] border-brass/40"
-          : "border-transparent lg:hover:border-white/5 lg:hover:bg-white/5",
+          ? "bg-white/[0.06] border-accent/30"
+          : "border-transparent lg:hover:border-white/5 lg:hover:bg-white/[0.04]",
       )}
     >
       {/* Active verdigris ping indicator on far left */}
       {active && (
         <span
-          className="absolute left-1.5 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-verdigris shadow-[0_0_6px_#4a8f7f] animate-pulse"
+          className="absolute left-1.5 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-accent shadow-[0_0_6px_rgba(255,74,58,0.5)] animate-pulse"
           aria-hidden="true"
         />
       )}
@@ -62,7 +62,7 @@ export function TrackRow({
           <button
             type="button"
             aria-label={active && isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
-            className="relative size-12 shrink-0 rounded-md overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brass/60 border border-brass/15"
+            className="relative size-12 shrink-0 rounded-md overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/60 border border-white/10"
             onClick={handlePlayToggle}
           >
             <Cover
@@ -80,7 +80,7 @@ export function TrackRow({
               {active && isPlaying ? (
                 <Equalizer />
               ) : (
-                <Play className="size-5 fill-paper text-paper ml-0.5" />
+                <Play className="size-5 fill-fg text-fg ml-0.5" />
               )}
             </span>
           </button>
@@ -96,22 +96,22 @@ export function TrackRow({
       >
         <div className="flex items-center gap-2">
           {typeof index === "number" ? (
-            <span className="hidden lg:inline-block w-5 text-right font-mono text-xs tabular-nums text-brass-dim shrink-0">
+            <span className="hidden lg:inline-block w-5 text-right font-mono text-xs tabular-nums text-muted shrink-0">
               {String(index + 1).padStart(2, "0")}
             </span>
           ) : null}
           <p
             className={cn(
               "truncate text-sm font-medium transition-colors",
-              active ? "text-brass font-medium" : "text-paper lg:group-hover:text-brass",
+              active ? "text-accent font-medium" : "text-fg lg:group-hover:text-accent",
             )}
           >
             {track.title}
           </p>
         </div>
-        <p className="truncate text-xs text-brass-dim flex items-center gap-1.5 pl-0.5 mt-0.5 font-mono text-[11px]">
+        <p className="truncate text-xs text-muted flex items-center gap-1.5 pl-0.5 mt-0.5 font-mono text-[11px]">
           {track.kind === "radio" && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-verdigris uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-accent uppercase tracking-wider">
               <Radio className="size-2.5 animate-pulse" /> Live
             </span>
           )}
@@ -119,7 +119,7 @@ export function TrackRow({
             <Link
               to="/artist/$id"
               params={{ id: track.artistId }}
-              className="lg:hover:text-paper lg:hover:underline transition-colors"
+              className="lg:hover:text-fg lg:hover:underline transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {track.artist}
@@ -136,9 +136,9 @@ export function TrackRow({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="hidden w-12 text-right font-mono text-xs tabular-nums text-brass-dim sm:block">
+        <span className="hidden w-12 text-right font-mono text-xs tabular-nums text-muted sm:block">
           {track.kind === "radio" ? (
-            <span className="text-[10px] font-bold tracking-widest text-verdigris">LIVE</span>
+            <span className="text-[10px] font-bold tracking-widest text-accent">LIVE</span>
           ) : (
             formatTime(track.duration)
           )}
@@ -151,9 +151,9 @@ export function TrackRow({
                 variant="icon"
                 size="iconSm"
                 aria-label={`Options for ${track.title}`}
-                className="opacity-70 lg:group-hover:opacity-100 transition-opacity lg:hover:bg-brass/10 lg:hover:text-paper"
+                className="opacity-70 lg:group-hover:opacity-100 transition-opacity lg:hover:bg-accent/10 lg:hover:text-fg"
               >
-                <MoreVertical className="size-4 text-brass-dim" />
+                <MoreVertical className="size-4 text-muted" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">More options</TooltipContent>

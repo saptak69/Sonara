@@ -21,6 +21,7 @@ import { formatTime } from "@/lib/format";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export function FullPlayer() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -241,18 +242,32 @@ export function FullPlayer() {
             )}>
               {/* Desktop Tabs */}
               <div className="hidden lg:flex items-center justify-center mb-6 mt-4">
-                <div className="flex bg-white/10 p-1 rounded-full text-sm font-medium shadow-inner">
+                <div className="flex sonara-glass-light p-1 rounded-full text-sm font-medium">
                   <button
-                    className={cn("px-8 py-1.5 rounded-full transition-colors", !lyricsOpen ? "bg-white text-black shadow-md" : "text-white/60 hover:text-white")}
+                    className="group relative isolate px-8 py-1.5 rounded-full transition-colors text-white/60 hover:text-white"
                     onClick={() => { setQueueOpen(true); setLyricsOpen(false); }}
                   >
-                    Queue
+                    {!lyricsOpen && (
+                      <motion.div
+                        layoutId="player-tab-glow"
+                        className="absolute inset-0 z-[-1] rounded-full bg-white/15 border border-white/10 shadow-md"
+                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                      />
+                    )}
+                    <span className={cn("relative z-10 transition-colors", !lyricsOpen ? "text-white font-semibold" : "text-white/60")}>Queue</span>
                   </button>
                   <button
-                    className={cn("px-8 py-1.5 rounded-full transition-colors", lyricsOpen ? "bg-white text-black shadow-md" : "text-white/60 hover:text-white")}
+                    className="group relative isolate px-8 py-1.5 rounded-full transition-colors text-white/60 hover:text-white"
                     onClick={() => { setLyricsOpen(true); setQueueOpen(false); }}
                   >
-                    Lyrics
+                    {lyricsOpen && (
+                      <motion.div
+                        layoutId="player-tab-glow"
+                        className="absolute inset-0 z-[-1] rounded-full bg-white/15 border border-white/10 shadow-md"
+                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                      />
+                    )}
+                    <span className={cn("relative z-10 transition-colors", lyricsOpen ? "text-white font-semibold" : "text-white/60")}>Lyrics</span>
                   </button>
                 </div>
               </div>

@@ -40,7 +40,7 @@ function AboutPage() {
         </section>
 
         <section className="grid sm:grid-cols-2 gap-8">
-          <div className="p-8 rounded-2xl bg-surface border border-border/50 shadow-xl hover:border-accent/30 transition-colors group">
+          <div className="p-8 rounded-2xl sonara-glass shadow-xl hover:border-accent/30 transition-colors group">
             <div className="size-12 rounded-full bg-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Music className="size-6 text-accent" />
             </div>
@@ -50,7 +50,7 @@ function AboutPage() {
             </p>
           </div>
 
-          <div className="p-8 rounded-2xl bg-surface border border-border/50 shadow-xl hover:border-accent/30 transition-colors group">
+          <div className="p-8 rounded-2xl sonara-glass shadow-xl hover:border-accent/30 transition-colors group">
             <div className="size-12 rounded-full bg-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Sparkles className="size-6 text-accent" />
             </div>
@@ -61,7 +61,7 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="space-y-6 p-8 md:p-12 rounded-2xl bg-gradient-to-br from-surface to-bg border border-border/50 text-center">
+        <section className="space-y-6 p-8 md:p-12 rounded-2xl sonara-glass-strong text-center">
           <Heart className="size-12 text-accent mx-auto mb-6 opacity-80" />
           <h2 className="font-display text-3xl text-white">Crafted for You</h2>
           <p className="text-lg text-muted leading-relaxed max-w-2xl mx-auto">

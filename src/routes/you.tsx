@@ -54,14 +54,14 @@ function YouPage() {
             {user.displayName || "Listener"}
           </h2>
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6 text-sm text-muted">
-            <span className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-full border border-border/50">
-              <Heart className="size-4 text-red-400" /> 12 Favorites
+            <span className="flex items-center gap-2 sonara-glass-light px-3 py-1.5 rounded-full">
+              <Heart className="size-4 text-accent" /> 12 Favorites
             </span>
-            <span className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-full border border-border/50">
-              <Clock className="size-4 text-blue-400" /> 34h Listened
+            <span className="flex items-center gap-2 sonara-glass-light px-3 py-1.5 rounded-full">
+              <Clock className="size-4 text-accent/80" /> 34h Listened
             </span>
-            <span className="flex items-center gap-2 bg-surface/50 px-3 py-1.5 rounded-full border border-border/50">
-              <Radio className="size-4 text-green-400" /> 5 Stations
+            <span className="flex items-center gap-2 sonara-glass-light px-3 py-1.5 rounded-full">
+              <Radio className="size-4 text-accent/60" /> 5 Stations
             </span>
           </div>
         </div>
@@ -87,7 +87,7 @@ function YouPage() {
           <h3 className="text-lg font-semibold flex items-center gap-2 text-fg">
             <PlayCircle className="size-5 text-accent" /> Recently Played
           </h3>
-          <div className="relative overflow-hidden bg-surface/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-[300px] group">
+          <div className="relative overflow-hidden sonara-glass rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-[300px] group">
             {/* Spinning Vinyl */}
             <div className="relative size-32 mb-6 group-hover:scale-105 transition-transform duration-500">
               <div className="absolute inset-0 bg-gradient-to-tr from-black via-zinc-900 to-black rounded-full shadow-2xl animate-[vinyl-spin_4s_linear_infinite]">
@@ -115,7 +115,7 @@ function YouPage() {
           <h3 className="text-lg font-semibold flex items-center gap-2 text-fg">
             <Heart className="size-5 text-red-400" /> Top Artists
           </h3>
-          <div className="relative overflow-hidden bg-surface/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-[300px] group">
+          <div className="relative overflow-hidden sonara-glass rounded-2xl p-6 md:p-8 flex flex-col items-center justify-center text-center min-h-[300px] group">
             {/* Spinning Vinyl */}
             <div className="relative size-32 mb-6 group-hover:scale-105 transition-transform duration-500">
               <div className="absolute inset-0 bg-gradient-to-tr from-black via-zinc-900 to-black rounded-full shadow-2xl animate-[vinyl-spin_4s_linear_infinite]" style={{ animationDirection: 'reverse' }}>
