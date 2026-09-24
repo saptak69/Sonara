@@ -513,11 +513,31 @@
   .glow-orb,
   .skeleton,
   .full-player,
-  .queue-drawer {
+  .queue-drawer,
+  .marquee-scroll {
     animation: none !important;
     transition: none !important;
     filter: none !important;
   }
+}
+
+/* Marquee scrolling text for long song/artist names */
+@keyframes marquee-scroll {
+  0%, 20%   { transform: translateX(0); }
+  80%, 100% { transform: translateX(var(--marquee-distance, -50%)); }
+}
+
+.marquee-container {
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.marquee-scroll {
+  display: inline-block;
+  padding-right: 2rem;
+  animation: marquee-scroll 8s linear infinite;
+  will-change: transform;
 }
 
 /* Sonara Glass — use everywhere chrome lives */

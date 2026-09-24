@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
+import { MarqueeText } from "@/components/marquee-text";
 import { LyricsPanel } from "@/components/player/lyrics";
 import { QueueList } from "@/components/player/queue";
 import { Slider } from "@/components/ui/slider";
@@ -122,16 +123,16 @@ export function FullPlayer() {
 
           {/* Main Layout Area */}
           <div className={cn(
-            "relative flex-1 flex flex-col lg:flex-row px-6 lg:px-12 pt-[calc(env(safe-area-inset-top)+80px)] pb-[max(env(safe-area-inset-bottom),32px)] lg:pt-12 lg:pb-8 overflow-y-auto lg:overflow-hidden [scrollbar-width:none] w-full max-w-7xl mx-auto gap-8 lg:gap-12 items-center lg:items-stretch lg:justify-between",
+            "relative flex-1 flex flex-col lg:flex-row px-6 lg:px-12 pt-[calc(env(safe-area-inset-top)+80px)] pb-[max(env(safe-area-inset-bottom),32px)] lg:pt-8 lg:pb-6 overflow-y-auto [scrollbar-width:none] w-full max-w-7xl mx-auto gap-8 lg:gap-12 items-center lg:items-stretch lg:justify-between",
             panelOpen ? "justify-start" : "justify-center"
           )}>
             
             {/* Left Side: Artwork & Info */}
             <div className={cn(
-              "flex flex-col w-full transition-all duration-500 lg:justify-center min-h-min lg:py-4 lg:w-1/2 lg:max-w-[420px]"
+              "flex flex-col w-full transition-all duration-500 lg:justify-center min-h-min lg:py-2 lg:w-1/2 lg:max-w-[420px]"
             )}>
               {/* Artwork */}
-              <div className="w-[min(76vw,320px)] lg:w-full aspect-square mt-auto lg:mt-0 mb-6 lg:mb-8 max-h-[42vh] lg:max-w-[360px] lg:max-h-[360px] mx-auto rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 flex-shrink-0">
+              <div className="w-[min(76vw,320px)] lg:w-full aspect-square mt-auto lg:mt-0 mb-6 lg:mb-6 max-h-[42vh] lg:max-w-[340px] lg:max-h-[min(340px,40vh)] mx-auto rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 flex-shrink-0">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
@@ -140,16 +141,12 @@ export function FullPlayer() {
               </div>
 
               {/* Info & Controls Panel */}
-              <div className="w-full sonara-glass-strong rounded-t-3xl lg:rounded-3xl border-t lg:border border-white/10 p-6 max-lg:-mx-6 max-lg:px-6 max-lg:w-[100vw] mt-auto lg:mt-0">
+              <div className="w-full sonara-glass-strong rounded-t-3xl lg:rounded-3xl border-t lg:border border-white/10 p-6 max-lg:-mx-6 max-lg:px-6 max-lg:w-[100vw] mt-auto lg:mt-0 flex-shrink-0">
                 {/* Info & Like */}
-                <div className="flex items-center justify-between gap-4 mb-6 lg:mb-8">
-                  <div className="min-w-0 flex-1">
-                    <h1 className="font-bold text-white truncate mb-1 transition-all text-2xl lg:text-3xl">
-                    {track.title}
-                  </h1>
-                  <p className="text-white/60 truncate transition-all text-lg lg:text-xl">
-                    {track.artist}
-                  </p>
+                <div className="flex items-center justify-between gap-4 mb-4 lg:mb-6">
+                    <div className="min-w-0 flex-1">
+                    <MarqueeText text={track.title} className="font-bold text-white mb-1 transition-all text-2xl lg:text-3xl" />
+                    <MarqueeText text={track.artist} className="text-white/60 transition-all text-lg lg:text-xl" />
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -168,7 +165,7 @@ export function FullPlayer() {
               {/* Controls */}
               <div className="w-full">
                 {/* Scrubber */}
-                <div className="w-full mb-8 mt-6">
+                <div className="w-full mb-6 mt-4">
                   <Slider
                     value={[live ? 0 : currentTime]}
                     min={0}
@@ -185,7 +182,7 @@ export function FullPlayer() {
                 </div>
 
                 {/* Main Buttons */}
-                <div className="flex items-center justify-between w-full max-w-[280px] lg:max-w-[300px] mx-auto mb-8">
+                <div className="flex items-center justify-between w-full max-w-[280px] lg:max-w-[300px] mx-auto mb-6">
                   <button
                     className={cn("text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-accent")}
                     onClick={toggleShuffle}

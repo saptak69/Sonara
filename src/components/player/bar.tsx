@@ -2,6 +2,7 @@ import React from "react";
 import { Heart, ListMusic, Mic2, MonitorSpeaker, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
+import { MarqueeText } from "@/components/marquee-text";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
@@ -61,7 +62,7 @@ export function PlayerBar() {
           </div>
         ) : null}
         
-        <div className="flex h-14 items-center gap-3 px-3">
+        <div className="flex h-16 items-center gap-3 px-3">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.98] transition-transform"
@@ -75,11 +76,11 @@ export function PlayerBar() {
                 className="size-full rounded-full shadow-sm"
               />
             </div>
-            <div className="flex flex-col min-w-0 flex-1 justify-center">
-              <span className="truncate text-sm font-medium text-fg flex items-center gap-2">
-                {track.title}
+            <div className="flex flex-col min-w-0 flex-1 justify-center overflow-hidden">
+              <div className="flex items-center gap-2">
+                <MarqueeText text={track.title} className="text-sm font-medium text-fg flex-1 min-w-0" />
                 <Equalizer isPlaying={isPlaying} />
-              </span>
+              </div>
               <span className="truncate text-xs text-muted">
                 {track.artist}
               </span>
@@ -151,11 +152,11 @@ export function PlayerBar() {
             <Cover src={track.artwork} alt={track.title} className="size-[28px] rounded-[4px] shadow-md" />
           </div>
           
-          <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none">
-            <span className="flex items-center gap-2 font-semibold text-fg text-[12px] leading-tight">
-              <span className="truncate">{track.title}</span>
+          <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none overflow-hidden">
+            <div className="flex items-center gap-2">
+              <MarqueeText text={track.title} className="font-semibold text-fg text-[12px] leading-tight flex-1 min-w-0" />
               <Equalizer isPlaying={isPlaying} />
-            </span>
+            </div>
             <span className="truncate text-[10px] text-muted leading-tight mt-0.5">
               {track.artist}
             </span>
