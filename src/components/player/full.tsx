@@ -99,16 +99,16 @@ export function FullPlayer() {
             <button
               aria-label="Close player"
               onClick={() => setExpanded(false)}
-              className="pointer-events-auto p-2 bg-black/20 backdrop-blur-xl rounded-full text-white/90 hover:text-white hover:bg-black/40 transition-colors shadow-lg border border-white/10"
+              className="pointer-events-auto p-2 sonara-glass-strong rounded-full text-white/90 hover:text-white hover:brightness-110 transition-all"
             >
               <ChevronDown className="size-7" strokeWidth={1.5} />
             </button>
             
-            <p className="pointer-events-auto text-[10px] font-semibold tracking-widest text-white/90 uppercase lg:hidden bg-black/20 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 shadow-lg truncate max-w-[50%]">
+            <p className="pointer-events-auto text-[10px] font-semibold tracking-widest text-white/90 uppercase lg:hidden sonara-glass px-4 py-1.5 rounded-full truncate max-w-[50%]">
               {track.album || "Now Playing"}
             </p>
 
-            <div className="pointer-events-auto flex lg:hidden items-center gap-1 bg-black/20 backdrop-blur-xl rounded-full p-1 shadow-lg border border-white/10">
+            <div className="pointer-events-auto flex lg:hidden items-center gap-1 sonara-glass rounded-full p-1">
               <button
                 aria-label="Options"
                 className="p-1.5 rounded-full text-white/90 hover:text-white transition-colors"
@@ -138,10 +138,12 @@ export function FullPlayer() {
                 />
               </div>
 
-              {/* Info & Like */}
-              <div className="flex items-center justify-between gap-4 mb-6 lg:mb-0">
-                <div className="min-w-0 flex-1">
-                  <h1 className="font-bold text-white truncate mb-1 transition-all text-2xl lg:text-3xl">
+              {/* Info & Controls Panel */}
+              <div className="w-full sonara-glass-strong rounded-t-3xl lg:rounded-3xl border-t lg:border border-white/10 p-6 max-lg:-mx-6 max-lg:px-6 max-lg:w-[100vw] mt-auto lg:mt-0">
+                {/* Info & Like */}
+                <div className="flex items-center justify-between gap-4 mb-6 lg:mb-8">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="font-bold text-white truncate mb-1 transition-all text-2xl lg:text-3xl">
                     {track.title}
                   </h1>
                   <p className="text-white/60 truncate transition-all text-lg lg:text-xl">
@@ -151,12 +153,12 @@ export function FullPlayer() {
                 <div className="flex items-center gap-2">
                   <button
                     aria-label={liked ? "Unlike" : "Like"}
-                    className="p-2.5 rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-all active:scale-95"
+                    className="p-2.5 rounded-full sonara-glass-light text-white/80 hover:text-white hover:brightness-110 transition-all active:scale-95"
                     onClick={() => toggleLike(track)}
                   >
-                    <Heart className={cn("size-5", liked && "fill-white text-white")} strokeWidth={1.5} />
+                    <Heart className={cn("size-5", liked && "fill-accent text-accent")} strokeWidth={1.5} />
                   </button>
-                  <button className="p-2.5 rounded-full bg-white/10 text-white/80 hover:text-white hover:bg-white/20 transition-all active:scale-95 hidden lg:block">
+                  <button className="p-2.5 rounded-full sonara-glass-light text-white/80 hover:text-white hover:brightness-110 transition-all active:scale-95 hidden lg:block">
                     <MoreHorizontal className="size-5" />
                   </button>
                 </div>
@@ -219,7 +221,7 @@ export function FullPlayer() {
                     <Share2 className="size-5" />
                   </button>
                   <button 
-                    className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors min-h-[44px]", lyricsOpen && "bg-accent/20 text-accent hover:bg-accent/30")}
+                    className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full sonara-glass-light hover:brightness-110 text-sm font-medium transition-colors min-h-[44px]", lyricsOpen && "bg-accent/20 text-accent hover:bg-accent/30")}
                     onClick={() => setLyricsOpen(!lyricsOpen)}
                   >
                     <Mic2 className="size-4" /> Lyrics
@@ -228,6 +230,7 @@ export function FullPlayer() {
                     <ListMusic className="size-5" />
                   </button>
                 </div>
+              </div>
               </div>
             </div>
 

@@ -156,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-surface/40 backdrop-blur-3xl border-r border-white/5 px-6 py-6 lg:flex shadow-2xl">
+      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col sonara-glass border-r border-white/5 px-6 py-6 lg:flex shadow-2xl">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -268,7 +268,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] lg:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/40 lg:backdrop-blur-2xl border-b border-white/5">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] lg:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all sonara-glass border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 lg:hidden">
@@ -300,7 +300,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="flex items-center justify-between w-full lg:hidden">
                 <Logo compact={false} />
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setMobileSearchOpen(true)} className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <button onClick={() => setMobileSearchOpen(true)} className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full sonara-glass-light hover:brightness-110 transition-all">
                     <Search className="size-5" />
                   </button>
                   <Link to="/about" className="text-muted hover:text-fg min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -368,7 +368,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <PlayerBar />
         </div>
         <div className="pointer-events-auto px-2 pb-2 w-full lg:hidden">
-          <nav className="flex items-center justify-around max-lg:bg-surface/95 max-lg:backdrop-blur-none bg-surface/60 lg:backdrop-blur-3xl border border-white/10 px-3 py-2 w-full rounded-2xl shadow-2xl">
+          <nav className="flex items-center justify-around sonara-glass-strong border border-white/10 px-3 py-2 w-full rounded-2xl shadow-2xl">
           {MOBILE_NAV.map((item) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;

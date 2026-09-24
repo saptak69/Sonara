@@ -66,7 +66,7 @@ export function QueuePanel() {
     <aside
       data-open={open}
       className={cn(
-        "fixed top-0 right-0 z-50 flex h-[100dvh] md:hidden w-full flex-col bg-bg/95 backdrop-blur-3xl transition-transform duration-300",
+        "fixed top-0 right-0 z-50 flex h-[100dvh] md:hidden w-full flex-col sonara-glass-strong transition-transform duration-300",
         "data-[open=false]:translate-x-full"
       )}
     >

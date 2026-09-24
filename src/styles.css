@@ -520,9 +520,61 @@
   }
 }
 
+/* Sonara Glass — use everywhere chrome lives */
+.sonara-glass {
+  background: rgba(20, 9, 8, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 245, 242, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Stronger glass for floating elements (mini-player, bottom nav, modals) */
+.sonara-glass-strong {
+  background: rgba(20, 9, 8, 0.72);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 245, 242, 0.10);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Lighter glass for buttons / chips */
+.sonara-glass-light {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sonara-glass,
+  .sonara-glass-strong {
+    background: rgba(20, 9, 8, 0.94);
+  }
+}
+
 /* Mobile Performance Optimizations */
+@media (max-width: 1023px) {
+  /* Mobile optimized glass with lighter blur */
+  .sonara-glass {
+    background: rgba(20, 9, 8, 0.78);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+
+  .sonara-glass-strong {
+    background: rgba(20, 9, 8, 0.85);
+    backdrop-filter: blur(16px) saturate(130%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+  }
+}
+
 @media (max-width: 768px) {
-  /* Disable heavy backdrop blurs on mobile for performance */
+  /* Disable heavy Tailwind backdrop blurs on mobile for performance */
   .backdrop-blur-3xl,
   .backdrop-blur-2xl,
   .backdrop-blur-xl,
