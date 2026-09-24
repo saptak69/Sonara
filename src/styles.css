@@ -620,3 +620,16 @@
     animation: none !important;
   }
 }
+
+/* Moving orange gradient for Hero section */
+@keyframes gradient-pan {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-gradient {
+  background: linear-gradient(-45deg, #140908, #2a0f0c, #ff4a3a, #ff8a6a, #8c1e14);
+  background-size: 300% 300%;
+  animation: gradient-pan 12s ease infinite;
+}

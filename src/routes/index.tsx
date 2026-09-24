@@ -11,10 +11,6 @@ import { fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
 import { SiteFooter } from "@/components/site-footer";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
-import { AuroraBackground } from "@/components/ui/aurora-background";
-import { Meteors } from "@/components/ui/meteors";
-import { ParallaxCarousel } from "@/components/ui/parallax-carousel";
-
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
@@ -48,22 +44,10 @@ function Home() {
   return (
     <div className="w-full pb-20">
       {/* Hero Banner Area */}
-      <AuroraBackground className="!h-[55vh] !min-h-[400px] !max-h-[600px] justify-end items-start p-8 md:p-12 overflow-hidden group border-b border-border/50 bg-gradient-to-tr max-md:from-bg max-md:via-bg max-md:to-accent/10">
-        {isDesktop && (
-          <div className="max-md:hidden w-full h-full absolute inset-0">
-            <Meteors number={12} className="opacity-40" />
-          </div>
-        )}
+      <div className="hero-gradient relative flex flex-col justify-end h-[55vh] min-h-[400px] max-h-[600px] p-8 md:p-12 overflow-hidden border-b border-border/50">
         
-        {/* Abstract Dark Overlay (To ensure text readability over aurora) */}
+        {/* Abstract Dark Overlay (To ensure text readability over gradient) */}
         <div className="absolute inset-0 z-0">
-          {/* Endless Parallax Carousel - Unmounted on mobile for performance */}
-          {isDesktop && (
-            <div className="max-md:hidden w-full h-full absolute inset-0">
-              <ParallaxCarousel images={topTracks.map(t => t.artwork).filter(Boolean)} />
-            </div>
-          )}
-
           <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-bg to-transparent opacity-60 pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
         </div>
@@ -106,7 +90,7 @@ function Home() {
             </button>
           </div>
         </div>
-      </AuroraBackground>
+      </div>
 
       {/* Main Content Rows */}
       <div className="flex flex-col mt-16 md:mt-24 gap-20 md:gap-24">
