@@ -20,7 +20,7 @@ const Equalizer = React.memo(function Equalizer({ isPlaying }: { isPlaying: bool
   );
 });
 
-export function PlayerBar({ desktopTop = false }: { desktopTop?: boolean }) {
+export function PlayerBar() {
   const track = usePlayer((s) => s.queue[s.index]);
   const isPlaying = usePlayer((s) => s.isPlaying);
   const currentTime = usePlayer((s) => s.currentTime);
@@ -119,31 +119,29 @@ export function PlayerBar({ desktopTop = false }: { desktopTop?: boolean }) {
         </div>
       </div>
 
-      {/* Desktop Bottom/Top Bar - Apple Music Style */}
-      <div className={cn("hidden lg:flex relative items-center justify-between overflow-hidden", desktopTop ? "h-[54px] w-full px-6 sonara-glass border-b border-white/5 bg-surface/80 backdrop-blur-3xl" : "h-[60px] w-[740px] max-w-[95%] mx-auto px-6 sonara-glass-strong rounded-full mb-[env(safe-area-inset-bottom,0px)]")}>
+      {/* Desktop Bottom Bar - Apple Music Style */}
+      <div className="hidden lg:flex relative h-[60px] w-[740px] max-w-[95%] mx-auto items-center justify-between px-6 sonara-glass-strong rounded-full overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
         
-        {/* Dynamic Artwork Background (Only for the floating pill version if not desktopTop) */}
-        {!desktopTop && (
-          <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none rounded-full">
-            <img
-              src={track.artwork}
-              alt=""
-              className="w-full h-full object-cover opacity-20 saturate-200 blur-3xl transform scale-150"
-              aria-hidden="true"
-            />
-          </div>
-        )}
+        {/* Dynamic Artwork Background */}
+        <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none rounded-full">
+          <img
+            src={track.artwork}
+            alt=""
+            className="w-full h-full object-cover opacity-20 saturate-200 blur-3xl transform scale-150"
+            aria-hidden="true"
+          />
+        </div>
 
         {/* Left: Playback Controls */}
-        <div className="flex items-center gap-6 w-[240px]">
+        <div className="flex items-center gap-5 w-[200px]">
           <button
             className={cn("text-muted hover:text-fg transition-colors", shuffle && "text-accent")}
             onClick={toggleShuffle}
           >
-            <Shuffle className="size-[16px]" strokeWidth={2} />
+            <Shuffle className="size-[15px]" strokeWidth={2} />
           </button>
           <button className="text-fg hover:text-accent transition-colors" onClick={prev}>
-            <SkipBack className="size-[22px] fill-current" />
+            <SkipBack className="size-5 fill-current" />
           </button>
           <PlayPauseButton
             isPlaying={isPlaying}
@@ -152,43 +150,36 @@ export function PlayerBar({ desktopTop = false }: { desktopTop?: boolean }) {
               toggle();
             }}
             className="text-fg hover:scale-105"
-            iconClassName="size-[28px]"
+            iconClassName="size-6"
           />
           <button className="text-fg hover:text-accent transition-colors" onClick={next}>
-            <SkipForward className="size-[22px] fill-current" />
+            <SkipForward className="size-5 fill-current" />
           </button>
           <button
             className={cn("text-muted hover:text-fg transition-colors", repeat !== "off" && "text-accent")}
             onClick={cycleRepeat}
           >
-            {repeat === "one" ? <Repeat1 className="size-[16px]" strokeWidth={2} /> : <Repeat className="size-[16px]" strokeWidth={2} />}
+            {repeat === "one" ? <Repeat1 className="size-[15px]" strokeWidth={2} /> : <Repeat className="size-[15px]" strokeWidth={2} />}
           </button>
         </div>
 
-        {/* Center: LCD Screen (Apple Music Web Style) */}
+        {/* Center: LCD Screen */}
         <div 
-          className={cn("flex-1 h-[40px] flex items-center px-2 relative group overflow-hidden cursor-pointer mx-4 max-w-[500px]", desktopTop ? "bg-black/10 dark:bg-white-[0.02] border border-black/5 dark:border-white/5 rounded-md shadow-inner" : "bg-black/20 dark:bg-white/5 rounded-md border border-white/5 shadow-inner")}
+          className="flex-1 h-[40px] bg-black/20 dark:bg-white/5 rounded-md flex items-center px-1.5 relative group overflow-hidden border border-white/5 shadow-inner cursor-pointer mx-2"
           onClick={() => setExpanded(true)}
         >
           <div className={cn("shrink-0 mr-3 pointer-events-none transition-transform duration-500", isPlaying && "scale-105")}>
-            <Cover src={track.artwork} alt={track.title} className="size-[28px] rounded-[4px] shadow-sm border border-white/10" />
+            <Cover src={track.artwork} alt={track.title} className="size-[28px] rounded-[4px] shadow-md" />
           </div>
           
-          <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none overflow-hidden pb-0.5">
-            <div className="flex items-center justify-between w-full">
-              <MarqueeText text={track.title} className="font-semibold text-fg text-[12px] leading-tight truncate mr-2" />
-              {!live && (
-                <span className="text-[10px] text-muted font-medium font-mono tabular-nums tracking-tighter shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="truncate text-[11px] text-muted leading-none">
-                {track.artist}
-              </span>
+          <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none overflow-hidden">
+            <div className="flex items-center gap-2 overflow-hidden w-full">
+              <MarqueeText text={track.title} className="font-semibold text-fg text-[12px] leading-tight flex-1 min-w-0" />
               <Equalizer isPlaying={isPlaying} />
             </div>
+            <span className="truncate text-[10px] text-muted leading-tight mt-0.5">
+              {track.artist}
+            </span>
           </div>
 
           {live && (
@@ -197,44 +188,40 @@ export function PlayerBar({ desktopTop = false }: { desktopTop?: boolean }) {
             </span>
           )}
 
-          {/* Scrubber Line (Apple Music Style at the very top of LCD) */}
+          {/* Scrubber Line (Bottom Edge) */}
           {!live && duration > 0 && (
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-black/10 dark:bg-white/10 group-hover:h-[4px] transition-all">
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/5 group-hover:h-[4px] transition-all">
               <div 
-                className="h-full bg-fg shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all ease-linear"
+                className="h-full bg-fg rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.5)]"
                 style={{ width: `${progress}%` }}
               />
             </div>
           )}
         </div>
 
-        {/* Right: Actions & Volume */}
-        <div className="flex items-center justify-end gap-5 w-[240px]">
+        {/* Right: Actions */}
+        <div className="flex items-center justify-end gap-5 w-[200px]">
           <button 
-            className={cn("transition-colors", desktopTop ? "text-muted hover:text-fg" : "text-muted hover:text-fg")}
+            className="text-muted hover:text-fg transition-colors"
             onClick={() => {
               setExpanded(true);
               setTimeout(() => setLyricsOpen(true), 50);
             }}
           >
-            <Mic2 className="size-[18px]" strokeWidth={2.5} />
+            <Mic2 className="size-[17px]" strokeWidth={2} />
           </button>
           <button 
-            className={cn("transition-colors", desktopTop ? "text-muted hover:text-fg" : "text-muted hover:text-fg")}
+            className="text-muted hover:text-fg transition-colors"
             onClick={() => {
               setExpanded(true);
               setTimeout(() => setLyricsOpen(false), 50);
             }}
           >
-            <ListMusic className="size-[18px]" strokeWidth={2.5} />
+            <ListMusic className="size-[17px]" strokeWidth={2} />
           </button>
-          
-          <div className="flex items-center gap-2 group w-24">
-            <MonitorSpeaker className="size-[18px] text-muted group-hover:text-fg transition-colors shrink-0" strokeWidth={2.5} />
-            <div className="flex-1 h-1 bg-black/10 dark:bg-white/10 rounded-full relative overflow-hidden group-hover:h-1.5 transition-all">
-              <div className="absolute left-0 top-0 bottom-0 bg-fg w-2/3 rounded-full" />
-            </div>
-          </div>
+          <button className="text-muted hover:text-fg transition-colors">
+            <Volume2 className="size-[17px]" strokeWidth={2} />
+          </button>
         </div>
 
       </div>

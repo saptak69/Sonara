@@ -157,10 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className={cn(
-        "fixed left-0 z-40 hidden w-sidebar flex-col bg-bg/80 backdrop-blur-2xl border-r border-white/5 px-5 py-5 lg:flex",
-        hasTrack ? "top-[54px] h-[calc(100dvh-54px)]" : "top-0 h-[100dvh]"
-      )}>
+      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-bg/80 backdrop-blur-2xl border-r border-white/5 px-5 py-5 lg:flex">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -279,13 +276,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         className={cn(
           "transition-all min-w-0 relative h-[100dvh] overflow-y-auto overflow-x-hidden bg-surface max-lg:bg-surface/90 lg:bg-surface/30 lg:backdrop-blur-xl shadow-2xl",
           "lg:ml-sidebar",
-          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-8 lg:pt-[54px]" : "pb-[calc(var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-8",
+          hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-8",
         )}
       >
-        <header className={cn(
-          "sticky z-20 flex items-center h-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all sonara-glass border-b border-white/5",
-          hasTrack ? "top-0 lg:top-[54px]" : "top-0"
-        )}>
+        <header className="sticky top-0 z-20 flex items-center h-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all sonara-glass border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 lg:hidden">
@@ -381,7 +375,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
       <div className={cn("fixed inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col items-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] transition-transform duration-500", hasTrack ? "" : "lg:hidden")}>
-        <div className="pointer-events-auto w-full max-w-[440px] flex flex-col items-center mb-2 lg:hidden">
+        <div className="pointer-events-auto w-full max-w-[440px] flex flex-col items-center mb-2 lg:mb-6">
           <div className="w-full">
             <PlayerBar />
           </div>
@@ -427,13 +421,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       <FullPlayer />
       <QueuePanel />
       <LyricsDrawer />
-
-      {/* Desktop Top Player Bar */}
-      {hasTrack && (
-        <div className="hidden lg:block fixed top-0 inset-x-0 z-50">
-          <PlayerBar desktopTop />
-        </div>
-      )}
     </div>
   );
 }
