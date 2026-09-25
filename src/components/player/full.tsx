@@ -55,7 +55,7 @@ export function FullPlayer() {
     <div
       data-open={expanded}
       className={cn(
-        "full-player fixed inset-0 z-50 flex flex-col bg-bg transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "full-player fixed inset-0 z-50 flex flex-col bg-bg/95 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         "data-[open=false]:translate-y-full"
       )}
       aria-hidden={!expanded}
@@ -68,13 +68,13 @@ export function FullPlayer() {
                 src={track.artworkLg || track.artwork || ""}
                 alt=""
                 className={cn(
-                  "h-full w-full scale-[1.5] object-cover opacity-30 blur-[100px] transition-transform duration-[20s] ease-in-out",
+                  "h-full w-full scale-[1.5] object-cover opacity-80 saturate-150 blur-[100px] transition-transform duration-[20s] ease-in-out",
                   isPlaying && "scale-[1.8] rotate-3"
                 )}
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             ) : null}
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-black/20" />
             
             {/* Immersive Waveform Visualizer */}
             {isPlaying && (
@@ -93,7 +93,7 @@ export function FullPlayer() {
               </div>
             )}
             
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/40 to-bg/90 pointer-events-none" />
           </div>
 
           {/* Header - Floating over content */}
