@@ -77,9 +77,9 @@ function LibraryPage() {
   );
 
   return (
-    <div className="stagger-in space-y-8 px-4 py-6 md:px-8 pb-32">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
-        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Library</h1>
+    <div className="w-full pb-20 stagger-in">
+      <header className="flex flex-wrap items-center justify-between gap-4 px-4 md:px-12 pt-12 pb-4">
+        <h1 className="font-display text-4xl md:text-[40px] font-bold text-white tracking-tight">Library</h1>
         <Button
           variant="chip"
           size="sm"
@@ -94,36 +94,37 @@ function LibraryPage() {
         </Button>
       </header>
 
-      <div className="flex gap-2 border-b border-border/40 pb-3 overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0">
-        {(
-          [
-            ["recents", "Recents", recents.length],
-            ["favorites", "Favorites", likedTracks.length],
-            ["playlists", "Playlists", userPlaylists.length],
-            ["radios", "Radios", 0],
-          ] as const
-        ).map(([id, label, count]) => (
-          <button
-            key={id}
-            type="button"
-            className="group relative isolate flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-150 md:text-sm active:scale-95"
-            onClick={() => handleTabChange(id)}
-          >
-            {tab === id && (
-              <motion.div
-                layoutId="library-tab-glow"
-                className="absolute inset-0 z-[-1] rounded-full"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              />
-            )}
-            <span className={cn("transition-colors relative z-10", tab === id ? "text-fg" : "text-muted group-hover:text-fg")}>{label}</span>
-            {count > 0 ? (
-              <span className={cn("text-[10px] font-mono transition-colors relative z-10", tab === id ? "text-fg/80" : "text-muted/60 group-hover:text-fg/80")}>({count})</span>
-            ) : null}
-          </button>
-        ))}
-      </div>
+      <div className="px-4 md:px-12 mt-2 space-y-8">
+        <div className="flex gap-2 pb-3 overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0">
+          {(
+            [
+              ["recents", "Recents", recents.length],
+              ["favorites", "Favorites", likedTracks.length],
+              ["playlists", "Playlists", userPlaylists.length],
+              ["radios", "Radios", 0],
+            ] as const
+          ).map(([id, label, count]) => (
+            <button
+              key={id}
+              type="button"
+              className="group relative isolate flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-150 md:text-sm active:scale-95 border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10"
+              onClick={() => handleTabChange(id)}
+            >
+              {tab === id && (
+                <motion.div
+                  layoutId="library-tab-glow"
+                  className="absolute inset-0 z-[-1] rounded-full"
+                  style={{ background: 'rgba(255, 74, 58, 0.2)', border: '1px solid rgba(255, 74, 58, 0.3)', boxShadow: '0 4px 12px rgba(255, 74, 58, 0.2)' }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                />
+              )}
+              <span className={cn("transition-colors relative z-10", tab === id ? "text-accent-fg" : "text-muted group-hover:text-fg")}>{label}</span>
+              {count > 0 ? (
+                <span className={cn("text-[10px] font-mono transition-colors relative z-10", tab === id ? "text-accent-fg/80" : "text-muted/60 group-hover:text-fg/80")}>({count})</span>
+              ) : null}
+            </button>
+          ))}
+        </div>
 
       {tab === "recents" ? (
         recents.length ? (
@@ -235,6 +236,7 @@ function LibraryPage() {
           <RadioContent />
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
@@ -250,57 +252,16 @@ function Empty({
   text: string;
   action?: { label: string; to: string };
 }) {
-  // Determine animation based on the icon
-  let animationProps = {};
-  let colorClass = "text-muted";
-  let bgClass = "bg-white/5 border-white/10";
-  
-  if (Icon === Heart) {
-    animationProps = {
-      animate: { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-rose-400";
-    bgClass = "bg-rose-400/10 border-rose-400/20";
-  } else if (Icon === Ghost) {
-    animationProps = {
-      animate: { y: [0, -8, 0], x: [0, 4, -4, 0] },
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-indigo-400";
-    bgClass = "bg-indigo-400/10 border-indigo-400/20";
-  } else if (Icon === ListMusic) {
-    animationProps = {
-      animate: { rotate: [0, -10, 10, 0], scale: [1, 1.05, 1] },
-      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-emerald-400";
-    bgClass = "bg-emerald-400/10 border-emerald-400/20";
-  } else {
-    animationProps = {
-      animate: { y: [0, -5, 0] },
-      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-    };
-  }
-
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
-      {/* Decorative background glow */}
-      <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full", colorClass.replace("text-", "bg-"))} />
-      
-      <motion.div 
-        className={cn("relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4", bgClass, colorClass)}
-        {...animationProps}
-      >
-        <Icon className="size-8 drop-shadow-sm" />
-      </motion.div>
-      <h3 className="relative text-lg font-bold text-fg tracking-tight">{title}</h3>
-      <p className="relative mt-2 text-sm text-muted max-w-xs mx-auto leading-relaxed">{text}</p>
+    <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+      <Icon className="size-12 text-muted mb-4 stroke-[1.5]" />
+      <h3 className="text-xl font-bold text-fg tracking-tight mb-2">{title}</h3>
+      <p className="text-sm text-muted max-w-sm mx-auto leading-relaxed">{text}</p>
       {action ? (
-        <div className="relative mt-6">
+        <div className="mt-8">
           <Link
             to={action.to}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all active:scale-95"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-accent text-white font-semibold text-sm transition-transform active:scale-95"
           >
             {action.label}
           </Link>

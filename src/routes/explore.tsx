@@ -58,15 +58,18 @@ function Explore() {
   if (charts.isLoading && !charts.data) return <HomeSkeleton />;
 
   return (
-    <div className="stagger-in space-y-10 px-4 py-6 md:px-8 pb-32">
-      <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
-        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Browse</h1>
-      </header>
+    <div className="w-full pb-20 stagger-in">
+      {/* Apple Music Style Large Header */}
+      <h1 className="font-display text-4xl md:text-[40px] font-bold text-white tracking-tight px-4 md:px-12 pt-12 pb-6">
+        Browse
+      </h1>
+
+      <div className="space-y-12 md:space-y-14 px-4 md:px-12 mt-2">
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-display text-xl md:text-2xl font-medium tracking-tight text-white">Featured genres</h2>
-          <p className="text-xs text-muted">Explore distinct sounds and musical sub-cultures</p>
+          <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight">Featured genres</h2>
+          <p className="text-xs text-muted mt-1">Explore distinct sounds and musical sub-cultures</p>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {GENRES.map((g) => (
@@ -137,6 +140,7 @@ function Explore() {
           ))}
         </Rail>
       ) : null}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import { RadioCard } from "@/components/cards";
 import { HomeSkeleton } from "@/components/home-skeleton";
 import { Rail } from "@/components/rail";
@@ -102,11 +103,15 @@ export function RadioContent() {
   if (popular.isLoading && !popular.data) return <HomeSkeleton />;
 
   const all = popular.data ?? [];
-  const featured = all[0];
-  const rest = all.slice(1);
+  const featured = React.useMemo(() => {
+    if (!all.length) return null;
+    const randomIndex = Math.floor(Math.random() * Math.min(all.length, 10));
+    return all[randomIndex];
+  }, [all]);
+  const rest = all.filter(s => s?.id !== featured?.id);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 md:space-y-14">
       {featured && <RadioHero station={featured} />}
 
       {rest.length ? (
@@ -128,12 +133,15 @@ export function RadioContent() {
 
 function RadioPage() {
   return (
-    <div className="stagger-in px-4 py-8 md:px-8 max-w-7xl mx-auto pb-32">
-      <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-8 mt-4 md:mt-0">
-        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Radio</h1>
-      </header>
+    <div className="w-full pb-20 stagger-in">
+      {/* Apple Music Style Large Header */}
+      <h1 className="font-display text-4xl md:text-[40px] font-bold text-white tracking-tight px-4 md:px-12 pt-12 pb-6">
+        Radio
+      </h1>
 
-      <RadioContent />
+      <div className="px-4 md:px-12 mt-2">
+        <RadioContent />
+      </div>
     </div>
   );
 }

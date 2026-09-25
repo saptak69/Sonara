@@ -156,8 +156,8 @@ function SearchPage() {
 
   if (!q) {
     return (
-      <div className="stagger-in px-4 py-8 md:px-8 space-y-8 pb-32">
-        <header className="relative z-50">
+      <div className="w-full pb-20 stagger-in">
+        <header className="relative z-50 px-4 md:px-12 md:pt-12 md:pb-6 pt-6 pb-2">
           <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
             <input
@@ -192,10 +192,12 @@ function SearchPage() {
               }} 
             />
           </form>
-          <div className="hidden md:flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
-            <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Search</h1>
+          <div className="hidden md:flex items-center justify-between">
+            <h1 className="font-display text-4xl md:text-[40px] font-bold tracking-tight text-white">Search</h1>
           </div>
         </header>
+
+        <div className="space-y-12 md:space-y-14 px-4 md:px-12 mt-2">
 
         {recents.length ? (
           <section className="space-y-3">
@@ -258,6 +260,7 @@ function SearchPage() {
         ) : null}
 
 
+        </div>
       </div>
     );
   }
@@ -265,8 +268,8 @@ function SearchPage() {
   if (tracks.isLoading && !tracks.data) return <HomeSkeleton />;
 
   return (
-    <div className="stagger-in space-y-10 px-4 py-6 md:px-8 pb-32">
-      <header className="relative z-50">
+    <div className="w-full pb-20 stagger-in">
+      <header className="relative z-50 px-4 md:px-12 md:pt-12 md:pb-6 pt-6 pb-2">
         <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
           <input
@@ -301,10 +304,12 @@ function SearchPage() {
             }} 
           />
         </form>
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
-          <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">“{q}”</h1>
+        <div className="flex items-center justify-between mt-8 md:mt-0">
+          <h1 className="font-display text-4xl md:text-[40px] font-bold tracking-tight text-white">“{q}”</h1>
         </div>
       </header>
+
+      <div className="space-y-12 md:space-y-14 px-4 md:px-12 mt-2">
 
       {/* Artists Rail */}
       {(artists.data ?? []).length ? (
@@ -365,6 +370,7 @@ function SearchPage() {
           ))}
         </Rail>
       ) : null}
+      </div>
     </div>
   );
 }

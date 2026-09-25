@@ -166,13 +166,23 @@ export function FullPlayer() {
             <div className="flex flex-col w-full transition-all duration-500 lg:justify-center lg:w-[45%] lg:max-w-[440px]">
               
               {/* Artwork — large, centered, with shadow */}
-              <div className="w-[min(80vw,340px)] lg:w-full aspect-square mx-auto rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-8 lg:mb-10">
+              <div className={cn(
+                "w-[min(80vw,340px)] lg:w-full aspect-square mx-auto rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-8 lg:mb-10",
+                lyricsOpen && "hidden lg:block"
+              )}>
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
                   className="w-full h-full object-cover"
                 />
               </div>
+
+              {/* Mobile Lyrics View */}
+              {lyricsOpen && (
+                <div className="flex-1 w-full lg:hidden min-h-[40vh] max-h-[50vh] flex flex-col mb-4 overflow-hidden mask-image:linear-gradient(to_bottom,transparent,black_5%,black_95%,transparent)">
+                  <LyricsPanel />
+                </div>
+              )}
 
               {/* Track Info */}
               <div className="w-full max-w-[340px] lg:max-w-none mx-auto">

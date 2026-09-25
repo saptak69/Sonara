@@ -7,7 +7,6 @@ import { PlayerEngine } from "@/components/player/engine";
 import { PlayerBar } from "@/components/player/bar";
 import { FullPlayer } from "@/components/player/full";
 import { QueuePanel } from "@/components/player/queue";
-import { LyricsDrawer } from "@/components/player/lyrics";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { usePlayer } from "@/lib/player-store";
@@ -157,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-bg/80 backdrop-blur-2xl border-r border-white/5 px-5 py-5 lg:flex">
+      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col sonara-glass border-r border-white/5 px-5 py-5 lg:flex">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -180,11 +179,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {active && (
                   <motion.div
                     layoutId="desktop-nav-glow"
-                    className="absolute inset-0 z-[-1] rounded-lg bg-white/5 border border-white/5"
+                    className="absolute inset-0 z-[-1] rounded-lg bg-surface shadow-sm border border-white/5"
                     transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
+                  >
+                    <motion.div
+                      layoutId="desktop-nav-indicator"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-1 rounded-r-full bg-accent shadow-[0_0_8px_rgba(252,60,68,0.6)]"
+                      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                    />
+                  </motion.div>
                 )}
-                <Icon className={cn("size-5 shrink-0 transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")} strokeWidth={active ? 2.5 : 2} />
+                <Icon className={cn("size-5 shrink-0 transition-colors", active ? "text-accent drop-shadow-sm" : "text-muted group-hover:text-fg")} strokeWidth={active ? 2.5 : 2} />
                 <span className={cn("transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")}>{item.label}</span>
               </Link>
             );
@@ -210,11 +215,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {active && (
                     <motion.div
                       layoutId="desktop-nav-glow"
-                      className="absolute inset-0 z-[-1] rounded-lg bg-white/5 border border-white/5"
+                      className="absolute inset-0 z-[-1] rounded-lg bg-surface shadow-sm border border-white/5"
                       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                    />
+                    >
+                      <motion.div
+                        layoutId="desktop-nav-indicator"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-1 rounded-r-full bg-accent shadow-[0_0_8px_rgba(252,60,68,0.6)]"
+                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                      />
+                    </motion.div>
                   )}
-                  <Icon className={cn("size-5 shrink-0 transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")} strokeWidth={active ? 2.5 : 2} />
+                  <Icon className={cn("size-5 shrink-0 transition-colors", active ? "text-accent drop-shadow-sm" : "text-muted group-hover:text-fg")} strokeWidth={active ? 2.5 : 2} />
                   <span className={cn("transition-colors", active ? "text-accent" : "text-muted group-hover:text-fg")}>{item.label}</span>
                 </Link>
               );
@@ -378,7 +389,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto w-full flex justify-center px-2 mb-2 lg:mb-6">
           <PlayerBar />
         </div>
-        <div className="pointer-events-auto w-full lg:hidden sonara-glass border-t border-white/5 bg-surface/50 backdrop-blur-[60px] saturate-[250%]">
+        <div className="pointer-events-auto w-full lg:hidden sonara-glass border-t border-white/5">
           <nav className="relative isolate flex items-center justify-around px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] w-full">
           {MOBILE_NAV.map((item, i) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
@@ -420,7 +431,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <FullPlayer />
       <QueuePanel />
-      <LyricsDrawer />
     </div>
   );
 }

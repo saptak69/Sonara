@@ -51,7 +51,7 @@ export function PlayerBar() {
   return (
     <>
       {/* Mobile Bar */}
-      <div className="lg:hidden mx-2 relative sonara-glass-strong rounded-[1.5rem] overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
+      <div className="lg:hidden mx-2 relative sonara-glass rounded-[1.5rem] overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
         {/* Dynamic Artwork Background */}
         <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none">
           <img
@@ -120,7 +120,7 @@ export function PlayerBar() {
       </div>
 
       {/* Desktop Bottom Bar - Apple Music Style */}
-      <div className="hidden lg:flex relative h-[60px] w-[740px] max-w-[95%] mx-auto items-center justify-between px-6 sonara-glass-strong rounded-full overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
+      <div className="hidden lg:flex relative h-[60px] w-[740px] max-w-[95%] mx-auto items-center justify-between px-6 sonara-glass rounded-full overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
         
         {/* Dynamic Artwork Background */}
         <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none rounded-full">
