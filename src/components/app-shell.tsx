@@ -378,7 +378,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto w-full flex justify-center px-2 mb-2 lg:mb-6">
           <PlayerBar />
         </div>
-        <div className="pointer-events-auto w-full lg:hidden sonara-glass border-t border-white/5 bg-background/50 backdrop-blur-[60px] saturate-[250%]">
+        <div className="pointer-events-auto w-full lg:hidden sonara-glass border-t border-white/5 bg-surface/50 backdrop-blur-[60px] saturate-[250%]">
           <nav className="relative isolate flex items-center justify-around px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] w-full">
           {MOBILE_NAV.map((item, i) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);

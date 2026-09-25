@@ -112,8 +112,8 @@ function ArtistPage() {
 
     return (
       <div className="relative min-h-dvh stagger-in">
-        {/* Background Aura (Mobile) */}
-        <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden md:hidden">
+        {/* Background Aura */}
+        <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden">
           {profile.bannerUrl || profile.avatarUrl ? (
             <img
               src={profile.bannerUrl || profile.avatarUrl}
@@ -236,8 +236,8 @@ function ArtistPage() {
 
   return (
     <div className="relative min-h-dvh stagger-in">
-      {/* Background Aura (Mobile) */}
-      <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden md:hidden">
+      {/* Background Aura */}
+      <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden">
         {a.artworkLg || a.artwork ? (
           <img
             src={a.artworkLg || a.artwork}

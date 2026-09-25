@@ -49,8 +49,8 @@ function PlaylistPage() {
 
   return (
     <div className="relative min-h-dvh">
-      {/* Background Aura (Mobile) */}
-      <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden md:hidden">
+      {/* Background Aura */}
+      <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden">
         {playlist.artworkLg || playlist.artwork ? (
           <img
             src={playlist.artworkLg || playlist.artwork}
