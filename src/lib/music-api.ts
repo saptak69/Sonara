@@ -84,122 +84,83 @@ type AudiusPlaylist = {
 // High-fidelity fallback music catalog curated for Sonara by Jiko
 export const CURATED_TRACKS: Track[] = [
   {
-    id: "curated_ekla_cholo",
-    title: "Ekla Cholo Re",
-    artist: "Rabindra Sangeet · Kishore Kumar",
-    artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
-    duration: 215,
-    streamUrl: "https://archive.org/download/EklaCholoRe/EklaCholoRe-KishoreKumar.mp3",
-    genre: "Rabindra Sangeet",
-    mood: "Soulful",
-    playCount: 520000,
+    id: "curated_espresso",
+    title: "Espresso",
+    artist: "Sabrina Carpenter",
+    artwork: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=1000&h=1000&fit=crop&q=85",
+    duration: 175,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630d7a3f.mp3?filename=watr-fluid-10149.mp3",
+    genre: "Pop",
+    mood: "Upbeat",
+    playCount: 1520000,
     kind: "track",
   },
   {
-    id: "curated_rabindra_boshonto",
-    title: "Aha Aji E Boshonto",
-    artist: "Rabindranath Tagore",
-    artwork: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=1000&h=1000&fit=crop&q=85",
-    duration: 232,
-    streamUrl: "https://archive.org/download/RabindraSangeet/01.AhaAjiEBoshanto.mp3",
-    genre: "Rabindra Sangeet",
-    mood: "Poetic",
-    playCount: 380000,
-    kind: "track",
-  },
-  {
-    id: "curated_mayabono_biharini",
-    title: "Mayabono Biharini Horini",
-    artist: "Rabindra Sangeet · Somlata Acharyya",
-    artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
-    duration: 248,
-    streamUrl: "https://archive.org/download/SomlataRabindraSangeet/MayabonoBiharini.mp3",
-    genre: "Bengali Contemporary",
-    mood: "Melodic",
-    playCount: 460000,
-    kind: "track",
-  },
-  {
-    id: "curated_tumi_roshik_re",
-    title: "Tumi Roshik Re (Baul Folk)",
-    artist: "Bengali Folk Traditions",
-    artwork: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1000&h=1000&fit=crop&q=85",
+    id: "curated_birds_of_a_feather",
+    title: "BIRDS OF A FEATHER",
+    artist: "Billie Eilish",
+    artwork: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f403?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1493225457124-a1a2a5f5f403?w=1000&h=1000&fit=crop&q=85",
     duration: 210,
-    streamUrl: "https://archive.org/download/BanglaFolkBaulSongs/TumiRoshikRe.mp3",
-    genre: "Bengali Folk",
-    mood: "Soulful",
-    playCount: 290000,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2022/11/06/audio_c896e382b6.mp3?filename=warm-breeze-126298.mp3",
+    genre: "Alternative",
+    mood: "Melancholic",
+    playCount: 2380000,
     kind: "track",
   },
   {
-    id: "curated_midnight_drive",
-    title: "Midnight City Lights",
-    artist: "Neon Skyline",
+    id: "curated_million_dollar_baby",
+    title: "MILLION DOLLAR BABY",
+    artist: "Tommy Richman",
+    artwork: "https://images.unsplash.com/photo-1601004944883-294b416fc656?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1601004944883-294b416fc656?w=1000&h=1000&fit=crop&q=85",
+    duration: 155,
+    streamUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=the-cradle-of-your-soul-15700.mp3",
+    genre: "Hip-Hop",
+    mood: "Energetic",
+    playCount: 1950000,
+    kind: "track",
+  },
+  {
+    id: "curated_i_had_some_help",
+    title: "I Had Some Help (feat. Morgan Wallen)",
+    artist: "Post Malone",
+    artwork: "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1000&h=1000&fit=crop&q=85",
+    duration: 178,
+    streamUrl: "https://archive.org/download/BanglaFolkBaulSongs/TumiRoshikRe.mp3",
+    genre: "Country",
+    mood: "Upbeat",
+    playCount: 1820000,
+    kind: "track",
+  },
+  {
+    id: "curated_not_like_us",
+    title: "Not Like Us",
+    artist: "Kendrick Lamar",
     artwork: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=480&h=480&fit=crop&q=80",
     artworkLg: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1000&h=1000&fit=crop&q=85",
-    duration: 214,
+    duration: 274,
     streamUrl: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=midnight-forest-184304.mp3",
-    genre: "Synthwave",
-    mood: "Chill",
-    playCount: 148200,
+    genre: "Hip-Hop",
+    mood: "Aggressive",
+    playCount: 3100000,
     kind: "track",
   },
   {
-    id: "curated_lofi_rain",
-    title: "Late Night Rain Beats",
-    artist: "Aura Chill",
-    artwork: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1000&h=1000&fit=crop&q=85",
-    duration: 185,
+    id: "curated_please_please_please",
+    title: "Please Please Please",
+    artist: "Sabrina Carpenter",
+    artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
+    artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
+    duration: 186,
     streamUrl: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=lofi-study-112191.mp3",
-    genre: "Lo-Fi",
-    mood: "Relaxed",
-    playCount: 239400,
+    genre: "Pop",
+    mood: "Chill",
+    playCount: 1120000,
     kind: "track",
-  },
-  {
-    id: "curated_cyber_drift",
-    title: "Neon Cyber Drift",
-    artist: "RetroWave Echo",
-    artwork: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1000&h=1000&fit=crop&q=85",
-    duration: 230,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=the-cradle-of-your-soul-15700.mp3",
-    genre: "Electronic",
-    mood: "Energetic",
-    playCount: 195000,
-    kind: "track",
-  },
-  {
-    id: "curated_urban_groove",
-    title: "Sunset Boulevard",
-    artist: "Velvet Groove",
-    artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
-    duration: 210,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630d7a3f.mp3?filename=watr-fluid-10149.mp3",
-    genre: "Pop / R&B",
-    mood: "Upbeat",
-    playCount: 420000,
-    kind: "track",
-  },
-  {
-    id: "curated_golden_hour",
-    title: "Golden Hour Glow",
-    artist: "Solstice Breeze",
-    artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
-    artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
-    duration: 202,
-    streamUrl: "https://cdn.pixabay.com/download/audio/2022/11/06/audio_c896e382b6.mp3?filename=warm-breeze-126298.mp3",
-    genre: "Acoustic / Indie",
-    mood: "Warm",
-    playCount: 164000,
-    kind: "track",
-  },
+  }
 ];
 
 export const CURATED_RADIO: RadioStation[] = [
@@ -421,29 +382,47 @@ export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]
       return combined.slice(0, limit);
     }
 
-    // Homepage Listen Now: Real chart hits across Bengali, Bollywood, Progressive Rock, and Pop
-    const [bengaliRes, bollywoodRes, rockRes, popRes, scRes] = await Promise.allSettled([
-      searchSaavnTracksServerFn({ data: { query: "Arijit Singh Bengali", limit: 8 } }),
-      searchSaavnTracksServerFn({ data: { query: "Bollywood Trending", limit: 8 } }),
-      searchSaavnTracksServerFn({ data: { query: "Dream Theater Pink Floyd", limit: 8 } }),
-      searchSaavnTracksServerFn({ data: { query: "Taylor Swift The Weeknd", limit: 8 } }),
-      searchSoundCloudTracksServerFn({ data: { query: "Classic Rock Acoustic", limit: 6 } }),
+    // Homepage Listen Now: Fully Dynamic "Properly Trending" Charts
+    // We search for official trending playlists to get real-time chart data
+    const [bollyPlRes, globalPlRes, indiePlRes] = await Promise.allSettled([
+      searchSaavnPlaylistsServerFn({ data: { query: "Top Bollywood", limit: 1 } }),
+      searchSaavnPlaylistsServerFn({ data: { query: "Top English", limit: 1 } }),
+      searchSaavnPlaylistsServerFn({ data: { query: "Trending Today", limit: 1 } }),
     ]);
 
-    const bengali = bengaliRes.status === "fulfilled" ? bengaliRes.value : [];
-    const bollywood = bollywoodRes.status === "fulfilled" ? bollywoodRes.value : [];
-    const rock = rockRes.status === "fulfilled" ? rockRes.value : [];
-    const pop = popRes.status === "fulfilled" ? popRes.value : [];
-    const scTracks = scRes.status === "fulfilled" ? scRes.value : [];
+    const trackPromises: Promise<any>[] = [];
+
+    const bollyPl = bollyPlRes.status === "fulfilled" ? bollyPlRes.value[0] : null;
+    if (bollyPl) trackPromises.push(getSaavnPlaylistServerFn({ data: { id: bollyPl.id } }));
+
+    const globalPl = globalPlRes.status === "fulfilled" ? globalPlRes.value[0] : null;
+    if (globalPl) trackPromises.push(getSaavnPlaylistServerFn({ data: { id: globalPl.id } }));
+
+    const indiePl = indiePlRes.status === "fulfilled" ? indiePlRes.value[0] : null;
+    if (indiePl) trackPromises.push(getSaavnPlaylistServerFn({ data: { id: indiePl.id } }));
+
+    // Fallback direct searches to guarantee content
+    trackPromises.push(searchSaavnTracksServerFn({ data: { query: "New Hindi Songs", limit: 6 } }));
+    trackPromises.push(searchSaavnTracksServerFn({ data: { query: "Global Pop Hits", limit: 6 } }));
+
+    const results = await Promise.allSettled(trackPromises);
+
+    const allTracks: Track[][] = results.map(res => {
+      if (res.status === "fulfilled" && res.value) {
+        // Handle both Playlist details (which has .tracks) and direct Track arrays
+        if (Array.isArray(res.value)) return res.value;
+        if (res.value.tracks) return res.value.tracks;
+      }
+      return [];
+    });
 
     const interleaved: Track[] = [];
-    const maxLen = Math.max(bengali.length, bollywood.length, rock.length, pop.length, scTracks.length);
+    const maxLen = Math.max(...allTracks.map(arr => arr.length));
+    
     for (let i = 0; i < maxLen; i++) {
-      if (bengali[i]) interleaved.push(bengali[i]);
-      if (bollywood[i]) interleaved.push(bollywood[i]);
-      if (rock[i]) interleaved.push(rock[i]);
-      if (pop[i]) interleaved.push(pop[i]);
-      if (scTracks[i]) interleaved.push(scTracks[i]);
+      allTracks.forEach(arr => {
+        if (arr[i]) interleaved.push(arr[i]);
+      });
     }
 
     if (interleaved.length) {
@@ -478,7 +457,7 @@ export async function fetchUnderground(limit = 16): Promise<Track[]> {
 export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
   try {
     const [saavnPlaylistsRes, audiusPlaylistsRes] = await Promise.allSettled([
-      searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Bengali Rock", limit: 8 } }),
+      searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Hollywood Hits", limit: 8 } }),
       fetchFromAudius<AudiusPlaylist[]>("/playlists/trending", { limit: String(limit) }),
     ]);
 
@@ -490,34 +469,24 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
 
     const curatedPlaylists: Playlist[] = [
       {
-        id: "curated_pl_bengali",
-        name: "Bengali Golden Treasures",
-        description: "Rabindra Sangeet, modern Bengali melodies & timeless classics.",
-        artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
-        artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
-        trackCount: 30,
-        isAlbum: false,
-        owner: "Sonara Curators",
-      },
-      {
-        id: "curated_pl_rock",
-        name: "Progressive Rock & Metal Anthems",
-        description: "Dream Theater, Pink Floyd, Queen, Metallica & classic epic solos.",
-        artwork: "/genres/rock.jpg",
-        artworkLg: "/genres/rock.jpg",
-        trackCount: 45,
-        isAlbum: false,
-        owner: "Sonara Rock",
-      },
-      {
-        id: "curated_pl_bollywood",
-        name: "Bollywood Superhits & Romance",
-        description: "Arijit Singh, Shreya Ghoshal, Pritam & blockbuster chartbusters.",
+        id: "curated_pl_bollywood_new",
+        name: "Bollywood New Releases",
+        description: "The latest chartbusters, romantic hits, and dance anthems from Bollywood.",
         artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
         artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
         trackCount: 50,
         isAlbum: false,
-        owner: "Bollywood Mix",
+        owner: "Sonara Curators",
+      },
+      {
+        id: "curated_pl_pop",
+        name: "Today's Top Pop Hits",
+        description: "Taylor Swift, Sabrina Carpenter, The Weeknd & the biggest global singles.",
+        artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
+        artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
+        trackCount: 45,
+        isAlbum: false,
+        owner: "Sonara Pop",
       },
       {
         id: "curated_pl_chill",
@@ -550,14 +519,24 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
   }
   return [
     {
-      id: "curated_pl_bengali",
-      name: "Bengali Golden Treasures",
-      description: "Rabindra Sangeet, modern Bengali melodies & timeless classics.",
-      artwork: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=480&h=480&fit=crop&q=80",
-      artworkLg: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1000&h=1000&fit=crop&q=85",
-      trackCount: 30,
+      id: "curated_pl_bollywood_new",
+      name: "Bollywood New Releases",
+      description: "The latest chartbusters, romantic hits, and dance anthems from Bollywood.",
+      artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
+      artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
+      trackCount: 50,
       isAlbum: false,
       owner: "Sonara Curators",
+    },
+    {
+      id: "curated_pl_pop",
+      name: "Today's Top Pop Hits",
+      description: "Taylor Swift, Sabrina Carpenter, The Weeknd & the biggest global singles.",
+      artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
+      artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
+      trackCount: 45,
+      isAlbum: false,
+      owner: "Sonara Pop",
     },
   ];
 }

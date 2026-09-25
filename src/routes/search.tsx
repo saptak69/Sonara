@@ -156,7 +156,7 @@ function SearchPage() {
 
   if (!q) {
     return (
-      <div className="stagger-in px-4 py-8 md:px-8 space-y-8">
+      <div className="stagger-in px-4 py-8 md:px-8 space-y-8 pb-32">
         <header className="relative z-50">
           <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
@@ -192,11 +192,9 @@ function SearchPage() {
               }} 
             />
           </form>
-          <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase hidden md:block">Explore Everything</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight hidden md:block">Search</h1>
-          <p className="mt-1.5 text-sm text-muted hidden md:block">
-            Find millions of full-length songs, rock bands, Bengali hits, playlists, and live radio.
-          </p>
+          <div className="hidden md:flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
+            <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Search</h1>
+          </div>
         </header>
 
         {recents.length ? (
@@ -267,7 +265,7 @@ function SearchPage() {
   if (tracks.isLoading && !tracks.data) return <HomeSkeleton />;
 
   return (
-    <div className="stagger-in space-y-10 px-4 py-6 md:px-8">
+    <div className="stagger-in space-y-10 px-4 py-6 md:px-8 pb-32">
       <header className="relative z-50">
         <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
@@ -303,8 +301,9 @@ function SearchPage() {
             }} 
           />
         </form>
-        <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Results</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">“{q}”</h1>
+        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
+          <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">“{q}”</h1>
+        </div>
       </header>
 
       {/* Artists Rail */}

@@ -128,10 +128,9 @@ export function RadioContent() {
 
 function RadioPage() {
   return (
-    <div className="stagger-in px-4 py-8 md:px-8 max-w-7xl mx-auto">
-      <header className="mb-8">
-        <p className="text-xs font-medium tracking-[0.2em] text-accent uppercase mb-1">On air</p>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">Radio</h1>
+    <div className="stagger-in px-4 py-8 md:px-8 max-w-7xl mx-auto pb-32">
+      <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-8 mt-4 md:mt-0">
+        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Radio</h1>
       </header>
 
       <RadioContent />

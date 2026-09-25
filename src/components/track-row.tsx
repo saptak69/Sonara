@@ -42,11 +42,10 @@ export function TrackRow({
   return (
     <div
       className={cn(
-        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-2xl px-3 py-2 transition-all duration-150 select-none",
-        "border lg:hover:scale-[1.02] active:scale-[0.98]",
+        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 transition-colors duration-150 select-none",
         active
-          ? "bg-white/[0.06] border-accent/30"
-          : "border-transparent lg:hover:border-white/5 lg:hover:bg-white/[0.04]",
+          ? "bg-white/[0.06]"
+          : "lg:hover:bg-white/[0.04]",
       )}
     >
       {/* Active verdigris ping indicator on far left */}
@@ -109,7 +108,7 @@ export function TrackRow({
             {track.title}
           </p>
         </div>
-        <p className="truncate text-xs text-muted flex items-center gap-1.5 pl-0.5 mt-0.5 font-mono text-[11px]">
+        <p className="truncate text-xs text-muted flex items-center gap-1.5 mt-0.5">
           {track.kind === "radio" && (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-accent uppercase tracking-wider">
               <Radio className="size-2.5 animate-pulse" /> Live
@@ -128,8 +127,8 @@ export function TrackRow({
             <span>{track.artist}</span>
           )}
           {showPlays && track.playCount ? (
-            <span className="text-brass-dim/70 font-mono text-[10px]">
-              · {formatCount(track.playCount)} soundings
+            <span className="text-muted/70 text-[10px]">
+              · {formatCount(track.playCount)} plays
             </span>
           ) : null}
         </p>

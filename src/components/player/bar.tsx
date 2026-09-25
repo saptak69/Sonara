@@ -78,12 +78,12 @@ export function PlayerBar() {
             className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.98] transition-transform"
             onClick={() => setExpanded(true)}
           >
-            <div className={cn("relative size-10 shrink-0", isPlaying && "animate-[spin_8s_linear_infinite]")}>
+            <div className="relative size-11 shrink-0 rounded-lg overflow-hidden shadow-sm">
               <Cover
                 src={track.artwork}
                 alt={track.title}
                 title={track.title}
-                className="size-full rounded-full shadow-sm"
+                className="size-full"
               />
             </div>
             <div className="flex flex-col min-w-0 flex-1 justify-center overflow-hidden">

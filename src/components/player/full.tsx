@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ChevronDown,
   Heart,
@@ -23,6 +23,54 @@ import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+
+/* ────────────────────────────────────────────────
+   Extract dominant color from artwork using canvas
+   Cached per-URL for performance
+   ──────────────────────────────────────────────── */
+const colorCache = new Map<string, string>();
+
+function extractDominantColor(url: string): Promise<string> {
+  if (colorCache.has(url)) return Promise.resolve(colorCache.get(url)!);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = 8;
+        canvas.height = 8;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve("rgba(20,9,8,0.9)"); return; }
+        ctx.drawImage(img, 0, 0, 8, 8);
+        const data = ctx.getImageData(0, 0, 8, 8).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+        }
+        r = Math.round(r / count);
+        g = Math.round(g / count);
+        b = Math.round(b / count);
+        const color = `rgb(${r},${g},${b})`;
+        colorCache.set(url, color);
+        resolve(color);
+      } catch {
+        resolve("rgba(20,9,8,0.9)");
+      }
+    };
+    img.onerror = () => resolve("rgba(20,9,8,0.9)");
+    img.src = url;
+  });
+}
+
+function useArtworkColor(artworkUrl?: string) {
+  const [color, setColor] = useState("rgba(20,9,8,0.9)");
+  useEffect(() => {
+    if (!artworkUrl) return;
+    extractDominantColor(artworkUrl).then(setColor);
+  }, [artworkUrl]);
+  return color;
+}
 
 export function FullPlayer() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -50,70 +98,59 @@ export function FullPlayer() {
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
 
   const live = track?.kind === "radio";
+  const dominantColor = useArtworkColor(track?.artworkLg || track?.artwork);
 
   return (
     <div
       data-open={expanded}
       className={cn(
-        "full-player fixed inset-0 z-50 flex flex-col bg-bg/95 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "full-player fixed inset-0 z-50 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
         "data-[open=false]:translate-y-full"
       )}
       aria-hidden={!expanded}
     >
       {track ? (
         <>
+          {/* ─── Dynamic Artwork Background ─── */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
-            {track.artworkLg || track.artwork ? (
+            {/* Solid color base derived from artwork */}
+            <div
+              className="absolute inset-0 transition-colors duration-1000 ease-out"
+              style={{ backgroundColor: dominantColor }}
+            />
+            {/* Blurred artwork overlay for richness */}
+            {(track.artworkLg || track.artwork) && (
               <img
                 src={track.artworkLg || track.artwork || ""}
                 alt=""
-                className={cn(
-                  "h-full w-full scale-[1.5] object-cover opacity-80 saturate-150 blur-[100px] transition-transform duration-[20s] ease-in-out",
-                  isPlaying && "scale-[1.8] rotate-3"
-                )}
+                className="h-full w-full scale-[1.3] object-cover opacity-60 blur-[80px] saturate-125 transition-all duration-1000 ease-out"
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
-            ) : null}
-            <div className="absolute inset-0 bg-black/20" />
-            
-            {/* Immersive Waveform Visualizer */}
-            {isPlaying && (
-              <div className="absolute bottom-0 left-0 right-0 h-1/3 mix-blend-screen opacity-40 flex items-end justify-between px-8 lg:px-32 gap-1 lg:gap-2">
-                 {Array.from({length: 40}).map((_, i) => (
-                    <div 
-                       key={i} 
-                       className={cn("flex-1 bg-accent/50 rounded-t-full origin-bottom", i >= 16 ? "hidden lg:block" : "block")}
-                       style={{ 
-                          animation: `equalizer ${0.8 + (i % 3) * 0.3}s ease-in-out infinite alternate`,
-                          animationDelay: `${(i % 5) * 0.2}s`,
-                          maxHeight: `${30 + (i % 7) * 10}%`
-                       }}
-                    />
-                 ))}
-              </div>
             )}
-            
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/40 to-bg/90 pointer-events-none" />
+            {/* Darken overlay for text readability */}
+            <div className="absolute inset-0 bg-black/35" />
+            {/* Bottom gradient fade */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 pointer-events-none" />
           </div>
 
-          {/* Header - Floating over content */}
-          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-4 pt-[max(env(safe-area-inset-top),16px)] lg:px-8 lg:py-6 pointer-events-none">
+          {/* ─── Header ─── */}
+          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-4 pt-[max(env(safe-area-inset-top),16px)] lg:px-8 lg:py-5 pointer-events-none">
             <button
               aria-label="Close player"
               onClick={() => setExpanded(false)}
-              className="pointer-events-auto p-2 sonara-glass-strong rounded-full text-white/90 hover:text-white hover:brightness-110 transition-all"
+              className="pointer-events-auto p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/90 hover:bg-white/20 hover:text-white transition-all"
             >
-              <ChevronDown className="size-7" strokeWidth={1.5} />
+              <ChevronDown className="size-6" strokeWidth={2} />
             </button>
             
-            <p className="pointer-events-auto text-[10px] font-semibold tracking-widest text-white/90 uppercase lg:hidden sonara-glass px-4 py-1.5 rounded-full truncate max-w-[50%]">
+            <p className="pointer-events-auto text-[11px] font-semibold tracking-widest text-white/80 uppercase lg:hidden truncate max-w-[50%]">
               {track.album || "Now Playing"}
             </p>
 
-            <div className="pointer-events-auto flex lg:hidden items-center gap-1 sonara-glass rounded-full p-1">
+            <div className="pointer-events-auto flex lg:hidden items-center gap-1">
               <button
-                aria-label="Options"
-                className="p-1.5 rounded-full text-white/90 hover:text-white transition-colors"
+                aria-label="Queue"
+                className="p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/90 hover:bg-white/20 transition-all"
                 onClick={() => setQueueOpen(true)}
               >
                 <ListMusic className="size-5" strokeWidth={1.5} />
@@ -121,18 +158,17 @@ export function FullPlayer() {
             </div>
           </div>
 
-          {/* Main Layout Area */}
+          {/* ─── Main Layout ─── */}
           <div className={cn(
-            "relative flex-1 flex flex-col lg:flex-row px-6 lg:px-12 pt-[calc(env(safe-area-inset-top)+80px)] pb-[max(env(safe-area-inset-bottom),32px)] lg:pt-8 lg:pb-6 overflow-y-auto [scrollbar-width:none] w-full max-w-7xl mx-auto gap-8 lg:gap-12 items-center lg:items-stretch lg:justify-between",
+            "relative flex-1 flex flex-col lg:flex-row px-6 lg:px-16 pt-[calc(env(safe-area-inset-top)+72px)] pb-[max(env(safe-area-inset-bottom),24px)] lg:pt-10 lg:pb-8 overflow-y-auto [scrollbar-width:none] w-full max-w-6xl mx-auto gap-6 lg:gap-16 items-center lg:items-center lg:justify-center",
             panelOpen ? "justify-start" : "justify-center"
           )}>
             
-            {/* Left Side: Artwork & Info */}
-            <div className={cn(
-              "flex flex-col w-full transition-all duration-500 lg:justify-center min-h-min lg:py-2 lg:w-1/2 lg:max-w-[420px]"
-            )}>
-              {/* Artwork */}
-              <div className="w-[min(76vw,320px)] lg:w-full aspect-square mt-auto lg:mt-0 mb-6 lg:mb-6 max-h-[42vh] lg:max-w-[340px] lg:max-h-[min(340px,40vh)] mx-auto rounded-2xl shadow-2xl overflow-hidden relative transition-all duration-500 flex-shrink-0">
+            {/* ─── Left: Artwork & Controls ─── */}
+            <div className="flex flex-col w-full transition-all duration-500 lg:justify-center lg:w-[45%] lg:max-w-[440px]">
+              
+              {/* Artwork — large, centered, with shadow */}
+              <div className="w-[min(80vw,340px)] lg:w-full aspect-square mx-auto rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-8 lg:mb-10">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
@@ -140,32 +176,24 @@ export function FullPlayer() {
                 />
               </div>
 
-              {/* Info & Controls Panel */}
-              <div className="w-full sonara-glass-strong rounded-t-3xl lg:rounded-3xl border-t lg:border border-white/10 p-6 max-lg:-mx-6 max-lg:px-6 max-lg:w-[100vw] mt-auto lg:mt-0 flex-shrink-0">
-                {/* Info & Like */}
-                <div className="flex items-center justify-between gap-4 mb-4 lg:mb-6 overflow-hidden">
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                    <MarqueeText text={track.title} className="font-bold text-white mb-1 transition-all text-2xl lg:text-3xl" />
-                    <MarqueeText text={track.artist} className="text-white/60 transition-all text-lg lg:text-xl" />
-                </div>
-                <div className="flex items-center gap-2">
+              {/* Track Info */}
+              <div className="w-full max-w-[340px] lg:max-w-none mx-auto">
+                <div className="flex items-start justify-between gap-3 mb-5 overflow-hidden">
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <MarqueeText text={track.title} className="font-bold text-white text-xl lg:text-2xl leading-tight" />
+                    <MarqueeText text={track.artist} className="text-white/60 text-base lg:text-lg mt-1" />
+                  </div>
                   <button
                     aria-label={liked ? "Unlike" : "Like"}
-                    className="p-2.5 rounded-full sonara-glass-light text-white/80 hover:text-white hover:brightness-110 transition-all active:scale-95"
+                    className="p-2 rounded-full text-white/70 hover:text-white transition-colors shrink-0 active:scale-90"
                     onClick={() => toggleLike(track)}
                   >
-                    <Heart className={cn("size-5", liked && "fill-accent text-accent")} strokeWidth={1.5} />
-                  </button>
-                  <button className="p-2.5 rounded-full sonara-glass-light text-white/80 hover:text-white hover:brightness-110 transition-all active:scale-95 hidden lg:block">
-                    <MoreHorizontal className="size-5" />
+                    <Heart className={cn("size-6", liked && "fill-accent text-accent")} strokeWidth={1.5} />
                   </button>
                 </div>
-              </div>
 
-              {/* Controls */}
-              <div className="w-full">
                 {/* Scrubber */}
-                <div className="w-full mb-6 mt-4">
+                <div className="w-full mb-4">
                   <Slider
                     value={[live ? 0 : currentTime]}
                     min={0}
@@ -175,96 +203,95 @@ export function FullPlayer() {
                     onValueChange={([val]) => seekTo(val)}
                     className="w-full"
                   />
-                  <div className="mt-2 flex justify-between text-xs text-white/50 font-medium">
+                  <div className="mt-1.5 flex justify-between text-[11px] text-white/40 font-medium tabular-nums">
                     <span>{live ? "LIVE" : formatTime(currentTime)}</span>
-                    <span>{live ? "∞" : formatTime(Number.isFinite(duration) ? duration : 0)}</span>
+                    <span>{live ? "∞" : `-${formatTime(Number.isFinite(duration) ? Math.max(0, duration - currentTime) : 0)}`}</span>
                   </div>
                 </div>
 
-                {/* Main Buttons */}
-                <div className="flex items-center justify-between w-full max-w-[280px] lg:max-w-[300px] mx-auto mb-6">
+                {/* Transport Controls */}
+                <div className="flex items-center justify-between w-full max-w-[300px] mx-auto mb-4">
                   <button
-                    className={cn("text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-accent")}
+                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-accent")}
                     onClick={toggleShuffle}
                   >
-                    <Shuffle className="size-5 lg:size-6" strokeWidth={1.5} />
+                    <Shuffle className="size-5" strokeWidth={2} />
                   </button>
-                  <button className="text-white hover:text-white/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={prev}>
+                  <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={prev}>
                     <SkipBack className="size-8 fill-current" />
                   </button>
                   <PlayPauseButton
                     isPlaying={isPlaying}
                     onClick={toggle}
-                    className="size-16 rounded-full bg-white text-black hover:scale-105 shadow-lg flex items-center justify-center"
+                    className="size-16 rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center transition-transform"
                     iconClassName="size-7"
                   />
-                  <button className="text-white hover:text-white/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={next}>
+                  <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={next}>
                     <SkipForward className="size-8 fill-current" />
                   </button>
                   <button
-                    className={cn("text-white/60 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", repeat !== "off" && "text-accent")}
+                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", repeat !== "off" && "text-accent")}
                     onClick={cycleRepeat}
                   >
-                    {repeat === "one" ? <Repeat1 className="size-5 lg:size-6" strokeWidth={1.5} /> : <Repeat className="size-5 lg:size-6" strokeWidth={1.5} />}
+                    {repeat === "one" ? <Repeat1 className="size-5" strokeWidth={2} /> : <Repeat className="size-5" strokeWidth={2} />}
                   </button>
                 </div>
 
-                {/* Action Row - Mobile Only */}
-                <div className="flex lg:hidden items-center justify-between w-full mt-auto pt-4 border-t border-white/10">
-                  <button className="text-white/60 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => {
+                {/* Action Row — Mobile */}
+                <div className="flex lg:hidden items-center justify-center w-full gap-6 pt-2">
+                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => {
                     if (navigator.share) {
                       navigator.share({ title: track.title, text: `Listen to ${track.title} by ${track.artist} on Sonara`, url: window.location.href });
                     }
                   }}>
                     <Share2 className="size-5" />
                   </button>
-                  <button 
-                    className={cn("flex items-center gap-2 px-4 py-1.5 rounded-full sonara-glass-light hover:brightness-110 text-sm font-medium transition-colors min-h-[44px]", lyricsOpen && "bg-accent/20 text-accent hover:bg-accent/30")}
+                  <button
+                    className={cn("flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all min-h-[44px]", lyricsOpen ? "bg-white/20 text-white" : "text-white/50 hover:text-white")}
                     onClick={() => setLyricsOpen(!lyricsOpen)}
                   >
                     <Mic2 className="size-4" /> Lyrics
                   </button>
-                  <button className="text-white/60 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => setQueueOpen(true)}>
+                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => setQueueOpen(true)}>
                     <ListMusic className="size-5" />
                   </button>
                 </div>
               </div>
-              </div>
             </div>
 
-            {/* Right Side: Lyrics or Queue */}
+            {/* ─── Right: Lyrics or Queue (Desktop) ─── */}
             <div className={cn(
               "w-full transition-all duration-500 relative",
-              "hidden lg:block lg:w-1/2 lg:h-full lg:flex lg:flex-col" // Always visible on desktop
+              "hidden lg:block lg:w-[45%] lg:h-full lg:flex lg:flex-col"
             )}>
               {/* Desktop Tabs */}
-              <div className="hidden lg:flex items-center justify-center mb-6 mt-4">
-                <div className="flex sonara-glass-light p-1 rounded-full text-sm font-medium">
+              <div className="hidden lg:flex items-center justify-center mb-6 mt-2">
+                <div className="flex bg-white/10 backdrop-blur-sm p-1 rounded-full text-sm font-medium">
                   <button
-                    className="group relative isolate px-8 py-1.5 rounded-full transition-colors text-white/60 hover:text-white"
+                    className="group relative isolate px-7 py-1.5 rounded-full transition-colors"
                     onClick={() => { setQueueOpen(true); setLyricsOpen(false); }}
                   >
                     {!lyricsOpen && (
                       <motion.div
                         layoutId="player-tab-glow"
-                        className="absolute inset-0 z-[-1] rounded-full bg-white/15 border border-white/10 shadow-md"
+                        className="absolute inset-0 z-[-1] rounded-full bg-white/15 shadow-sm"
                         transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                       />
                     )}
-                    <span className={cn("relative z-10 transition-colors", !lyricsOpen ? "text-white font-semibold" : "text-white/60")}>Queue</span>
+                    <span className={cn("relative z-10 transition-colors", !lyricsOpen ? "text-white font-semibold" : "text-white/50 hover:text-white/70")}>Queue</span>
                   </button>
                   <button
-                    className="group relative isolate px-8 py-1.5 rounded-full transition-colors text-white/60 hover:text-white"
+                    className="group relative isolate px-7 py-1.5 rounded-full transition-colors"
                     onClick={() => { setLyricsOpen(true); setQueueOpen(false); }}
                   >
                     {lyricsOpen && (
                       <motion.div
                         layoutId="player-tab-glow"
-                        className="absolute inset-0 z-[-1] rounded-full bg-white/15 border border-white/10 shadow-md"
+                        className="absolute inset-0 z-[-1] rounded-full bg-white/15 shadow-sm"
                         transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                       />
                     )}
-                    <span className={cn("relative z-10 transition-colors", lyricsOpen ? "text-white font-semibold" : "text-white/60")}>Lyrics</span>
+                    <span className={cn("relative z-10 transition-colors", lyricsOpen ? "text-white font-semibold" : "text-white/50 hover:text-white/70")}>Lyrics</span>
                   </button>
                 </div>
               </div>

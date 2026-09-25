@@ -77,12 +77,9 @@ function LibraryPage() {
   );
 
   return (
-    <div className="stagger-in space-y-8 px-4 py-6 md:px-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Yours</p>
-          <h1 className="mt-1 font-display text-3xl md:text-4xl font-medium tracking-tight">Library</h1>
-        </div>
+    <div className="stagger-in space-y-8 px-4 py-6 md:px-8 pb-32">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
+        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Library</h1>
         <Button
           variant="chip"
           size="sm"

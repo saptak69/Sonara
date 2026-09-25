@@ -39,7 +39,7 @@ function YouPage() {
   return (
     <div className="pb-32 px-4 md:px-8 max-w-5xl mx-auto pt-8 animate-in fade-in duration-500">
       {/* Header Profile Section */}
-      <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 mb-12">
+      <div className="flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 mb-12 border-b border-white/10 pb-10 mt-8 md:mt-0">
         <div className="relative group">
           <Cover 
             src={user.profileImageUrl || ""} 

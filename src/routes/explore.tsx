@@ -58,10 +58,9 @@ function Explore() {
   if (charts.isLoading && !charts.data) return <HomeSkeleton />;
 
   return (
-    <div className="stagger-in space-y-10 px-4 py-6 md:px-8">
-      <header>
-        <p className="text-xs font-medium tracking-[0.18em] text-subtle uppercase">Discover</p>
-        <h1 className="mt-1 font-display text-3xl md:text-4xl font-medium tracking-tight">Explore</h1>
+    <div className="stagger-in space-y-10 px-4 py-6 md:px-8 pb-32">
+      <header className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
+        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Browse</h1>
       </header>
 
       <section className="space-y-4">

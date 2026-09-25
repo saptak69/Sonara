@@ -25,20 +25,20 @@ import { motion } from "framer-motion";
 
 const SIDEBAR_NAV = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/library", label: "Your Library", icon: Library },
+  { to: "/explore", label: "Browse", icon: Compass },
+  { to: "/radio", label: "Radio", icon: Radio },
 ] as const;
 
-const SIDEBAR_DISCOVER = [
-  { to: "/explore", label: "Discover", icon: Compass },
-  { to: "/radio", label: "Radio", icon: Radio },
+const SIDEBAR_LIBRARY = [
+  { to: "/library", label: "Recently Added", icon: ListMusic },
   { to: "/library", search: { tab: "favorites" }, label: "Favorites", icon: Heart },
 ] as const;
 
 const MOBILE_NAV = [
   { to: "/", label: "Home", icon: Home },
+  { to: "/explore", label: "Browse", icon: Compass },
   { to: "/radio", label: "Radio", icon: Radio },
   { to: "/library", label: "Library", icon: Library },
-  { to: "/you", label: "You", icon: User },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -157,7 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
 
       {/* Left Sidebar */}
-      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col sonara-glass border-r border-white/5 px-6 py-6 lg:flex shadow-2xl">
+      <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-bg/80 backdrop-blur-2xl border-r border-white/5 px-5 py-5 lg:flex">
         <Logo compact={false} />
         
         <nav className="mt-10 flex flex-col gap-2">
@@ -180,8 +180,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {active && (
                   <motion.div
                     layoutId="desktop-nav-glow"
-                    className="absolute inset-0 z-[-1] rounded-lg"
-                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    className="absolute inset-0 z-[-1] rounded-lg bg-white/5 border border-white/5"
                     transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                   />
                 )}
@@ -192,11 +191,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-8 border-t border-border/50 pt-6">
+        <div className="mt-8 pt-2">
+          <h3 className="px-3 text-xs font-semibold uppercase tracking-wider text-muted mb-2">Library</h3>
           <nav className="flex flex-col gap-2">
-            {SIDEBAR_DISCOVER.map((item) => {
+            {SIDEBAR_LIBRARY.map((item) => {
               const active = item.to === "/library" 
-                ? path.startsWith(item.to) && search.tab === "favorites"
+                ? path.startsWith(item.to) && search.tab === "favorites" && item.label === "Favorites"
+                  || (path.startsWith(item.to) && (!search.tab || search.tab === "recent") && item.label === "Recently Added")
                 : path.startsWith(item.to);
               const Icon = item.icon;
               return (
@@ -209,8 +210,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {active && (
                     <motion.div
                       layoutId="desktop-nav-glow"
-                      className="absolute inset-0 z-[-1] rounded-lg"
-                      style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      className="absolute inset-0 z-[-1] rounded-lg bg-white/5 border border-white/5"
                       transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -279,7 +279,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           hasTrack ? "pb-[calc(var(--spacing-player)+var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-[calc(var(--spacing-player)+4rem)]" : "pb-[calc(var(--spacing-nav)+max(env(safe-area-inset-bottom,0px),24px))] lg:pb-8",
         )}
       >
-        <header className="sticky top-0 z-20 flex items-center h-[calc(4rem+env(safe-area-inset-top,0px))] lg:h-[calc(5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all sonara-glass border-b border-white/5">
+        <header className="sticky top-0 z-20 flex items-center h-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] pl-[max(env(safe-area-inset-left,0px),16px)] pr-[max(env(safe-area-inset-right,0px),16px)] lg:px-8 transition-all sonara-glass border-b border-white/5">
           <div className="flex items-center justify-between gap-4 w-full max-w-7xl mx-auto">
             {mobileSearchOpen ? (
               <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 lg:hidden">
@@ -374,12 +374,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-30 pointer-events-none flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:pl-sidebar", hasTrack ? "" : "lg:hidden")}>
-        <div className="pointer-events-auto w-full max-w-5xl px-2 flex justify-center mb-1.5">
+      <div className={cn("fixed inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col items-center pb-[env(safe-area-inset-bottom,0px)]", hasTrack ? "" : "lg:hidden")}>
+        <div className="pointer-events-auto w-full flex justify-center px-2 mb-2 lg:mb-6">
           <PlayerBar />
         </div>
         <div className="pointer-events-auto px-2 pb-2 w-full lg:hidden">
-          <nav className="relative isolate flex items-center justify-around sonara-glass-strong border border-white/10 px-2 py-2 w-full rounded-full shadow-2xl">
+          <nav className="relative isolate flex items-center justify-around sonara-glass px-2 py-1.5 w-full rounded-full shadow-lg">
           {MOBILE_NAV.map((item, i) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
@@ -402,17 +402,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 }}
                 className="group relative isolate flex flex-1 flex-col items-center justify-center gap-1 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92] active:duration-100 py-1"
               >
-                {active && (
-                  <motion.div
-                    layoutId="mobile-nav-glow"
-                    className={cn(
-                      "absolute -inset-y-1 rounded-full z-[-1]",
-                      i === 0 ? "-left-2 -right-1" : i === MOBILE_NAV.length - 1 ? "-left-1 -right-2" : "-inset-x-1"
-                    )}
-                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)' }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
-                )}
+                {/* Apple Music mobile nav uses simple red tint on active, no heavy pill background */}
                 <motion.div
                   animate={{ scale: active ? 1.15 : 1, y: active ? -1 : 0 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 20 }}
