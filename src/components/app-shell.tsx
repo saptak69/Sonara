@@ -380,7 +380,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <PlayerBar />
           </div>
         </div>
-        <div className="pointer-events-auto w-full max-w-[340px] lg:hidden rounded-[24px] bg-black/50 backdrop-blur-3xl saturate-[200%] border border-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+        <div className="pointer-events-auto w-full max-w-[440px] lg:hidden rounded-[24px] bg-black/50 backdrop-blur-3xl saturate-[200%] border border-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
           <nav className="relative isolate flex items-center justify-around px-2 py-2 w-full">
           {MOBILE_NAV.map((item, i) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
@@ -410,12 +410,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className={cn("transition-colors relative", active ? "text-white" : "text-white/50 group-hover:text-white")}
                 >
                   <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
-                  {active && (
-                    <motion.div
-                      layoutId="mobile-nav-indicator"
-                      className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent shadow-[0_0_8px_rgba(252,60,68,0.8)]"
-                    />
-                  )}
                 </motion.div>
                 <span className={cn("text-[10px] font-medium transition-colors mt-1 opacity-0 h-0 w-0 absolute", active ? "opacity-100" : "")}>{item.label}</span>
               </Link>
