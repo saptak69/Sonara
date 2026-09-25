@@ -119,29 +119,40 @@ export function PlayerBar() {
         </div>
       </div>
 
-      {/* Desktop Bottom Bar - Apple Music Style */}
-      <div className="hidden lg:flex relative h-[60px] w-[740px] max-w-[95%] mx-auto items-center justify-between px-6 sonara-glass-strong rounded-full overflow-hidden mb-[env(safe-area-inset-bottom,0px)]">
+      {/* Desktop Bottom Bar - New Apple Music Style */}
+      <div className="hidden lg:flex relative h-[64px] w-[840px] max-w-[95%] mx-auto items-center justify-between px-8 sonara-glass border border-white/5 rounded-full overflow-hidden shadow-2xl mb-[env(safe-area-inset-bottom,0px)]">
         
-        {/* Dynamic Artwork Background */}
+        {/* Dynamic Artwork Background (Subtle) */}
         <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none rounded-full">
           <img
             src={track.artwork}
             alt=""
-            className="w-full h-full object-cover opacity-20 saturate-200 blur-3xl transform scale-150"
+            className="w-full h-full object-cover opacity-30 saturate-200 blur-3xl transform scale-[2]"
             aria-hidden="true"
           />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
 
+        {/* Scrubber Line (Spans the very top edge of the entire pill like the new AM layout) */}
+        {!live && duration > 0 && (
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10 group-hover:h-[4px] transition-all">
+            <div 
+              className="h-full bg-fg shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all ease-linear"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+
         {/* Left: Playback Controls */}
-        <div className="flex items-center gap-5 w-[200px]">
+        <div className="flex items-center gap-6 w-[240px]">
           <button
             className={cn("text-muted hover:text-fg transition-colors", shuffle && "text-accent")}
             onClick={toggleShuffle}
           >
-            <Shuffle className="size-[15px]" strokeWidth={2} />
+            <Shuffle className="size-[16px]" strokeWidth={2.5} />
           </button>
           <button className="text-fg hover:text-accent transition-colors" onClick={prev}>
-            <SkipBack className="size-5 fill-current" />
+            <SkipBack className="size-[22px] fill-current" />
           </button>
           <PlayPauseButton
             isPlaying={isPlaying}
@@ -149,58 +160,41 @@ export function PlayerBar() {
               e.stopPropagation();
               toggle();
             }}
-            className="text-fg hover:scale-105"
-            iconClassName="size-6"
+            className="text-fg hover:scale-105 transition-transform"
+            iconClassName="size-[28px]"
           />
           <button className="text-fg hover:text-accent transition-colors" onClick={next}>
-            <SkipForward className="size-5 fill-current" />
+            <SkipForward className="size-[22px] fill-current" />
           </button>
           <button
             className={cn("text-muted hover:text-fg transition-colors", repeat !== "off" && "text-accent")}
             onClick={cycleRepeat}
           >
-            {repeat === "one" ? <Repeat1 className="size-[15px]" strokeWidth={2} /> : <Repeat className="size-[15px]" strokeWidth={2} />}
+            {repeat === "one" ? <Repeat1 className="size-[16px]" strokeWidth={2.5} /> : <Repeat className="size-[16px]" strokeWidth={2.5} />}
           </button>
         </div>
 
-        {/* Center: LCD Screen */}
+        {/* Center: Track Info (No box, clean text) */}
         <div 
-          className="flex-1 h-[40px] bg-black/20 dark:bg-white/5 rounded-md flex items-center px-1.5 relative group overflow-hidden border border-white/5 shadow-inner cursor-pointer mx-2"
+          className="flex-1 flex flex-col items-center justify-center px-4 cursor-pointer group"
           onClick={() => setExpanded(true)}
         >
-          <div className={cn("shrink-0 mr-3 pointer-events-none transition-transform duration-500", isPlaying && "scale-105")}>
-            <Cover src={track.artwork} alt={track.title} className="size-[28px] rounded-[4px] shadow-md" />
+          <div className="flex items-center gap-2 max-w-full">
+            {live && (
+              <span className="text-[9px] font-bold tracking-wider text-accent bg-accent/10 px-1.5 py-0.5 rounded">
+                LIVE
+              </span>
+            )}
+            <MarqueeText text={track.title} className="font-semibold text-fg text-[13px] leading-tight truncate text-center" />
+            <Equalizer isPlaying={isPlaying} />
           </div>
-          
-          <div className="flex flex-col min-w-0 flex-1 justify-center z-10 pointer-events-none overflow-hidden">
-            <div className="flex items-center gap-2 overflow-hidden w-full">
-              <MarqueeText text={track.title} className="font-semibold text-fg text-[12px] leading-tight flex-1 min-w-0" />
-              <Equalizer isPlaying={isPlaying} />
-            </div>
-            <span className="truncate text-[10px] text-muted leading-tight mt-0.5">
-              {track.artist}
-            </span>
-          </div>
-
-          {live && (
-            <span className="text-[9px] font-bold tracking-wider text-accent bg-accent/10 px-1.5 py-0.5 rounded mr-2 z-10 pointer-events-none">
-              LIVE
-            </span>
-          )}
-
-          {/* Scrubber Line (Bottom Edge) */}
-          {!live && duration > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/5 group-hover:h-[4px] transition-all">
-              <div 
-                className="h-full bg-fg rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.5)]"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          )}
+          <span className="truncate text-[11px] text-muted font-medium leading-tight mt-0.5 max-w-full text-center">
+            {track.artist}
+          </span>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-5 w-[200px]">
+        <div className="flex items-center justify-end gap-6 w-[240px]">
           <button 
             className="text-muted hover:text-fg transition-colors"
             onClick={() => {
@@ -208,7 +202,7 @@ export function PlayerBar() {
               setTimeout(() => setLyricsOpen(true), 50);
             }}
           >
-            <Mic2 className="size-[17px]" strokeWidth={2} />
+            <Mic2 className="size-[18px]" strokeWidth={2.5} />
           </button>
           <button 
             className="text-muted hover:text-fg transition-colors"
@@ -217,11 +211,14 @@ export function PlayerBar() {
               setTimeout(() => setLyricsOpen(false), 50);
             }}
           >
-            <ListMusic className="size-[17px]" strokeWidth={2} />
+            <ListMusic className="size-[18px]" strokeWidth={2.5} />
           </button>
-          <button className="text-muted hover:text-fg transition-colors">
-            <Volume2 className="size-[17px]" strokeWidth={2} />
-          </button>
+          <div className="flex items-center gap-2 group/vol w-24">
+            <MonitorSpeaker className="size-[18px] text-muted group-hover/vol:text-fg transition-colors shrink-0" strokeWidth={2.5} />
+            <div className="flex-1 h-1.5 bg-white/10 rounded-full relative overflow-hidden group-hover/vol:h-2 transition-all">
+              <div className="absolute left-0 top-0 bottom-0 bg-fg w-2/3 rounded-full" />
+            </div>
+          </div>
         </div>
 
       </div>
