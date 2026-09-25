@@ -127,10 +127,8 @@ export function FullPlayer() {
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             )}
-            {/* Darken overlay for text readability */}
-            <div className="absolute inset-0 bg-black/35" />
-            {/* Bottom gradient fade */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 pointer-events-none" />
+            {/* Subtle gradient to ensure text readability without a heavy black tint */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60 pointer-events-none mix-blend-multiply" />
           </div>
 
           {/* ─── Header ─── */}

@@ -4,7 +4,7 @@ export const Route = createFileRoute("/terms")({
   component: TermsPage,
 });
 
-function TermsPage() {
+export function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 md:px-8 space-y-8 stagger-in pb-32">
       <header className="border-b border-white/10 pb-6 mb-8 mt-8 md:mt-0">

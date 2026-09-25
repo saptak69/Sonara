@@ -374,12 +374,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col items-center pb-[env(safe-area-inset-bottom,0px)]", hasTrack ? "" : "lg:hidden")}>
+      <div className={cn("fixed inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col items-center", hasTrack ? "" : "lg:hidden")}>
         <div className="pointer-events-auto w-full flex justify-center px-2 mb-2 lg:mb-6">
           <PlayerBar />
         </div>
-        <div className="pointer-events-auto px-2 pb-2 w-full lg:hidden">
-          <nav className="relative isolate flex items-center justify-around sonara-glass px-2 py-1.5 w-full rounded-full shadow-lg">
+        <div className="pointer-events-auto w-full lg:hidden sonara-glass border-t border-white/5 bg-background/50 backdrop-blur-[60px] saturate-[250%]">
+          <nav className="relative isolate flex items-center justify-around px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+8px)] w-full">
           {MOBILE_NAV.map((item, i) => {
             const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
             const Icon = item.icon;
