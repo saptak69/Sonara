@@ -1,6 +1,5 @@
-import { ChevronLeft, ChevronRight, ChevronRightIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type ReactNode, useRef } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 
@@ -10,17 +9,14 @@ export function SectionHeader({
   title,
   to,
 }: {
-  title: ReactNode;
-  to?: string;
+  title: string;
+  to?: RailTo;
 }) {
-  const heading = <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight flex items-center gap-1 cursor-pointer group w-fit">{title}</h2>;
+  const heading = <h2 className="font-display text-xl md:text-2xl font-medium tracking-tight">{title}</h2>;
   if (!to) return heading;
   return (
-    <Link to={to} className="group">
-      <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight flex items-center gap-1 w-fit">
-        <span className="group-hover:underline decoration-1 underline-offset-2">{title}</span>
-        <ChevronRightIcon className="size-4 text-muted group-hover:text-fg transition-colors mt-0.5" strokeWidth={2.5} />
-      </h2>
+    <Link to={to} className="hover:underline">
+      {heading}
     </Link>
   );
 }
@@ -40,7 +36,7 @@ export function Rail({
   };
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3">
       <div className="flex items-center justify-between gap-3 px-1">
         <SectionHeader title={title} to={to} />
         <div className="hidden items-center gap-1 md:flex">

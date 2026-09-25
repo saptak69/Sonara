@@ -155,9 +155,9 @@ export function ArtistCard({ artist }: { artist: Artist }) {
       to="/artist/$id"
       params={{ id: artist.id }}
       onPointerDown={triggerHaptic}
-      className="group w-36 shrink-0 snap-start text-center sm:w-40 rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+      className="group w-36 shrink-0 snap-start text-center sm:w-40 rounded-xl transition-all duration-200 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
     >
-      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface shadow-md transition-shadow duration-[0.25s] lg:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] lg:group-hover:shadow-black/20">
+      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface shadow-md transition-shadow duration-300 lg:group-hover:shadow-xl lg:group-hover:shadow-black/40">
         <Cover
           src={artist.artworkLg || artist.artwork}
           alt={artist.name}
@@ -166,11 +166,11 @@ export function ArtistCard({ artist }: { artist: Artist }) {
           className="aspect-square w-full"
         />
       </div>
-      <div className="mt-2.5 px-0.5">
-        <span className="block truncate text-sm font-medium text-fg leading-snug lg:group-hover:text-accent transition-colors">
+      <div className="mt-2.5">
+        <span className="block truncate text-sm font-medium text-fg lg:group-hover:text-accent transition-colors">
           {artist.name}
         </span>
-        <span className="block truncate text-xs text-muted mt-0.5 leading-snug">Artist</span>
+        <span className="block text-xs text-muted mt-0.5">Artist</span>
       </div>
     </Link>
   );
@@ -191,10 +191,10 @@ export function RadioCard({ station }: { station: RadioStation }) {
       type="button"
       onClick={() => playTrack(track)}
       onPointerDown={triggerHaptic}
-      className="group w-40 shrink-0 snap-start text-left sm:w-44 rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:enabled:scale-[0.97] lg:hover:scale-[1.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+      className="group w-40 shrink-0 snap-start text-left sm:w-44 rounded-xl transition-all duration-200 active:enabled:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
     >
       <div className={cn(
-        "relative overflow-hidden rounded-xl bg-surface transition-shadow duration-[0.25s] lg:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] lg:group-hover:shadow-black/20",
+        "relative overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 lg:group-hover:shadow-xl lg:group-hover:shadow-black/40",
         active && "ring-2 ring-accent/60",
       )}>
         <Cover
@@ -236,7 +236,7 @@ export function MoodCard({
       to="/search"
       search={{ q: query }}
       onPointerDown={triggerHaptic}
-      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-xl p-4 shadow-lg lg:hover:shadow-[0_12px_24px_rgba(0,0,0,0.2)] transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025]"
+      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 shadow-lg lg:hover:shadow-2xl transition-all duration-200 active:scale-[0.97]"
     >
       {image ? (
         <img
@@ -248,11 +248,11 @@ export function MoodCard({
       ) : null}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
       <div className="relative z-10 flex flex-col">
-        <span className="truncate text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-md leading-tight lg:group-hover:text-accent transition-colors">
+        <span className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-md lg:group-hover:text-accent transition-colors">
           {label}
         </span>
         {subtitle ? (
-          <span className="truncate text-[11px] font-medium text-white/70 drop-shadow mt-0.5">
+          <span className="text-[11px] font-medium text-white/70 drop-shadow">
             {subtitle}
           </span>
         ) : null}

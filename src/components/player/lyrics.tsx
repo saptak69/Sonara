@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import { fetchLyrics } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export function LyricsPanel() {
   const track = usePlayer((s) => s.queue[s.index]);
@@ -65,4 +67,44 @@ export function LyricsPanel() {
   );
 }
 
+export function LyricsDrawer() {
+  const open = usePlayer((s) => s.lyricsOpen);
+  const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
+  const track = usePlayer((s) => s.queue[s.index]);
 
+  return (
+    <aside
+      data-open={open}
+      className={cn(
+        "fixed inset-0 z-50 flex lg:hidden flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] bg-black",
+        "data-[open=false]:translate-y-full"
+      )}
+    >
+      {/* Immersive blurred artwork background */}
+      {track && (
+        <div className="absolute inset-0 z-[-1] overflow-hidden">
+          <img
+            src={track.artworkLg || track.artwork}
+            alt=""
+            className="w-full h-full object-cover opacity-60 saturate-[150%] blur-[80px] scale-150"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+      )}
+
+      <div className="flex items-center justify-between px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4 shrink-0">
+        <div className="flex flex-col">
+          <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-md">Lyrics</h2>
+          {track && <p className="text-xs font-medium text-white/60 drop-shadow">{track.title}</p>}
+        </div>
+        <Button variant="icon" size="iconSm" aria-label="Close lyrics" onClick={() => setLyricsOpen(false)} className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-colors size-8 flex items-center justify-center shadow-lg">
+          <X className="size-5" />
+        </Button>
+      </div>
+      <div className="flex-1 overflow-hidden mask-image:linear-gradient(to_bottom,transparent,black_5%,black_95%,transparent)">
+        <LyricsPanel />
+      </div>
+    </aside>
+  );
+}

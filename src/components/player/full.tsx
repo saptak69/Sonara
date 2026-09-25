@@ -166,10 +166,7 @@ export function FullPlayer() {
             <div className="flex flex-col w-full transition-all duration-500 lg:justify-center lg:w-[45%] lg:max-w-[440px]">
               
               {/* Artwork — large, centered, with shadow */}
-              <div className={cn(
-                "w-[min(80vw,340px)] lg:w-full aspect-square mx-auto rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-8 lg:mb-10",
-                lyricsOpen && "hidden lg:block"
-              )}>
+              <div className="w-[min(85vw,360px)] lg:w-full aspect-square mx-auto rounded-[32px] shadow-[0_32px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-8 lg:mb-10">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
@@ -177,19 +174,12 @@ export function FullPlayer() {
                 />
               </div>
 
-              {/* Mobile Lyrics View */}
-              {lyricsOpen && (
-                <div className="flex-1 w-full lg:hidden min-h-[40vh] max-h-[50vh] flex flex-col mb-4 overflow-hidden mask-image:linear-gradient(to_bottom,transparent,black_5%,black_95%,transparent)">
-                  <LyricsPanel />
-                </div>
-              )}
-
               {/* Track Info */}
               <div className="w-full max-w-[340px] lg:max-w-none mx-auto">
-                <div className="flex items-start justify-between gap-3 mb-5 overflow-hidden">
+                <div className="flex items-start justify-between gap-3 mb-6 overflow-hidden">
                   <div className="min-w-0 flex-1 overflow-hidden">
-                    <MarqueeText text={track.title} className="font-bold text-white text-xl lg:text-2xl leading-tight" />
-                    <MarqueeText text={track.artist} className="text-white/60 text-base lg:text-lg mt-1" />
+                    <MarqueeText text={track.title} className="font-extrabold text-white text-[28px] lg:text-3xl leading-tight tracking-tight" />
+                    <MarqueeText text={track.artist} className="text-white/70 font-semibold text-lg lg:text-xl mt-1" />
                   </div>
                   <button
                     aria-label={liked ? "Unlike" : "Like"}
@@ -218,30 +208,30 @@ export function FullPlayer() {
                 </div>
 
                 {/* Transport Controls */}
-                <div className="flex items-center justify-between w-full max-w-[300px] mx-auto mb-4">
+                <div className="flex items-center justify-between w-full max-w-[320px] mx-auto mb-4">
                   <button
-                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-accent")}
+                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-white")}
                     onClick={toggleShuffle}
                   >
-                    <Shuffle className="size-5" strokeWidth={2} />
+                    <Shuffle className="size-6" strokeWidth={2.5} />
                   </button>
                   <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={prev}>
-                    <SkipBack className="size-8 fill-current" />
+                    <SkipBack className="size-10 fill-current" />
                   </button>
                   <PlayPauseButton
                     isPlaying={isPlaying}
                     onClick={toggle}
-                    className="size-16 rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center transition-transform"
-                    iconClassName="size-7"
+                    className="size-20 rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-xl flex items-center justify-center transition-transform"
+                    iconClassName="size-8"
                   />
                   <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={next}>
-                    <SkipForward className="size-8 fill-current" />
+                    <SkipForward className="size-10 fill-current" />
                   </button>
                   <button
-                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", repeat !== "off" && "text-accent")}
+                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", repeat !== "off" && "text-white")}
                     onClick={cycleRepeat}
                   >
-                    {repeat === "one" ? <Repeat1 className="size-5" strokeWidth={2} /> : <Repeat className="size-5" strokeWidth={2} />}
+                    {repeat === "one" ? <Repeat1 className="size-6" strokeWidth={2.5} /> : <Repeat className="size-6" strokeWidth={2.5} />}
                   </button>
                 </div>
 
