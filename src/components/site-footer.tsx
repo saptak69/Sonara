@@ -92,12 +92,12 @@ export function SiteFooter() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/[0.06] text-[11px] text-subtle">
           <p>© {new Date().getFullYear()} Sonara. Independent non-commercial experiment.</p>
           <div className="flex items-center gap-4">
-            <Link to="/about" className="hover:text-muted transition-colors">
-              Terms & Attribution
+            <Link to="/privacy" className="hover:text-muted transition-colors">
+              Privacy Policy
             </Link>
             <span>•</span>
-            <Link to="/about" className="hover:text-muted transition-colors">
-              Copyright Notice
+            <Link to="/terms" className="hover:text-muted transition-colors">
+              Terms of Service
             </Link>
             <span>•</span>
             <a
