@@ -14,9 +14,11 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RadioRouteImport } from './routes/radio'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as StudioRouteImport } from './routes/studio'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WeeklyMixRouteImport } from './routes/weekly-mix'
 import { Route as YouRouteImport } from './routes/you'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
@@ -52,6 +54,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RadioRoute = RadioRouteImport.update({
   id: '/radio',
   path: '/radio',
@@ -65,6 +72,11 @@ const SearchRoute = SearchRouteImport.update({
 const StudioRoute = StudioRouteImport.update({
   id: '/studio',
   path: '/studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WeeklyMixRoute = WeeklyMixRouteImport.update({
@@ -119,9 +131,11 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
   '/api/version': typeof ApiVersionRoute
@@ -138,9 +152,11 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
   '/api/version': typeof ApiVersionRoute
@@ -158,9 +174,11 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
+  '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
   '/api/version': typeof ApiVersionRoute
@@ -179,9 +197,11 @@ export interface FileRouteTypes {
     | '/explore'
     | '/library'
     | '/login'
+    | '/privacy'
     | '/radio'
     | '/search'
     | '/studio'
+    | '/terms'
     | '/weekly-mix'
     | '/you'
     | '/api/version'
@@ -198,9 +218,11 @@ export interface FileRouteTypes {
     | '/explore'
     | '/library'
     | '/login'
+    | '/privacy'
     | '/radio'
     | '/search'
     | '/studio'
+    | '/terms'
     | '/weekly-mix'
     | '/you'
     | '/api/version'
@@ -217,9 +239,11 @@ export interface FileRouteTypes {
     | '/explore'
     | '/library'
     | '/login'
+    | '/privacy'
     | '/radio'
     | '/search'
     | '/studio'
+    | '/terms'
     | '/weekly-mix'
     | '/you'
     | '/api/version'
@@ -237,9 +261,11 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   RadioRoute: typeof RadioRoute
   SearchRoute: typeof SearchRoute
   StudioRoute: typeof StudioRoute
+  TermsRoute: typeof TermsRoute
   WeeklyMixRoute: typeof WeeklyMixRoute
   YouRoute: typeof YouRoute
   ApiVersionRoute: typeof ApiVersionRoute
@@ -288,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/radio': {
       id: '/radio'
       path: '/radio'
@@ -307,6 +340,13 @@ declare module '@tanstack/react-router' {
       path: '/studio'
       fullPath: '/studio'
       preLoaderRoute: typeof StudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/weekly-mix': {
@@ -381,9 +421,11 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   RadioRoute: RadioRoute,
   SearchRoute: SearchRoute,
   StudioRoute: StudioRoute,
+  TermsRoute: TermsRoute,
   WeeklyMixRoute: WeeklyMixRoute,
   YouRoute: YouRoute,
   ApiVersionRoute: ApiVersionRoute,
