@@ -72,13 +72,13 @@ export function PlayerBar() {
           </div>
         ) : null}
         
-        <div className="flex h-16 items-center gap-3 px-3">
+        <div className="flex h-[76px] items-center gap-4 px-4">
           <button
             type="button"
-            className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.98] transition-transform"
+            className="flex min-w-0 flex-1 items-center gap-3.5 text-left active:scale-[0.98] transition-transform"
             onClick={() => setExpanded(true)}
           >
-            <div className="relative size-11 shrink-0 rounded-lg overflow-hidden shadow-sm">
+            <div className="relative size-[52px] shrink-0 rounded-[10px] overflow-hidden shadow-sm">
               <Cover
                 src={track.artwork}
                 alt={track.title}
@@ -88,24 +88,24 @@ export function PlayerBar() {
             </div>
             <div className="flex flex-col min-w-0 flex-1 justify-center overflow-hidden">
               <div className="flex items-center gap-2 overflow-hidden w-full">
-                <MarqueeText text={track.title} className="text-sm font-medium text-fg flex-1 min-w-0" />
+                <MarqueeText text={track.title} className="text-[15px] font-semibold text-fg flex-1 min-w-0" />
                 <Equalizer isPlaying={isPlaying} />
               </div>
-              <span className="truncate text-xs text-muted">
+              <span className="truncate text-[13px] text-white/70">
                 {track.artist}
               </span>
             </div>
           </button>
 
-          <div className="flex shrink-0 items-center gap-4 px-2">
+          <div className="flex shrink-0 items-center gap-5 px-2">
             <PlayPauseButton
               isPlaying={isPlaying}
               onClick={(e) => {
                 e.stopPropagation();
                 toggle();
               }}
-              className="text-fg"
-              iconClassName="size-6"
+              className="text-fg active:scale-90 transition-transform"
+              iconClassName="size-7"
             />
             <button
               type="button"
@@ -113,7 +113,7 @@ export function PlayerBar() {
               className="active:scale-90 transition-transform text-fg"
               onClick={next}
             >
-              <SkipForward className="size-6 fill-current" />
+              <SkipForward className="size-7 fill-current" />
             </button>
           </div>
         </div>

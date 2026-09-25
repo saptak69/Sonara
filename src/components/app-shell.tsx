@@ -409,9 +409,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                   className={cn("transition-colors relative", active ? "text-white" : "text-white/50 group-hover:text-white")}
                 >
-                  <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                  <Icon className="size-6" strokeWidth={active ? 2.5 : 2} />
                 </motion.div>
-                <span className={cn("text-[10px] font-medium transition-colors mt-1 opacity-0 h-0 w-0 absolute", active ? "opacity-100" : "")}>{item.label}</span>
               </Link>
             );
           })}
