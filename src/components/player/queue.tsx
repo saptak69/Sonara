@@ -61,22 +61,41 @@ export function QueueList({ className }: { className?: string }) {
 export function QueuePanel() {
   const open = usePlayer((s) => s.queueOpen);
   const setQueueOpen = usePlayer((s) => s.setQueueOpen);
+  const track = usePlayer((s) => s.queue[s.index]);
 
   return (
     <aside
       data-open={open}
       className={cn(
-        "fixed top-0 right-0 z-50 flex h-[100dvh] md:hidden w-full flex-col liquid-glass transition-transform duration-300",
-        "data-[open=false]:translate-x-full"
+        "fixed inset-0 z-50 flex md:hidden flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] liquid-glass",
+        "data-[open=false]:translate-y-full"
       )}
     >
-      <div className="flex items-center justify-between px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-4 border-b border-white/5 bg-transparent">
-        <h2 className="text-lg font-bold text-white tracking-tight">Queue</h2>
-        <Button variant="icon" size="iconSm" aria-label="Close queue" onClick={() => setQueueOpen(false)} className="text-white/60 hover:text-white bg-white/10 rounded-full">
+      {/* Immersive blurred artwork background */}
+      {track && (
+        <div className="absolute inset-0 z-[-1] overflow-hidden bg-black">
+          <img
+            src={track.artworkLg || track.artwork}
+            alt=""
+            className="w-full h-full object-cover opacity-60 saturate-[150%] blur-3xl scale-150"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+      )}
+
+      <div className="flex items-center justify-between px-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-4 shrink-0">
+        <div className="flex flex-col">
+          <h2 className="text-xl font-bold text-white tracking-tight drop-shadow-md">Queue</h2>
+          {track && <p className="text-xs font-medium text-white/60 drop-shadow">Now Playing: {track.title}</p>}
+        </div>
+        <Button variant="icon" size="iconSm" aria-label="Close queue" onClick={() => setQueueOpen(false)} className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-colors size-8 flex items-center justify-center shadow-lg">
           <X className="size-5" />
         </Button>
       </div>
-      <QueueList />
+      <div className="flex-1 overflow-hidden mask-image:linear-gradient(to_bottom,transparent,black_5%,black_95%,transparent)">
+        <QueueList />
+      </div>
     </aside>
   );
 }
