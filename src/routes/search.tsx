@@ -10,7 +10,7 @@ import { fetchFeaturedAlbums, searchAlbums, searchArtists, searchPlaylists, sear
 import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
-import { Search as SearchIcon, X } from "lucide-react";
+import { Search as SearchIcon, X, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { SearchSuggestions } from "@/components/search-suggestions";
 
@@ -31,6 +31,7 @@ function SearchPage() {
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [localQ, setLocalQ] = useState(q);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     setLocalQ(q);

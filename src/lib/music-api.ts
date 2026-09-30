@@ -662,220 +662,161 @@ export async function generateWeeklyMix(recents: Track[]): Promise<Track[]> {
       return fetchTrending(20);
     }
     
-    // Extract top artists and genres from recent tracks
     const artists = new Map<string, number>();
     const genres = new Map<string, number>();
     
-    recents.forEach(track => {
+    recents.forEach((track, i) => {
+      const weight = 1 + (i / recents.length); 
       if (track.artist) {
-        artists.set(track.artist, (artists.get(track.artist) || 0) + 1);
+        const a = track.artist.split(',')[0].trim();
+        artists.set(a, (artists.get(a) || 0) + weight);
       }
       if (track.genre) {
-        genres.set(track.genre, (genres.get(track.genre) || 0) + 1);
+        genres.set(track.genre, (genres.get(track.genre) || 0) + weight);
       }
     });
 
-    const topArtists = Array.from(artists.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
-    const topGenres = Array.from(genres.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(e => e[0]);
+    const topArtists = Array.from(artists.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4).map(e => e[0]);
+    const topGenres = Array.from(genres.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
     
-    const queries: string[] = [];
-    topArtists.forEach(a => queries.push(`${a} popular`));
-    topGenres.forEach(g => queries.push(`${g} hits`));
-    
-    if (queries.length === 0) {
-      return fetchTrending(20);
-    }
-
     const mix: Track[] = [];
     const seen = new Set<string>();
 
-    // Fetch from Saavn for highest quality
-    const results = await Promise.allSettled(
-      queries.map(q => searchSaavnTracksServerFn({ data: { query: q, limit: 6 } }))
+    const addTrack = (t: Track) => {
+      const key = t.title.toLowerCase().trim() + '_' + (t.artist || '').toLowerCase().trim();
+      if (!seen.has(key) && !seen.has(t.id)) {
+        seen.add(key);
+        seen.add(t.id);
+        mix.push(t);
+        return true;
+      }
+      return false;
+    };
+
+    const artistResults = await Promise.allSettled(
+      topArtists.map(a => searchSaavnTracksServerFn({ data: { query: a + ' hits', limit: 5 } }))
     );
-    
-    for (const res of results) {
+    let artistCount = 0;
+    for (const res of artistResults) {
       if (res.status === 'fulfilled' && res.value) {
         for (const t of res.value) {
-          const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
-          if (!seen.has(key) && !seen.has(t.id)) {
-            seen.add(key);
-            seen.add(t.id);
-            mix.push(t);
-          }
+          if (artistCount < 8 && addTrack(t)) artistCount++;
         }
       }
     }
-    
-    // Add a few trending tracks as well to spice it up
-    const trending = await fetchTrending(5);
-    for (const t of trending) {
-       const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
-       if (!seen.has(key) && !seen.has(t.id)) {
-         seen.add(key);
-         seen.add(t.id);
-         mix.push(t);
-       }
+
+    const genreResults = await Promise.allSettled(
+      topGenres.map(g => searchSaavnTracksServerFn({ data: { query: g + ' popular', limit: 5 } }))
+    );
+    let genreCount = 0;
+    for (const res of genreResults) {
+      if (res.status === 'fulfilled' && res.value) {
+        for (const t of res.value) {
+          if (genreCount < 6 && addTrack(t)) genreCount++;
+        }
+      }
     }
 
-    // Shuffle the mix
+    const discoveryResults = await Promise.allSettled(
+      topArtists.slice(0, 2).map(a => searchSaavnTracksServerFn({ data: { query: a + ' latest', limit: 4 } }))
+    );
+    let discCount = 0;
+    for (const res of discoveryResults) {
+      if (res.status === 'fulfilled' && res.value) {
+        for (const t of res.value) {
+          if (discCount < 4 && addTrack(t)) discCount++;
+        }
+      }
+    }
+
+    const trending = await fetchTrending(5);
+    let trendCount = 0;
+    for (const t of trending || []) {
+      if (trendCount < 2 && addTrack(t)) trendCount++;
+    }
+
     for (let i = mix.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [mix[i], mix[j]] = [mix[j], mix[i]];
+        const temp = mix[i];
+        mix[i] = mix[j];
+        mix[j] = temp;
     }
 
     return mix.slice(0, 20);
   } catch (error) {
-    console.error("Error generating weekly mix", error);
+    console.error('Error generating weekly mix', error);
     return fetchTrending(20);
   }
 }
 
-/**
- * Intelligent Next-Track / Queue Recommendation Algorithm
- * Analyzes the played song's artist, genre, and acoustic vibe to queue matching songs.
- * Ensures Rock stays with Rock/Metal, Bengali stays with Bengali, and prevents random EDM/DJ mixes!
- */
+
 export async function fetchRelatedQueue(track: Track, limit = 15, recents: Track[] = []): Promise<Track[]> {
   try {
-    if (track.id.startsWith("saavn_")) {
-      const similar = await getSimilarSongsServerFn({ data: { id: track.id, limit } });
-      if (similar && similar.length > 0) return similar;
-    }
-
-    const artist = track.artist?.toLowerCase() || "";
-    const title = track.title?.toLowerCase() || "";
-    const genre = track.genre?.toLowerCase() || "";
-    const blob = `${artist} ${title} ${genre}`;
-
-    // 1. Rock / Prog Rock / Metal
-    const isRockOrMetal =
-      genre.includes("rock") ||
-      genre.includes("metal") ||
-      genre.includes("prog") ||
-      /dream theater|pink floyd|queen|metallica|rush|porcupine tree|tool|opeth|iron maiden|led zeppelin|ac\/dc|guns n' roses|nirvana|linkin park|foo fighters|deep purple|black sabbath|fossils|cactus|steven wilson|judas priest|megadeth/.test(
-        blob,
-      );
-
-    // 2. Bengali Music
-    const isBengali =
-      genre.includes("bengali") ||
-      genre.includes("bangla") ||
-      /arijit singh|anupam roy|fossils|rupam islam|cactus|rabindra|shreya ghoshal|nachiketa|somlata|silajit|hemanta|manna dey|kishore kumar|moheener ghoraguli/.test(
-        blob,
-      );
-
-    // 3. Bollywood / Hindi Melodic
-    const isBollywood =
-      genre.includes("hindi") ||
-      genre.includes("bollywood") ||
-      /arijit singh|atif aslam|pritam|shreya ghoshal|mohit chauhan|kk|sonu nigam|jubin nautiyal|darshan raval|sachin-jigar|ar rahman|vishal mishra/.test(
-        blob,
-      );
-
-    // 4. Pop / Western Contemporary
-    const isPop =
-      genre.includes("pop") ||
-      /taylor swift|the weeknd|billie eilish|olivia rodrigo|coldplay|daft punk|dua lipa|ed sheeran|bruno mars|sabrina carpenter|ariana grande|adele|charlie puth/.test(
-        blob,
-      );
-
-    let queries: string[] = [];
-
-    if (isRockOrMetal) {
-      if (isBengali) {
-        queries = ["Fossils Bangla Rock", "Cactus Bengali Band", "Rupam Islam Rock", "Lakkhichhara"];
-      } else {
-        queries = [
-          `${track.artist} greatest hits`,
-          "Dream Theater Pink Floyd",
-          "Progressive Rock Metal Anthems",
-          "Rush Porcupine Tree",
-          "Classic Rock Metal",
-        ];
-      }
-    } else if (isBengali) {
-      queries = [
-        `${track.artist} Bengali`,
-        "Bengali Golden Treasures",
-        "Anupam Roy Hits",
-        "Arijit Singh Bengali Songs",
-      ];
-    } else if (isBollywood) {
-      queries = [
-        `${track.artist} Superhits`,
-        "Bollywood Romance Melody",
-        "Arijit Singh Atif Aslam",
-        "Pritam Bollywood Hits",
-      ];
-    } else if (isPop) {
-      queries = [
-        `${track.artist} top hits`,
-        "Pop Anthems Hits",
-        "The Weeknd Taylor Swift",
-        "Coldplay Pop Rock",
-      ];
-    } else {
-      queries = [`${track.artist} songs`, `${track.genre || track.artist} popular`];
-      
-      if (recents && recents.length > 0) {
-        const artists = new Map<string, number>();
-        recents.forEach(t => {
-          if (t.artist && t.artist !== track.artist) {
-            artists.set(t.artist, (artists.get(t.artist) || 0) + 1);
-          }
-        });
-        const topArtists = Array.from(artists.entries()).sort((a, b) => b[1] - a[1]).slice(0, 2).map(e => e[0]);
-        topArtists.forEach(a => queries.push(`${a} hits`));
-      }
-    }
-
     const results: Track[] = [];
     const seen = new Set<string>([track.id]);
+    const artistCounts = new Map<string, number>();
 
-    const [saavnRes, scRes] = await Promise.allSettled([
-      Promise.allSettled(
-        queries.slice(0, 3).map((q) => searchSaavnTracksServerFn({ data: { query: q, limit: 8 } })),
-      ),
-      isRockOrMetal
-        ? searchSoundCloudTracksServerFn({ data: { query: `${track.artist} rock`, limit: 6 } })
-        : Promise.resolve([]),
-    ]);
+    const addTrack = (t: Track) => {
+      if (!t.artist || (t.duration && t.duration < 45)) return false;
+      const key = t.title.toLowerCase().trim() + '_' + t.artist.toLowerCase().trim();
+      const aName = t.artist.toLowerCase().trim();
+      const count = artistCounts.get(aName) || 0;
+      if (count < 3 && !seen.has(key) && !seen.has(t.id)) {
+        artistCounts.set(aName, count + 1);
+        seen.add(key);
+        seen.add(t.id);
+        results.push(t);
+        return true;
+      }
+      return false;
+    };
 
-    if (saavnRes.status === "fulfilled") {
-      for (const res of saavnRes.value) {
-        if (res.status === "fulfilled" && res.value) {
-          for (const t of res.value) {
-            const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
-            if (!seen.has(key) && !seen.has(t.id)) {
-              seen.add(key);
-              seen.add(t.id);
-              results.push(t);
-            }
-          }
+    if (track.id.startsWith('saavn_')) {
+      const similar = await getSimilarSongsServerFn({ data: { id: track.id, limit: limit * 2 } });
+      if (similar && similar.length > 0) {
+        for (const t of similar) {
+          if (results.length >= limit) break;
+          addTrack(t);
+        }
+        if (results.length >= limit) return results;
+      }
+    }
+
+    if (track.artist && results.length < limit) {
+      const artistQuery = track.artist.split(',')[0].trim();
+      const artistTracks = await searchSaavnTracksServerFn({ data: { query: artistQuery + ' songs', limit: 15 } });
+      for (const t of artistTracks) {
+        if (results.length >= limit) break;
+        if (t.artist?.toLowerCase().includes(artistQuery.toLowerCase())) {
+          addTrack(t);
         }
       }
     }
 
-    if (scRes.status === "fulfilled" && Array.isArray(scRes.value)) {
-      for (const t of scRes.value) {
-        const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
-        if (!seen.has(key) && !seen.has(t.id)) {
-          seen.add(key);
-          seen.add(t.id);
-          results.push(t);
+    if (results.length < limit) {
+      const langGenre = ((track.genre || '') + ' ' + (track.artist ? track.artist.split(',')[0].trim() : '')).trim();
+      if (langGenre) {
+        const genreTracks = await searchSaavnTracksServerFn({ data: { query: langGenre + ' popular', limit: 15 } });
+        for (const t of genreTracks) {
+          if (results.length >= limit) break;
+          addTrack(t);
         }
       }
     }
 
-    if (results.length >= 3) {
-      return results.slice(0, limit);
+    if (results.length < limit) {
+      const trending = await fetchTrending(limit);
+      for (const t of trending) {
+        if (results.length >= limit) break;
+        addTrack(t);
+      }
     }
-  } catch {
-    // fallback
+
+    return results;
+  } catch (error) {
+    console.error('fetchRelatedQueue error', error);
+    return CURATED_TRACKS.filter((t) => t.id !== track.id).slice(0, limit);
   }
-
-  return CURATED_TRACKS.filter((t) => t.id !== track.id).slice(0, limit);
 }
 
 

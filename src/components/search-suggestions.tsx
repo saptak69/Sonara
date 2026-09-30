@@ -20,53 +20,14 @@ function SuggestionItemButton({
   onSelect: () => void;
   className?: string;
 }) {
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const isScrollingRef = useRef(false);
-
   return (
     <button
       type="button"
-      onMouseDown={(e) => {
-        // Prevent blurring search input on desktop mouse click
-        e.preventDefault();
-      }}
+      onMouseDown={(e) => e.preventDefault()}
       onClick={(e) => {
-        // Desktop click or synthetic click
         e.preventDefault();
         e.stopPropagation();
         onSelect();
-      }}
-      onTouchStart={(e) => {
-        const touch = e.touches[0];
-        touchStartRef.current = {
-          x: touch.clientX,
-          y: touch.clientY,
-          time: Date.now(),
-        };
-        isScrollingRef.current = false;
-      }}
-      onTouchMove={(e) => {
-        if (!touchStartRef.current) return;
-        const touch = e.touches[0];
-        const diffY = Math.abs(touch.clientY - touchStartRef.current.y);
-        const diffX = Math.abs(touch.clientX - touchStartRef.current.x);
-        // If finger moved more than 8px, user is scrolling, not tapping
-        if (diffY > 8 || diffX > 8) {
-          isScrollingRef.current = true;
-        }
-      }}
-      onTouchEnd={(e) => {
-        // Only trigger search if user was tapping, not scrolling/swiping
-        if (!isScrollingRef.current && touchStartRef.current) {
-          const elapsed = Date.now() - touchStartRef.current.time;
-          if (elapsed < 500) {
-            e.preventDefault();
-            e.stopPropagation();
-            onSelect();
-          }
-        }
-        touchStartRef.current = null;
-        isScrollingRef.current = false;
       }}
       className={className}
     >
@@ -75,17 +36,20 @@ function SuggestionItemButton({
   );
 }
 
+
 export function SearchSuggestions({
   query,
   isOpen,
   onClose,
   onSelectQuery,
+  onLoadingChange,
   className,
 }: {
   query: string;
   isOpen: boolean;
   onClose: () => void;
   onSelectQuery: (q: string) => void;
+  onLoadingChange?: (loading: boolean) => void;
   className?: string;
 }) {
   const navigate = useNavigate();
@@ -95,27 +59,33 @@ export function SearchSuggestions({
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch suggestions with 150ms debounce
+  // Fetch suggestions with 300ms debounce
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
       setData({ queries: [], topMatches: [] });
       setSelectedIndex(-1);
+      onLoadingChange?.(false);
       return;
     }
 
     setLoading(true);
+    onLoadingChange?.(true);
     const timer = setTimeout(() => {
       void fetchSearchSuggestionsServerFn({ data: { query: trimmed } })
         .then((res) => {
           setData(res);
           setSelectedIndex(-1);
         })
-        .finally(() => setLoading(false));
-    }, 150);
+        .finally(() => {
+          setLoading(false);
+          onLoadingChange?.(false);
+        });
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [query]);
+
 
   // Click outside to close
   useEffect(() => {

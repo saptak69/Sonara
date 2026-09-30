@@ -118,7 +118,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [name, setName] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [desktopSuggestionsOpen, setDesktopSuggestionsOpen] = useState(false);
+  const [isSearchingDesktop, setIsSearchingDesktop] = useState(false);
   const [mobileSuggestionsOpen, setMobileSuggestionsOpen] = useState(false);
+  const [isSearchingMobile, setIsSearchingMobile] = useState(false);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -370,10 +372,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                   />
                   {q && (
                     <button type="button" onClick={() => { setQ(""); setMobileSuggestionsOpen(false); }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      <X className="size-4" />
+                      {isSearchingMobile ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
                     </button>
                   )}
-                  <SearchSuggestions query={q} isOpen={mobileSuggestionsOpen} onClose={() => setMobileSuggestionsOpen(false)} onSelectQuery={executeSearch} />
+                  <SearchSuggestions query={q} isOpen={mobileSuggestionsOpen} onClose={() => setMobileSuggestionsOpen(false)} onSelectQuery={executeSearch} onLoadingChange={setIsSearchingMobile} />
                 </form>
                 <button type="button" onClick={() => { setMobileSearchOpen(false); setMobileSuggestionsOpen(false); }} className="text-sm font-medium text-muted hover:text-fg min-h-[44px] px-2 flex items-center justify-center">Cancel</button>
               </div>
@@ -416,9 +418,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className="h-11 w-full rounded-full bg-surface hover:bg-hover focus:bg-surface pr-14 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
                 />
                 <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center text-xs font-medium text-muted">
-                  ⌘K
+                  {isSearchingDesktop ? <Loader2 className="size-4 animate-spin" /> : "⌘K"}
                 </div>
-                <SearchSuggestions query={q} isOpen={desktopSuggestionsOpen} onClose={() => setDesktopSuggestionsOpen(false)} onSelectQuery={executeSearch} />
+                <SearchSuggestions query={q} isOpen={desktopSuggestionsOpen} onClose={() => setDesktopSuggestionsOpen(false)} onSelectQuery={executeSearch} onLoadingChange={setIsSearchingDesktop} />
               </form>
 
               <div className="ml-auto flex items-center gap-4">
