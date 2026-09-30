@@ -123,7 +123,7 @@ export function FullPlayer() {
               <img
                 src={track.artworkLg || track.artwork || ""}
                 alt=""
-                className="h-full w-full scale-[1.3] object-cover opacity-60 blur-[80px] saturate-125 transition-all duration-1000 ease-out"
+                className="h-full w-full scale-[1.3] object-cover opacity-60 blur-3xl saturate-125 transition-all duration-1000 ease-out"
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             )}

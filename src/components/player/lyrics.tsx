@@ -82,11 +82,11 @@ export function LyricsDrawer() {
     >
       {/* Immersive blurred artwork background */}
       {track && (
-        <div className="absolute inset-0 z-[-1] overflow-hidden">
+        <div className="absolute inset-0 z-[-1] overflow-hidden bg-black">
           <img
             src={track.artworkLg || track.artwork}
             alt=""
-            className="w-full h-full object-cover opacity-60 saturate-[150%] blur-[80px] scale-150"
+            className="w-full h-full object-cover opacity-60 saturate-[150%] blur-3xl scale-150"
             aria-hidden="true"
           />
           <div className="absolute inset-0 bg-black/40" />

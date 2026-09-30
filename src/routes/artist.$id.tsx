@@ -118,7 +118,7 @@ function ArtistPage() {
             <img
               src={profile.bannerUrl || profile.avatarUrl}
               alt=""
-              className="w-full h-full object-cover opacity-50 blur-[80px] scale-125"
+              className="w-full h-full object-cover opacity-50 blur-3xl scale-125"
             />
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-accent/20 to-transparent" />
@@ -254,7 +254,7 @@ function ArtistPage() {
           <img
             src={a.artworkLg || a.artwork}
             alt=""
-            className="w-full h-full object-cover opacity-50 blur-[80px] scale-125"
+            className="w-full h-full object-cover opacity-50 blur-3xl scale-125"
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />

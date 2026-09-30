@@ -55,7 +55,7 @@ function PlaylistPage() {
           <img
             src={playlist.artworkLg || playlist.artwork}
             alt=""
-            className="w-full h-full object-cover opacity-50 blur-[80px] scale-125"
+            className="w-full h-full object-cover opacity-50 blur-3xl scale-125"
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
