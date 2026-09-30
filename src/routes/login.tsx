@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Lock, Mail, Music2, Sparkles, User } from "lucide-react";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
+import { SocialLogin } from "@capgo/capacitor-social-login";
 
 
 export const Route = createFileRoute("/login")({
@@ -64,11 +64,24 @@ function LoginPage() {
     try {
       if (Capacitor.isNativePlatform()) {
         try {
-          const googleUser = await GoogleAuth.signIn();
-          if (googleUser.authentication.idToken) {
+          await SocialLogin.initialize({
+            google: {
+              webClientId: "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com",
+              mode: "online",
+            },
+          });
+          const googleUser = await SocialLogin.login({
+            provider: "google",
+            options: {
+              scopes: ["email", "profile"],
+            },
+          });
+          const idToken = (googleUser as any).result?.idToken || (googleUser as any).result?.authentication?.idToken || (googleUser as any).idToken;
+          
+          if (idToken) {
             const res = await (authClient.signIn as any).social?.({
               provider: "google",
-              idToken: googleUser.authentication.idToken,
+              idToken: { token: idToken },
             });
             if (res?.error) {
               toast.error(res.error.message || "Failed native Google sign in");
