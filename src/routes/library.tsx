@@ -78,7 +78,7 @@ function LibraryPage() {
 
   return (
     <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <header className="hidden lg:flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Library</h1>
         <div className="flex items-center gap-2">
           <Button

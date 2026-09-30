@@ -199,7 +199,7 @@ function SearchPage() {
 
         {recents.length ? (
           <section className="space-y-3">
-            <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Recent Searches</h2>
+            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">Recent Searches</h2>
             <div className="flex flex-wrap gap-2">
               {recents.map((s) => (
                 <Link
@@ -231,7 +231,7 @@ function SearchPage() {
 
         {/* Trending culture & rock searches */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-wider text-fg/80 uppercase">Trending & Featured</h2>
+          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">Trending & Featured</h2>
           <div className="flex flex-wrap gap-2.5">
             {TRENDING_SEARCHES.map((item) => (
               <Link
@@ -301,7 +301,7 @@ function SearchPage() {
             }} 
           />
         </form>
-        <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
+        <div className="hidden lg:flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
           <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">“{q}”</h1>
         </div>
       </header>
@@ -328,7 +328,7 @@ function SearchPage() {
       {(tracks.data ?? []).length ? (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-semibold tracking-tight">Songs</h2>
+            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight">Songs</h2>
             {(tracks.data ?? []).length > 6 ? (
               <Button
                 variant="ghost"

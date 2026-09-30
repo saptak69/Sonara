@@ -162,8 +162,7 @@ function TrackPage() {
       {/* Recommended Songs */}
       {(relatedQuery.data ?? []).length ? (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Music2 className="size-5 text-accent" />
+          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">
             More like this
           </h2>
           <div className="space-y-1">

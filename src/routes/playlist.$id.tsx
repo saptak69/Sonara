@@ -84,23 +84,26 @@ function PlaylistPage() {
               <p className="mt-3 line-clamp-2 max-w-xl text-sm text-white/50">{playlist.description}</p>
             ) : null}
             
-            <div className="mt-8 flex items-center justify-center md:justify-start gap-3 w-full md:w-auto">
+            <div className="mt-6 flex items-center gap-3 w-full max-w-[320px] mx-auto md:mx-0">
               <Button 
                 variant="solid" 
-                className="rounded-full w-full max-w-[240px] md:w-auto md:px-10 h-14 text-base font-bold shadow-lg active:scale-95 transition-transform" 
+                className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
                 onClick={() => tracks.length && playTracks(tracks, 0)}
               >
-                <Play className="size-6 fill-current" style={{ marginLeft: 2 }} />
+                <Play className="size-5 fill-current mr-1" />
                 Play
               </Button>
               <Button
-                variant="chip"
-                className="rounded-full size-14 p-0 flex items-center justify-center bg-surface/40 backdrop-blur-xl border border-white/10 hover:bg-surface/60 active:scale-95 transition-all shadow-lg"
-                onClick={() => tracks.forEach((t, i) => (i === 0 ? playTracks([t], 0) : playNext(t)))}
+                variant="solid" 
+                className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
+                onClick={() => {
+                  const shuffled = [...tracks].sort(() => 0.5 - Math.random());
+                  if (shuffled.length) playTracks(shuffled, 0);
+                }}
                 disabled={!tracks.length}
-                aria-label="Add to queue"
               >
-                <Plus className="size-6 text-white" strokeWidth={2} />
+                <svg className="size-5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                Shuffle
               </Button>
             </div>
           </div>

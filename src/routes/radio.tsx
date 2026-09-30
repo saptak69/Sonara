@@ -18,60 +18,45 @@ const TAGS = ["pop", "jazz", "classical", "electronic", "news", "chill"] as cons
 
 function RadioHero({ station }: { station: RadioStation }) {
   const playTrack = usePlayer((s) => s.playTrack);
-  const current = usePlayer((s) => s.queue[s.index]);
-  const isPlaying = usePlayer((s) => s.isPlaying);
   const track = radioToTrack(station);
-  const active = current?.id === track.id;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-surface/50 p-6 md:p-10 mb-10 transition-all duration-500 hover:shadow-2xl hover:shadow-accent/20 group">
-      {/* Dynamic Ambient Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-surface to-background z-10 opacity-90" />
-        {active && isPlaying ? (
-          <div className="absolute inset-0 z-0 opacity-40 animate-[mesh_10s_ease-in-out_infinite] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent via-surface to-background mix-blend-screen" />
-        ) : (
-          <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent/50 via-surface to-background" />
-        )}
+    <button 
+      type="button"
+      onClick={() => playTrack(track)}
+      className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] rounded-[20px] md:rounded-[24px] overflow-hidden group text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    >
+      <div className="absolute inset-0 bg-surface">
+        <Cover
+          src={station.artwork}
+          alt={station.name}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-[0.8s] ease-[cubic-bezier(0.2,0,0.1,1)] group-hover:scale-[1.03]"
+        />
+      </div>
+      
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+      
+      <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10 flex flex-col">
+        <span className="text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white/80 drop-shadow-md">
+          Featured Station
+        </span>
       </div>
 
-      <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-        <div className="relative w-48 shrink-0 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-105">
-          <Cover
-            src={station.artwork}
-            alt={station.name}
-            className="aspect-square w-full"
-          />
-          {active && isPlaying && (
-            <div className="absolute inset-0 z-10 bg-black/40 flex items-center justify-center gap-1">
-              <div className="w-1.5 bg-white rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite] h-4" />
-              <div className="w-1.5 bg-white rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite] h-6" style={{ animationDelay: '0.2s' }} />
-              <div className="w-1.5 bg-white rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite] h-4" style={{ animationDelay: '0.4s' }} />
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 text-center md:text-left space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent uppercase tracking-widest">
-            <span className={cn("size-2 rounded-full", active && isPlaying ? "bg-accent animate-pulse" : "bg-accent/50")} />
-            Live Broadcast
-          </div>
-          <div>
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-2">{station.name}</h2>
-            <p className="text-muted md:text-lg">{station.country || "Global"} · Premium Radio</p>
-          </div>
-          
-          <Button
-            size="lg"
-            variant="default"
-            className="rounded-full shadow-lg hover:shadow-accent/50 transition-all font-semibold px-8"
-            onClick={() => playTrack(track)}
-          >
-            {active && isPlaying ? "Playing" : "Tune In"}
-          </Button>
+      <div className="absolute bottom-0 left-0 p-5 md:p-8 z-10">
+        <h2 className="text-[28px] md:text-[38px] font-bold text-white tracking-tight leading-tight line-clamp-1 drop-shadow-md">
+          {station.name}
+        </h2>
+        <p className="text-sm md:text-base font-medium text-white/70 mt-1 drop-shadow-sm">
+          {station.country || "Global"}
+        </p>
+      </div>
+      
+      <div className="absolute bottom-5 right-5 md:bottom-8 md:right-8 z-10">
+        <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-md shadow-lg border border-white/20 lg:group-hover:bg-accent transition-colors">
+          <Play className="size-5 md:size-6 text-white fill-current ml-1" />
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -84,7 +69,7 @@ function RadioTagRail({ tag }: { tag: string }) {
   if (!stations.length) return null;
   return (
     <div className="py-2">
-      <Rail title={tag.toUpperCase()} className="tracking-widest">
+      <Rail title={tag.charAt(0).toUpperCase() + tag.slice(1)}>
         {stations.map((s) => (
           <RadioCard key={s.id} station={s} />
         ))}
@@ -115,7 +100,7 @@ export function RadioContent() {
       {featured && <RadioHero station={featured} />}
 
       {rest.length ? (
-        <Rail title="Popular stations" className="tracking-wide">
+        <Rail title="Popular Stations">
           {rest.map((s) => (
             <RadioCard key={s.id} station={s} />
           ))}
@@ -135,7 +120,7 @@ function RadioPage() {
   return (
     <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
       {/* Apple Music Style Large Header */}
-      <header className="flex items-center justify-between border-b border-white/10 pb-4">
+      <header className="hidden lg:flex items-center justify-between border-b border-white/10 pb-4">
         <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Radio</h1>
       </header>
 

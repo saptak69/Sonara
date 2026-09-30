@@ -12,10 +12,17 @@ export function SectionHeader({
   title: string;
   to?: RailTo;
 }) {
-  const heading = <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-white">{title}</h2>;
+  const heading = (
+    <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1 group">
+      {title}
+      {to && (
+        <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+      )}
+    </h2>
+  );
   if (!to) return heading;
   return (
-    <Link to={to} className="hover:text-accent transition-colors">
+    <Link to={to} className="transition-colors w-fit">
       {heading}
     </Link>
   );

@@ -59,14 +59,14 @@ function Explore() {
 
   return (
     <div className="stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
-      <header className="flex items-center justify-between border-b border-white/10 pb-4">
+      <header className="hidden lg:flex items-center justify-between border-b border-white/10 pb-4">
         <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Browse</h1>
       </header>
 
 
       <section className="space-y-5">
-        <div>
-          <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-white mb-1">Featured genres</h2>
+        <div className="mb-2 px-1">
+          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-0.5">Featured genres</h2>
           <p className="text-xs sm:text-sm text-muted">Explore distinct sounds and musical sub-cultures</p>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 md:gap-6">

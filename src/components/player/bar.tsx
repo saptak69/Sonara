@@ -1,5 +1,5 @@
 import React from "react";
-import { Heart, ListMusic, Mic2, MonitorSpeaker, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, RadioTower, Play, Pause } from "lucide-react";
+import { Heart, ListMusic, Mic2, MonitorSpeaker, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, FastForward, Volume2, RadioTower, Play, Pause } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { MarqueeText } from "@/components/marquee-text";
 import { usePlayer } from "@/lib/player-store";
@@ -49,27 +49,15 @@ export function PlayerBar() {
 
   return (
     <>
-      {/* Mobile Bar (Unchanged) */}
       {/* Mobile Player Pill (Apple Music iOS Style) */}
-      <div className="w-full lg:hidden relative rounded-[32px] bg-background/80 dark:bg-black/60 backdrop-blur-3xl border border-white/10 overflow-hidden shadow-2xl">
-        {/* Dynamic Artwork Background */}
-        <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none">
-          <img
-            src={track.artwork}
-            alt=""
-            className="w-full h-full object-cover opacity-[0.25] saturate-[200%] blur-3xl transform scale-150"
-            aria-hidden="true"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-        </div>
-
-        <div className="flex h-[56px] items-center gap-3 px-3">
+      <div className="w-full lg:hidden relative rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-[40px] border border-white/60 dark:border-white/20 overflow-hidden shadow-sm">
+        <div className="flex h-[60px] items-center gap-3 px-3">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.98] transition-transform"
             onClick={() => setExpanded(true)}
           >
-            <div className="relative size-[40px] shrink-0 rounded-[8px] overflow-hidden shadow-sm">
+            <div className="relative size-[44px] shrink-0 rounded-[10px] overflow-hidden shadow-sm ml-0.5">
               <Cover
                 src={track.artwork}
                 alt={track.title}
@@ -84,26 +72,31 @@ export function PlayerBar() {
                     <RadioTower className="size-[10px]" />
                   </span>
                 )}
-                <MarqueeText text={track.title} className="text-[14px] font-semibold text-fg tracking-tight flex-1 min-w-0 leading-tight" />
+                <MarqueeText text={track.title} className="text-[15px] font-bold text-black/90 dark:text-white/90 tracking-tight flex-1 min-w-0 leading-tight" />
               </div>
-              <span className="truncate text-[12px] text-fg/70 leading-tight mt-[1px] tracking-tight">
+              <span className="truncate text-[14px] text-black/50 dark:text-white/50 font-medium leading-tight mt-[1px] tracking-tight">
                 {track.artist}
               </span>
             </div>
           </button>
 
-          <div className="flex items-center gap-3 shrink-0 pr-3">
+          <div className="flex items-center gap-5 shrink-0 pr-4 text-black dark:text-white">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 toggle();
               }}
-              className="text-fg active:scale-95 transition-transform"
+              className="active:scale-95 transition-transform flex items-center justify-center"
             >
               {isPlaying ? (
-                <Pause className="size-6 fill-current" />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="5" width="4" height="14" rx="1" />
+                  <rect x="14" y="5" width="4" height="14" rx="1" />
+                </svg>
               ) : (
-                <Play className="size-6 fill-current ml-[1px]" />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 4.5v15a1 1 0 001.524.852l12-7.5a1 1 0 000-1.704l-12-7.5A1 1 0 007 4.5z" />
+                </svg>
               )}
             </button>
             <button
@@ -111,22 +104,17 @@ export function PlayerBar() {
                 e.stopPropagation();
                 next();
               }}
-              className="text-fg active:scale-95 transition-transform"
+              className="active:scale-95 transition-transform flex items-center justify-center"
             >
-              <SkipForward className="size-6 fill-current" />
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6.5v11a1 1 0 001.536.843l8.5-5.5a1 1 0 000-1.686l-8.5-5.5A1 1 0 004 6.5z" />
+                <path d="M12.5 6.5v11a1 1 0 001.536.843l8.5-5.5a1 1 0 000-1.686l-8.5-5.5A1 1 0 0012.5 6.5z" />
+              </svg>
             </button>
           </div>
         </div>
         
-        {/* Scrubber Background (Spans very bottom edge of pill) */}
-        {!live && duration > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/10 z-10 pointer-events-none">
-            <div 
-              className="h-full bg-fg shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all ease-linear"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
+        {/* Scrubber Background Removed to match design */}
       </div>
 
       {/* Desktop Bar - Apple Music Floating Pill Style */}

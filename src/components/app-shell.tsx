@@ -34,12 +34,61 @@ const SIDEBAR_LIBRARY = [
   { to: "/library", search: { tab: "favorites" }, label: "Favorites", icon: Heart },
 ] as const;
 
+// Custom Icons for Mobile Nav to match Apple Music exact look
+const IconHome = ({ active }: { active?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 2} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <path d="M12 3L4 9v11h5v-6h6v6h5V9z" />
+    ) : (
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    )}
+  </svg>
+);
+const IconNew = ({ active }: { active?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 2}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </svg>
+);
+const IconRadio = ({ active }: { active?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="2.5" fill={active ? "currentColor" : "none"} />
+    <path d="M16 8a5.5 5.5 0 0 1 0 8M19 5a9.5 9.5 0 0 1 0 14M8 8a5.5 5.5 0 0 0 0 8M5 5a9.5 9.5 0 0 0 0 14" />
+  </svg>
+);
+const IconLibrary = ({ active }: { active?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 2} strokeLinecap="round" strokeLinejoin="round">
+    {active ? (
+      <>
+        <path d="M7 4h10v2H7z" />
+        <path d="M5 8h14v2H5z" />
+        <rect x="3" y="12" width="18" height="10" rx="2" />
+        <path d="M9 18v-2h3v1a1 1 0 1 1-2 1v-2" fill="white" stroke="white" strokeWidth="0.5" />
+      </>
+    ) : (
+      <>
+        <path d="M8 4h8" />
+        <path d="M6 8h12" />
+        <rect x="4" y="12" width="16" height="10" rx="2" />
+      </>
+    )}
+  </svg>
+);
+const IconSearch = ({ active }: { active?: boolean }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 3 : 2} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+  </svg>
+);
+
 const MOBILE_NAV = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/explore", label: "New", icon: LayoutGrid },
-  { to: "/radio", label: "Radio", icon: Radio },
-  { to: "/library", label: "Library", icon: Library },
-  { to: "/search", label: "Search", icon: Search },
+  { to: "/", label: "Home", icon: IconHome },
+  { to: "/explore", label: "New", icon: IconNew },
+  { to: "/radio", label: "Radio", icon: IconRadio },
+  { to: "/library", label: "Library", icon: IconLibrary },
+  { to: "/search", label: "Search", icon: IconSearch },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -329,21 +378,23 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <button type="button" onClick={() => { setMobileSearchOpen(false); setMobileSuggestionsOpen(false); }} className="text-sm font-medium text-muted hover:text-fg min-h-[44px] px-2 flex items-center justify-center">Cancel</button>
               </div>
             ) : (
-              <div className="flex items-center justify-between w-full lg:hidden">
-                <Logo compact={false} />
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setMobileSearchOpen(true)} className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-white/10 backdrop-blur-lg border border-white/10 hover:brightness-110 transition-all">
-                    <Search className="size-5" />
-                  </button>
-                  <Link to="/about" className="text-muted hover:text-fg min-h-[44px] min-w-[44px] flex items-center justify-center">
-                    <Info className="size-5" />
-                  </Link>
+              <div className="flex items-center justify-between w-full lg:hidden pt-4 pb-2">
+                <h1 className="text-[32px] leading-none font-bold tracking-tight text-fg">
+                  {path === "/" ? "Listen Now" : 
+                   path.startsWith("/explore") ? "Browse" : 
+                   path.startsWith("/radio") ? "Radio" : 
+                   path.startsWith("/library") ? "Library" : 
+                   path.startsWith("/search") ? "Search" : "Sonara"}
+                </h1>
+                <div className="flex items-center gap-3">
                   {user && !user.isDevFallback ? (
                     <Link to="/studio" className="flex items-center justify-center min-h-[44px] min-w-[44px]">
-                      <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8" />
+                      <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8 shadow-sm" />
                     </Link>
                   ) : (
-                    <Link to="/login" className="flex items-center justify-center min-h-[44px] px-5 rounded-full bg-accent text-white font-medium text-sm hover:bg-accent/90 transition-colors">Sign In</Link>
+                    <Link to="/login" className="flex items-center justify-center size-8 rounded-full bg-[#f42c4f] text-white shadow-sm hover:bg-[#d62646] transition-colors">
+                      <User className="size-4" />
+                    </Link>
                   )}
                 </div>
               </div>
@@ -399,9 +450,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto w-full max-w-[440px] flex flex-col items-center">
           <PlayerBar />
         </div>
-        <div className="pointer-events-auto w-full max-w-[440px] rounded-[32px] bg-background/80 dark:bg-black/60 backdrop-blur-3xl border border-white/10 shadow-2xl overflow-hidden relative">
-          {/* Base background that stays solid enough to blur */}
-          <div className="absolute inset-0 bg-white/5 dark:bg-black/20 pointer-events-none" />
+        <div className="pointer-events-auto w-full max-w-[440px] rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-[40px] border border-white/60 dark:border-white/20 shadow-xl overflow-hidden relative">
           <nav className="relative isolate flex items-center justify-between px-2 h-[72px] w-full">
             {MOBILE_NAV.map((item) => {
                const active = item.to === "/" ? path === "/" : (path.startsWith(item.to) && search.tab !== "favorites");
@@ -426,13 +475,22 @@ export function AppShell({ children }: { children: ReactNode }) {
                    }}
                    className="group relative isolate flex flex-1 flex-col items-center justify-center h-full transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.92]"
                  >
+                   {active && (
+                     <motion.div
+                       layoutId="mobile-nav-active-bg"
+                       className="absolute inset-y-1.5 inset-x-2 z-[-1] rounded-[24px] bg-black/10 dark:bg-white/10"
+                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                     />
+                   )}
                    <motion.div
                      animate={{ scale: active ? 1.05 : 1, y: active ? -2 : 0 }}
                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                     className={cn("transition-colors relative flex flex-col items-center gap-[3px]", active ? "text-fg" : "text-fg/50 group-hover:text-fg")}
+                     className={cn("transition-colors relative flex flex-col items-center gap-[4px]", active ? "text-[#e85a4f]" : "text-black/60 dark:text-white/60 group-hover:opacity-70")}
                    >
-                     <Icon className="size-[22px]" strokeWidth={active ? 2.5 : 2} />
-                     <span className={cn("text-[9px] font-medium leading-none tracking-tight", active ? "font-semibold" : "")}>{item.label}</span>
+                     <div className="size-[26px] flex items-center justify-center">
+                       <Icon active={active} />
+                     </div>
+                     <span className={cn("text-[10px] font-semibold leading-none tracking-tight", active ? "font-bold" : "")}>{item.label}</span>
                    </motion.div>
                  </Link>
               );

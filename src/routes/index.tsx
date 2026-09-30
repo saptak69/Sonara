@@ -44,7 +44,7 @@ function Home() {
 
         {/* Top Picks for You */}
         <section>
-          <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight mb-4">
+          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">
             Top Picks for You
           </h2>
           <Rail title="">
@@ -64,10 +64,12 @@ function Home() {
 
         {/* Algorithmic Smart Playlists */}
         <section>
-          <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight mb-4 flex items-center gap-1 cursor-pointer group w-fit">
-            <span className="group-hover:underline decoration-1 underline-offset-2">Algorithmic Smart Playlists</span>
-            <svg className="size-4 text-muted group-hover:text-fg transition-colors mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </h2>
+          <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
+            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+              Algorithmic Smart Playlists
+              <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </h2>
+          </div>
           <Rail title="">
             <Link
               to="/weekly-mix"
@@ -103,10 +105,12 @@ function Home() {
         {/* Recently Played */}
         {recents.length > 0 && (
           <section>
-            <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight mb-4 flex items-center gap-1 cursor-pointer group w-fit">
-              <span className="group-hover:underline decoration-1 underline-offset-2">Recently Played</span>
-              <svg className="size-4 text-muted group-hover:text-fg transition-colors mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-            </h2>
+            <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
+              <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+                Recently Played
+                <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </h2>
+            </div>
             <Rail title="">
               {recents.map((t) => (
                 <AlbumCard key={t.id} track={t} queue={recents} />
@@ -117,10 +121,12 @@ function Home() {
 
         {/* New Music */}
         <section>
-          <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight mb-4 flex items-center gap-1 cursor-pointer group w-fit">
-            <span className="group-hover:underline decoration-1 underline-offset-2">New Music</span>
-            <svg className="size-4 text-muted group-hover:text-fg transition-colors mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </h2>
+          <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
+            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+              New Music
+              <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </h2>
+          </div>
           <Rail title="">
             {topTracks.slice(6).map((t) => (
               <AlbumCard key={t.id} track={t} queue={topTracks.slice(6)} />
@@ -132,10 +138,12 @@ function Home() {
 
         {/* Artists You Might Like */}
         <section>
-          <h2 className="text-xl md:text-[22px] font-bold text-fg tracking-tight mb-4 flex items-center gap-1 cursor-pointer group w-fit">
-            <span className="group-hover:underline decoration-1 underline-offset-2">Artists You Might Like</span>
-            <svg className="size-4 text-muted group-hover:text-fg transition-colors mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </h2>
+          <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
+            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+              Artists You Might Like
+              <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </h2>
+          </div>
           <Rail title="">
             {topTracks.map((t) => (
               <div

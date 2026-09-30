@@ -171,15 +171,27 @@ function ArtistPage() {
                 </p>
               ) : null}
 
-              <div className="mt-8 flex items-center justify-center md:justify-start gap-3 w-full md:w-auto">
-                <Button
-                  variant="solid"
-                  className="rounded-full w-full max-w-[240px] md:w-auto md:px-10 h-14 text-base font-bold shadow-lg active:scale-95 transition-transform"
+              <div className="mt-6 flex items-center gap-3 w-full max-w-[320px] mx-auto md:mx-0">
+                <Button 
+                  variant="solid" 
+                  className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
                   onClick={() => tracks.length && playTracks(tracks, 0)}
                   disabled={!tracks.length}
                 >
-                  <Play className="size-6 fill-current mr-1.5" />
-                  Play All
+                  <Play className="size-5 fill-current mr-1" />
+                  Play
+                </Button>
+                <Button
+                  variant="solid" 
+                  className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
+                  onClick={() => {
+                    const shuffled = [...tracks].sort(() => 0.5 - Math.random());
+                    if (shuffled.length) playTracks(shuffled, 0);
+                  }}
+                  disabled={!tracks.length}
+                >
+                  <svg className="size-5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                  Shuffle
                 </Button>
               </div>
             </div>
@@ -189,7 +201,7 @@ function ArtistPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-white">Releases & Discography</h2>
+              <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-1">Releases & Discography</h2>
               <p className="text-xs text-muted">Official audio uploaded and verified by {profile.displayName}</p>
             </div>
           </div>
@@ -266,21 +278,34 @@ function ArtistPage() {
             </p>
             {a.bio ? <p className="mt-3 line-clamp-3 max-w-2xl text-sm text-white/50">{a.bio}</p> : null}
             
-            <div className="mt-8 flex items-center justify-center md:justify-start gap-3 w-full md:w-auto">
+            <div className="mt-6 flex items-center gap-3 w-full max-w-[320px] mx-auto md:mx-0">
               <Button 
                 variant="solid" 
-                className="rounded-full w-full max-w-[240px] md:w-auto md:px-10 h-14 text-base font-bold shadow-lg active:scale-95 transition-transform" 
+                className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
                 onClick={() => list.length && playTracks(list, 0)}
+                disabled={!list.length}
               >
-                <Play className="size-6 fill-current mr-1.5" />
-                Play All
+                <Play className="size-5 fill-current mr-1" />
+                Play
+              </Button>
+              <Button
+                variant="solid" 
+                className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
+                onClick={() => {
+                  const shuffled = [...list].sort(() => 0.5 - Math.random());
+                  if (shuffled.length) playTracks(shuffled, 0);
+                }}
+                disabled={!list.length}
+              >
+                <svg className="size-5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                Shuffle
               </Button>
             </div>
           </div>
         </div>
 
       <section className="mt-10">
-        <h2 className="mb-3 text-xl font-semibold tracking-tight">Popular</h2>
+        <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">Popular</h2>
         {list.map((t, i) => (
           <TrackRow key={t.id} track={t} index={i} queue={list} showPlays />
         ))}
