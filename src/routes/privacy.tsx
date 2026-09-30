@@ -4,7 +4,7 @@ export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
 });
 
-function PrivacyPage() {
+export function PrivacyPage() {
   return (
     <div className="w-full max-w-4xl mx-auto stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
       <header className="border-b border-white/10 pb-4">
