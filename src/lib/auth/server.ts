@@ -162,7 +162,8 @@ const googleClientSecret =
   env("GOOGLE_OAUTH_CLIENT_SECRET") ||
   env("AUTH_GOOGLE_SECRET");
 
-const hasDirectGoogleAuth = Boolean(googleClientId && googleClientSecret);
+// We only need the Client ID to verify ID tokens from Android Capacitor
+const hasDirectGoogleAuth = Boolean(googleClientId);
 
 // Built separately so the `betterAuth({...})` call stays easy to edit without
 // breaking brackets (models often trip on the conditional plugin spread).
@@ -226,7 +227,7 @@ export const auth = betterAuth({
       ? {
           google: {
             clientId: googleClientId!,
-            clientSecret: googleClientSecret!,
+            clientSecret: googleClientSecret || "dummy-secret-for-mobile-id-token",
           },
         }
       : {}),

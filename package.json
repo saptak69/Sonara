@@ -30,6 +30,7 @@
     "@capacitor/push-notifications": "^8.1.2",
     "@capacitor/status-bar": "^8.0.3",
     "@capgo/capacitor-media-session": "^8.0.30",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@electric-sql/pglite": "^0.5.4",
     "@hookform/resolvers": "^5.7.0",
     "@radix-ui/react-accordion": "^1.2.12",

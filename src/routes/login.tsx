@@ -6,6 +6,9 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Lock, Mail, Music2, Sparkles, User } from "lucide-react";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
+
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -59,6 +62,32 @@ function LoginPage() {
   const handleGoogleClick = async () => {
     setLoading(true);
     try {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const googleUser = await GoogleAuth.signIn();
+          if (googleUser.authentication.idToken) {
+            const res = await (authClient.signIn as any).social?.({
+              provider: "google",
+              idToken: googleUser.authentication.idToken,
+            });
+            if (res?.error) {
+              toast.error(res.error.message || "Failed native Google sign in");
+            } else {
+              toast.success("Welcome to Sonara!");
+              void navigate({ to: "/studio" });
+            }
+            return;
+          }
+        } catch (e: any) {
+           console.error("Native Google Auth Error", e);
+           if (e.message && e.message.includes("cancel")) return;
+           toast.error("Native Google Auth failed");
+           return;
+        } finally {
+           setLoading(false);
+        }
+      }
+
       const res = await (authClient.signIn as any).social?.({
         provider: "google",
         callbackURL: `${window.location.origin}/studio`,
