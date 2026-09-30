@@ -95,7 +95,9 @@ export function PlayerEngine() {
         });
       }
     }, 1000);
-  
+    return () => clearInterval(interval);
+  }, [isPlaying, current?.id]);
+
   // Media Session & Lockscreen Controls
   useEffect(() => {
     if (!current?.id || !current?.title || typeof window === 'undefined') return;
@@ -129,9 +131,6 @@ export function PlayerEngine() {
         playbackState: isPlaying ? 'playing' : 'paused'
       }).catch(() => {});
     }).catch(() => {});
-  }, [isPlaying, current?.id]);
-
-  return () => clearInterval(interval);
   }, [isPlaying, current?.id]);
 
   // Sleep Timer execution
