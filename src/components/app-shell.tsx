@@ -19,7 +19,6 @@ import { Cover } from "@/components/cover";
 import { SearchSuggestions } from "@/components/search-suggestions";
 import { requestNotificationPermissions, scheduleWeeklyMix, scheduleRetentionNudge, cancelRetentionNudges } from "@/lib/notifications";
 import { App as CapacitorApp } from "@capacitor/app";
-import { LocalNotifications } from "@capacitor/local-notifications";
 import { UpdatePrompt } from "@/components/update-prompt";
 import { motion } from "framer-motion";
 
@@ -141,13 +140,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
     });
 
-    const notifSub = LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
-      const type = action.notification.extra?.action;
-      if (type === 'WEEKLY_MIX') {
-        void navigate({ to: '/weekly-mix' });
-      }
-    });
-
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
       const isSlash = e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement);
@@ -170,7 +162,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
       appStateSub.then(s => s.remove());
-      notifSub.then(s => s.remove());
     };
   }, [navigate]);
 
