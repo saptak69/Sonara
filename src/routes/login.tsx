@@ -94,7 +94,7 @@ function LoginPage() {
         } catch (e: any) {
            console.error("Native Google Auth Error", e);
            if (e.message && e.message.includes("cancel")) return;
-           toast.error("Native Google Auth failed");
+           toast.error(`Native Google Auth failed: ${e.message || "Unknown error"}`);
            return;
         } finally {
            setLoading(false);

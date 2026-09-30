@@ -381,9 +381,21 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </h1>
                 <div className="flex items-center gap-3">
                   {user && !user.isDevFallback ? (
-                    <Link to="/studio" className="flex items-center justify-center min-h-[44px] min-w-[44px]">
-                      <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8 shadow-sm" />
-                    </Link>
+                    <div className="flex items-center gap-1">
+                      <Link to="/studio" className="flex items-center justify-center min-h-[44px] min-w-[44px]">
+                        <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8 shadow-sm" />
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          await signOut();
+                          window.location.href = "/";
+                        }}
+                        className="flex items-center justify-center size-8 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                        title="Sign Out"
+                      >
+                        <LogOut className="size-4" />
+                      </button>
+                    </div>
                   ) : (
                     <Link to="/login" className="flex items-center justify-center size-8 rounded-full bg-[#f42c4f] text-white shadow-sm hover:bg-[#d62646] transition-colors">
                       <User className="size-4" />
@@ -419,10 +431,22 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Info className="size-5" />
                 </Link>
                 {user && !user.isDevFallback ? (
-                  <Link to="/studio" className="flex items-center gap-3 pl-2 border-l border-border/50 hover:opacity-80 transition-opacity">
-                    <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8" />
-                    <span className="text-sm font-medium">{user.displayName || "User"}</span>
-                  </Link>
+                  <div className="flex items-center gap-4 pl-2 border-l border-border/50">
+                    <Link to="/studio" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                      <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-8" />
+                      <span className="text-sm font-medium">{user.displayName || "User"}</span>
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        await signOut();
+                        window.location.href = "/";
+                      }}
+                      className="p-2 text-muted hover:text-red-500 transition-colors"
+                      title="Sign Out"
+                    >
+                      <LogOut className="size-4" />
+                    </button>
+                  </div>
                 ) : (
                   <Link to="/login" className="px-5 py-2 rounded-full bg-accent text-white font-medium text-sm hover:bg-accent/90 transition-colors">
                     Sign In

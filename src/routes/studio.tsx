@@ -35,8 +35,10 @@ import {
   Trash2,
   Upload,
   UserCheck,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
+import { signOut } from "@/lib/auth/client";
 
 export const Route = createFileRoute("/studio")({
   component: ArtistStudioPage,
@@ -388,6 +390,19 @@ function ArtistStudioPage() {
                   Edit Profile
                 </Button>
               </DialogTrigger>
+              
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  await signOut();
+                  void navigate({ to: "/" });
+                }}
+                className="flex-1 sm:flex-none rounded-xl gap-2 text-xs border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400"
+              >
+                <LogOut className="size-3.5" />
+                Sign Out
+              </Button>
+
               <DialogContent title="Edit Artist Profile">
                 <form onSubmit={handleSaveProfile} className="space-y-4">
                   <div>
