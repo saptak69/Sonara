@@ -537,9 +537,11 @@ export const getSaavnArtistTracksServerFn = createServerFn({ method: "GET" })
         const mapped = songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
         const seen = new Set<string>();
         const deduped = mapped.filter((t) => {
-          const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
+          // Arijit Singh often has the same song multiple times with different co-artists or parenthetical subtitles
+          // We deduplicate aggressively by the base title for artist pages.
+          const baseTitle = t.title.toLowerCase().replace(/\s*[\(\[].*?[\)\]]/g, '').trim();
+          if (seen.has(baseTitle)) return false;
+          seen.add(baseTitle);
           return true;
         });
 
