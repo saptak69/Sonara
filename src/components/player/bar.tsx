@@ -35,8 +35,6 @@ export function PlayerBar() {
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
   const likedIds = usePlayer((s) => s.likedIds);
   const toggleLike = usePlayer((s) => s.toggleLike);
-  const lastfmUsername = usePlayer((s) => s.lastfmUsername);
-
   const live = track?.kind === "radio";
   const progress =
     live || !duration || !Number.isFinite(duration) ? 0 : (currentTime / duration) * 100;
@@ -50,7 +48,7 @@ export function PlayerBar() {
   return (
     <>
       {/* Mobile Player Pill (Apple Music iOS Style) */}
-      <div className="w-full lg:hidden relative rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-[40px] border border-white/60 dark:border-white/20 overflow-hidden shadow-sm">
+      <div className="w-full lg:hidden relative rounded-full sonara-glass-strong overflow-hidden shadow-lg">
         <div className="flex h-[60px] items-center gap-3 px-3">
           <button
             type="button"
@@ -67,20 +65,15 @@ export function PlayerBar() {
             </div>
             <div className="flex flex-col min-w-0 flex-1 justify-center overflow-hidden">
               <div className="flex items-center gap-2 overflow-hidden w-full">
-                {lastfmUsername && isPlaying && (
-                  <span className="shrink-0 text-[#fa243c] animate-pulse">
-                    <RadioTower className="size-[10px]" />
-                  </span>
-                )}
-                <MarqueeText text={track.title} className="text-[15px] font-bold text-black/90 dark:text-white/90 tracking-tight flex-1 min-w-0 leading-tight" />
+                <MarqueeText text={track.title} className="text-[15px] font-bold text-white tracking-tight flex-1 min-w-0 leading-tight" />
               </div>
-              <span className="truncate text-[14px] text-black/50 dark:text-white/50 font-medium leading-tight mt-[1px] tracking-tight">
+              <span className="truncate text-[14px] text-white/60 font-medium leading-tight mt-[1px] tracking-tight">
                 {track.artist}
               </span>
             </div>
           </button>
 
-          <div className="flex items-center gap-5 shrink-0 pr-4 text-black dark:text-white">
+          <div className="flex items-center gap-5 shrink-0 pr-4 text-white">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -166,11 +159,6 @@ export function PlayerBar() {
                   LIVE
                 </span>
               )}
-              {lastfmUsername && isPlaying && (
-                <span className="shrink-0 text-[#d51007] animate-pulse">
-                  <RadioTower className="size-3" />
-                </span>
-              )}
               <div className="flex items-center gap-2 overflow-hidden w-full">
                 <MarqueeText text={track.title} className="font-semibold text-fg text-[14px] leading-tight flex-1 min-w-0" />
                 <Equalizer isPlaying={isPlaying} />
@@ -199,9 +187,9 @@ export function PlayerBar() {
               className="text-fg hover:scale-105 transition-transform active:scale-95 flex items-center justify-center bg-fg/10 size-11 rounded-full backdrop-blur-md border border-white/5"
             >
               {isPlaying ? (
-                <Pause className="size-5 fill-current" />
+                <Pause className="size-5 fill-current" strokeWidth={0} />
               ) : (
-                <Play className="size-5 fill-current ml-0.5" />
+                <Play className="size-5 fill-current ml-0.5" strokeWidth={0} />
               )}
             </button>
             <button className="text-fg hover:opacity-80 transition-opacity active:scale-95" onClick={next}>
@@ -227,7 +215,7 @@ export function PlayerBar() {
             className="text-muted hover:text-fg transition-colors active:scale-95"
             onClick={() => {
               setExpanded(true);
-              setTimeout(() => setLyricsOpen(true), 50);
+              setLyricsOpen(true);
             }}
           >
             <Mic2 className="size-[18px]" strokeWidth={2} />
@@ -236,7 +224,7 @@ export function PlayerBar() {
             className="text-muted hover:text-fg transition-colors active:scale-95"
             onClick={() => {
               setExpanded(true);
-              setTimeout(() => setLyricsOpen(false), 50);
+              setLyricsOpen(false);
             }}
           >
             <ListMusic className="size-[18px]" strokeWidth={2} />

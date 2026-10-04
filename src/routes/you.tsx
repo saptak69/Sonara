@@ -7,7 +7,6 @@ import { Clock, Heart, PlayCircle, LogOut, Radio, User, RadioTower, Check } from
 import { signOut } from "@/lib/auth/client";
 import { usePlayer } from "@/lib/player-store";
 import { toast } from "sonner";
-import { useState } from "react";
 
 export const Route = createFileRoute("/you")({
   component: YouPage,
@@ -16,11 +15,6 @@ export const Route = createFileRoute("/you")({
 function YouPage() {
   const { user, isPending } = useCurrentUserState();
   const navigate = useNavigate();
-  const lastfmUsername = usePlayer((s) => s.lastfmUsername);
-  const setLastfmUsername = usePlayer((s) => s.setLastfmUsername);
-  
-  const [fmInput, setFmInput] = useState(lastfmUsername || "");
-
   useEffect(() => {
     if (!isPending && (!user || user.isDevFallback)) {
       void navigate({ to: "/login" });
@@ -147,52 +141,6 @@ function YouPage() {
         </div>
       </div>
 
-      {/* Last.fm Scrobbling Section */}
-      <div className="mt-12 space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-fg">
-          <RadioTower className="size-5 text-[#d51007]" /> Last.fm Scrobbling
-        </h3>
-        <div className="sonara-glass rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex-1">
-            <h4 className="text-fg font-medium mb-1 text-lg">Universal Scrobbling</h4>
-            <p className="text-muted text-sm max-w-lg leading-relaxed">
-              Connect your Last.fm account to automatically scrobble the music you listen to on Sonara. This tracks your listening history and improves your recommendations.
-            </p>
-          </div>
-          
-          <div className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative w-full sm:w-64">
-              <input 
-                type="text" 
-                placeholder="Last.fm Username" 
-                value={fmInput}
-                onChange={(e) => setFmInput(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-fg focus:outline-none focus:border-accent/50 transition-colors placeholder:text-muted/60"
-              />
-              {lastfmUsername && lastfmUsername === fmInput && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider">
-                  <Check className="size-3" /> Connected
-                </div>
-              )}
-            </div>
-            <Button 
-              variant="solid" 
-              className="w-full sm:w-auto rounded-xl bg-[#d51007] hover:bg-[#b00d05] text-white font-medium px-6 shadow-lg shadow-[#d51007]/20"
-              onClick={() => {
-                if (!fmInput.trim()) {
-                  setLastfmUsername(null);
-                  toast("Last.fm disconnected");
-                  return;
-                }
-                setLastfmUsername(fmInput.trim());
-                toast.success(`Connected Last.fm account: ${fmInput.trim()}`);
-              }}
-            >
-              {lastfmUsername && lastfmUsername === fmInput ? "Disconnect" : "Connect"}
-            </Button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

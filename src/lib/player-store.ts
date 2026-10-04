@@ -23,7 +23,7 @@ type PlayerState = {
   recents: Track[];
   playlists: UserPlaylist[];
   recentSearches: string[];
-  lastfmUsername: string | null;
+
   hydrated: boolean;
   current: () => Track | null;
   isLiked: (id: string) => boolean;
@@ -57,9 +57,7 @@ type PlayerState = {
   removeFromPlaylist: (id: string, trackId: string) => void;
   deletePlaylist: (id: string) => void;
   rememberSearch: (q: string) => void;
-  clearRecents: () => void;
-  setLastfmUsername: (username: string | null) => void;
-  setHydrated: () => void;
+  clearRecents: () => void;  setHydrated: () => void;
 };
 
 const MAX_RECENTS = 40;
@@ -116,7 +114,7 @@ export const usePlayer = create<PlayerState>()(
       recents: [],
       playlists: [],
       recentSearches: [],
-      lastfmUsername: null,
+
       hydrated: false,
       current: () => {
         const s = get();
@@ -345,7 +343,7 @@ export const usePlayer = create<PlayerState>()(
         });
       },
       clearRecents: () => set({ recents: [] }),
-      setLastfmUsername: (username: string | null) => set({ lastfmUsername: username }),
+
       setHydrated: () => set({ hydrated: true }),
     }),
     {
@@ -364,7 +362,7 @@ export const usePlayer = create<PlayerState>()(
         recents: s.recents,
         playlists: s.playlists,
         recentSearches: s.recentSearches,
-        lastfmUsername: s.lastfmUsername,
+
         volume: s.volume,
       }),
       onRehydrateStorage: () => (state) => {

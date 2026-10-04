@@ -1,4 +1,4 @@
-import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X, Heart, Menu, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, MonitorSpeaker, Mic2, Volume2, ListMusic, LayoutGrid } from "lucide-react";
+import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X, Heart, Menu, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, MonitorSpeaker, Mic2, Volume2, ListMusic, LayoutGrid, Loader2 } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -152,9 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           setDesktopSuggestionsOpen(true);
         } else {
           setMobileSearchOpen(true);
-          setTimeout(() => {
-            mobileSearchInputRef.current?.focus();
-          }, 60);
+          mobileSearchInputRef.current?.focus();
         }
       }
     };
@@ -372,7 +370,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ) : (
               <div className="flex items-center justify-between w-full lg:hidden pt-4 pb-2">
-                <h1 className="text-[32px] leading-none font-bold tracking-tight text-fg">
+                <h1 className="text-3xl leading-none font-bold tracking-tighter text-fg">
                   {path === "/" ? "Listen Now" : 
                    path.startsWith("/explore") ? "Browse" : 
                    path.startsWith("/radio") ? "Radio" : 
@@ -380,6 +378,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                    path.startsWith("/search") ? "Search" : "Sonara"}
                 </h1>
                 <div className="flex items-center gap-3">
+                  <Link to="/about" className="p-2 text-muted hover:text-fg transition-colors">
+                    <Info className="size-5" />
+                  </Link>
                   {user && !user.isDevFallback ? (
                     <div className="flex items-center gap-1">
                       <Link to="/studio" className="flex items-center justify-center min-h-[44px] min-w-[44px]">
@@ -397,7 +398,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       </button>
                     </div>
                   ) : (
-                    <Link to="/login" className="flex items-center justify-center size-8 rounded-full bg-[#f42c4f] text-white shadow-sm hover:bg-[#d62646] transition-colors">
+                    <Link to="/login" className="flex items-center justify-center size-8 rounded-full bg-accent text-accent-fg shadow-sm hover:bg-accent/90 transition-colors">
                       <User className="size-4" />
                     </Link>
                   )}
@@ -467,7 +468,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-auto w-full max-w-[440px] flex flex-col items-center">
           <PlayerBar />
         </div>
-        <div className="pointer-events-auto w-full max-w-[440px] rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-[40px] border border-white/60 dark:border-white/20 shadow-xl overflow-hidden relative">
+        <div className="pointer-events-auto w-full max-w-[440px] rounded-full sonara-glass-strong overflow-hidden relative">
           <nav className="relative isolate flex items-center justify-between px-2 h-[72px] w-full">
             {MOBILE_NAV.map((item) => {
                const active = item.to === "/" ? path === "/" : (path.startsWith(item.to) && search.tab !== "favorites");
@@ -495,14 +496,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                    {active && (
                      <motion.div
                        layoutId="mobile-nav-active-bg"
-                       className="absolute inset-y-1.5 inset-x-2 z-[-1] rounded-[24px] bg-black/10 dark:bg-white/10"
+                       className="absolute inset-y-1.5 inset-x-2 z-[-1] rounded-[24px] bg-white/10"
                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                      />
                    )}
                    <motion.div
                      animate={{ scale: active ? 1.05 : 1, y: active ? -2 : 0 }}
                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                     className={cn("transition-colors relative flex flex-col items-center gap-[4px]", active ? "text-[#e85a4f]" : "text-black/60 dark:text-white/60 group-hover:opacity-70")}
+                     className={cn("transition-colors relative flex flex-col items-center gap-[4px]", active ? "text-accent" : "text-white/60 group-hover:opacity-70")}
                    >
                      <div className="size-[26px] flex items-center justify-center">
                        <Icon active={active} />

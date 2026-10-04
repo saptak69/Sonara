@@ -329,11 +329,20 @@ export const getDeezerArtistTracksServerFn = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     try {
       const rawId = data.id.replace("deezer_artist_", "");
+      const fetchLimit = (data.limit || 25) * 3;
       const res = await fetchDeezerJson<{ data?: RawDeezerTrack[] }>(
-        `https://api.deezer.com/artist/${rawId}/top?limit=${data.limit}`,
+        `https://api.deezer.com/artist/${rawId}/top?limit=${fetchLimit}`,
       );
       if (!res?.data) return [];
-      return res.data.map(mapDeezerTrack).filter((x): x is Track => Boolean(x));
+      const mapped = res.data.map(mapDeezerTrack).filter((x): x is Track => Boolean(x));
+      const seen = new Set<string>();
+      const deduped = mapped.filter((t) => {
+        const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      return deduped.slice(0, data.limit || 25);
     } catch {
       return [];
     }

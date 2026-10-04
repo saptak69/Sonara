@@ -4,7 +4,7 @@ import { recordStreamServerFn } from "@/lib/artist-studio";
 import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
 import { fetchTrack } from "@/lib/music-api";
 import { toast } from "sonner";
-import { scrobbleTrackServerFn } from "@/lib/lastfm";
+
 import type { Track as _Track } from "@/lib/types";
 
 export function PlayerEngine() {
@@ -388,17 +388,6 @@ export function PlayerEngine() {
     },
     onEnded: () => {
       if (activeIndexRef.current === audioIndex) {
-          const state = usePlayer.getState();
-          const currentT = state.current();
-          if (currentT && state.lastfmUsername) {
-            void scrobbleTrackServerFn({
-              data: {
-                title: currentT.title,
-                artist: currentT.artist,
-                lastfmUsername: state.lastfmUsername,
-              }
-            }).catch(console.error);
-          }
           next();
       }
     },

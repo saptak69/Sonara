@@ -1156,11 +1156,21 @@ export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]
     return getDeezerArtistTracksServerFn({ data: { id, limit } });
   }
   try {
+    const fetchLimit = limit * 3;
     const raw = await fetchFromAudius<AudiusTrack[]>(`/users/${encodeURIComponent(id)}/tracks`, {
-      limit: String(limit),
+      limit: String(fetchLimit),
     });
     const mapped = (raw ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-    if (mapped.length) return mapped;
+    if (mapped.length) {
+      const seen = new Set<string>();
+      const deduped = mapped.filter((t) => {
+        const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      return deduped.slice(0, limit);
+    }
   } catch {
     // fallback
   }

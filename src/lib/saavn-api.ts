@@ -521,19 +521,29 @@ export const getSaavnArtistTracksServerFn = createServerFn({ method: "GET" })
     const key = `saavn_art_tr_${rawId}_${data.limit || 40}`;
     return serverCache.getOrFetch(key, CACHE_TTL.ARTIST_PROFILE, async () => {
       try {
+        const fetchLimit = (data.limit || 40) * 3;
         const json = await fetchSaavnJson<{
           topSongs?: RawSaavnSong[] | { songs?: RawSaavnSong[] };
         }>({
           __call: "artist.getArtistPageDetails",
           artistId: rawId,
-          n_song: String(data.limit || 40),
+          n_song: String(fetchLimit),
         });
 
         const songs = Array.isArray(json?.topSongs)
           ? json.topSongs
           : (json?.topSongs?.songs || []);
 
-        return songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
+        const mapped = songs.map(mapSaavnTrack).filter((x): x is Track => Boolean(x));
+        const seen = new Set<string>();
+        const deduped = mapped.filter((t) => {
+          const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        return deduped.slice(0, data.limit || 40);
       } catch {
         return [];
       }

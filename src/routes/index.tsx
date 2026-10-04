@@ -44,7 +44,7 @@ function Home() {
 
         {/* Top Picks for You */}
         <section>
-          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">
+          <h2 className="text-xl md:text-2xl font-bold text-fg tracking-tight mb-4 px-1">
             Top Picks for You
           </h2>
           <Rail title="">
@@ -64,10 +64,9 @@ function Home() {
 
         {/* Algorithmic Smart Playlists */}
         <section>
-          <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
-            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+          <div className="mb-4 px-1">
+            <h2 className="text-xl md:text-2xl font-bold text-fg tracking-tight">
               Algorithmic Smart Playlists
-              <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </h2>
           </div>
           <Rail title="">
@@ -105,10 +104,9 @@ function Home() {
         {/* Recently Played */}
         {recents.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
-              <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+            <div className="mb-4 px-1">
+              <h2 className="text-xl md:text-2xl font-bold text-fg tracking-tight">
                 Recently Played
-                <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </h2>
             </div>
             <Rail title="">
@@ -121,10 +119,9 @@ function Home() {
 
         {/* New Music */}
         <section>
-          <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
-            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+          <div className="mb-4 px-1">
+            <h2 className="text-xl md:text-2xl font-bold text-fg tracking-tight">
               New Music
-              <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </h2>
           </div>
           <Rail title="">
@@ -138,10 +135,9 @@ function Home() {
 
         {/* Artists You Might Like */}
         <section>
-          <div className="flex items-center justify-between mb-2 px-1 cursor-pointer group">
-            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1">
+          <div className="mb-4 px-1">
+            <h2 className="text-xl md:text-2xl font-bold text-fg tracking-tight">
               Artists You Might Like
-              <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
             </h2>
           </div>
           <Rail title="">
