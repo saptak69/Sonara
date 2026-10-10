@@ -19,7 +19,7 @@ import { Cover } from "@/components/cover";
 import { SearchSuggestions } from "@/components/search-suggestions";
 import { requestNotificationPermissions, scheduleWeeklyMix, scheduleRetentionNudge, cancelRetentionNudges } from "@/lib/notifications";
 import { App as CapacitorApp } from "@capacitor/app";
-import { UpdatePrompt } from "@/components/update-prompt";
+import { MahalayaPrompt } from "@/components/mahalaya-prompt";
 import { motion } from "framer-motion";
 
 const SIDEBAR_NAV = [
@@ -186,7 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="bg-transparent min-h-dvh w-full text-fg relative isolate selection:bg-accent/30 selection:text-fg font-sans">
-      <UpdatePrompt />
+      <MahalayaPrompt />
       <PlayerEngine />
       <Toaster
         theme="dark"
