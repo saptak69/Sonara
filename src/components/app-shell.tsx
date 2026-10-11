@@ -1,4 +1,4 @@
-import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X, Heart, Menu, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, MonitorSpeaker, Mic2, Volume2, ListMusic, LayoutGrid, Loader2 } from "lucide-react";
+import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X, Heart, Menu, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, MonitorSpeaker, Mic2, Volume2, ListMusic, LayoutGrid } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -361,7 +361,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   />
                   {q && (
                     <button type="button" onClick={() => { setQ(""); setMobileSuggestionsOpen(false); }} className="absolute top-1/2 right-4 -translate-y-1/2 text-muted hover:text-fg min-h-[44px] min-w-[44px] flex items-center justify-center">
-                      {isSearchingMobile ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
+                      {isSearchingMobile ? <SearchSpinner className="size-4" /> : <X className="size-4" />}
                     </button>
                   )}
                   <SearchSuggestions query={q} isOpen={mobileSuggestionsOpen} onClose={() => setMobileSuggestionsOpen(false)} onSelectQuery={executeSearch} onLoadingChange={setIsSearchingMobile} />
@@ -422,7 +422,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className="h-11 w-full rounded-full bg-surface hover:bg-hover focus:bg-surface pr-14 pl-11 text-sm text-fg placeholder:text-muted outline-none border border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
                 />
                 <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center text-xs font-medium text-muted">
-                  {isSearchingDesktop ? <Loader2 className="size-4 animate-spin" /> : "⌘K"}
+                  {isSearchingDesktop ? <SearchSpinner className="size-4" /> : "⌘K"}
                 </div>
                 <SearchSuggestions query={q} isOpen={desktopSuggestionsOpen} onClose={() => setDesktopSuggestionsOpen(false)} onSelectQuery={executeSearch} onLoadingChange={setIsSearchingDesktop} />
               </form>
@@ -532,3 +532,12 @@ function MoreHorizontal(props: React.SVGProps<SVGSVGElement>) {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
   );
 }
+
+function SearchSpinner({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("animate-spin", className)}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  );
+}
+

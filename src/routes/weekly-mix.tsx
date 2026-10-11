@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Play, Loader2 } from "lucide-react";
+import { Play } from "lucide-react";
 import { usePlayer } from "@/lib/player-store";
 import { generateWeeklyMix } from "@/lib/music-api";
 import type { Track } from "@/lib/types";
@@ -59,7 +59,9 @@ function WeeklyMixPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted">
-            <Loader2 className="size-8 animate-spin mb-4" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-8 animate-spin mb-4">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
             <p className="text-sm font-medium">Curating your mix...</p>
           </div>
         ) : tracks.length > 0 ? (
