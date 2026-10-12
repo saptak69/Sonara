@@ -69,7 +69,7 @@ export function useCurrentUserState(): CurrentUserState {
       profileImageUrl: rawUser.image ?? null,
       isDevFallback: false,
     };
-  }, [rawUser?.id, rawUser?.name, rawUser?.email, rawUser?.image]);
+  }, [rawUser]);
 
   return useMemo(() => {
     if (!authEnabled) return { user: DEV_USER, isPending: false };

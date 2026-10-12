@@ -4,14 +4,13 @@ import { Cover } from "@/components/cover";
 import { usePlayer } from "@/lib/player-store";
 import type { Artist, Playlist, RadioStation, Track } from "@/lib/types";
 import { radioToTrack } from "@/lib/music-api";
-import { formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 
 const triggerHaptic = () => {
   try {
     Haptics.impact({ style: ImpactStyle.Light });
-  } catch (err) {
+  } catch {
     // Ignore on web
   }
 };
@@ -80,12 +79,6 @@ export function AlbumCard({
           className="aspect-square w-full"
         />
         
-        {/* Apple Music Style Corner Logo */}
-        <div className="absolute top-2 right-2.5 z-10 flex items-center gap-1 opacity-90 drop-shadow-md">
-          <svg viewBox="0 0 100 100" className="size-2.5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M50 0a50 50 0 1050 50A50 50 0 0050 0zM35.6 77.1V22.9h14.9a26.9 26.9 0 0113.6 3.4 15.6 15.6 0 017 9.4 34.6 34.6 0 012 11.7 39.5 39.5 0 01-1.7 11.8 15.2 15.2 0 01-6.5 9 29.8 29.8 0 01-14.8 3.5h-5.2v5.4H35.6zm10.7-14.7h3.8a13 13 0 0010.5-4.2 18.2 18.2 0 003.5-12.1 16.5 16.5 0 00-3.6-11.7 12 12 0 00-9.5-3.8h-4.7v31.8z"/></svg>
-          <span className="text-white font-bold tracking-tight text-[9px]">Sonara</span>
-        </div>
-
         <PlayBadge active={active} playing={isPlaying} />
       </div>
 
@@ -123,12 +116,6 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
           className="aspect-square w-full"
         />
         
-        {/* Apple Music Style Corner Logo */}
-        <div className="absolute top-2 right-2.5 z-10 flex items-center gap-1 opacity-90 drop-shadow-md">
-          <svg viewBox="0 0 100 100" className="size-2.5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M50 0a50 50 0 1050 50A50 50 0 0050 0zM35.6 77.1V22.9h14.9a26.9 26.9 0 0113.6 3.4 15.6 15.6 0 017 9.4 34.6 34.6 0 012 11.7 39.5 39.5 0 01-1.7 11.8 15.2 15.2 0 01-6.5 9 29.8 29.8 0 01-14.8 3.5h-5.2v5.4H35.6zm10.7-14.7h3.8a13 13 0 0010.5-4.2 18.2 18.2 0 003.5-12.1 16.5 16.5 0 00-3.6-11.7 12 12 0 00-9.5-3.8h-4.7v31.8z"/></svg>
-          <span className="text-white font-bold tracking-tight text-[9px]">Sonara</span>
-        </div>
-
         <PlayBadge />
       </div>
 

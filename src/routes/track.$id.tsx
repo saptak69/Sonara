@@ -6,7 +6,7 @@ import { usePlayer } from "@/lib/player-store";
 import { Button } from "@/components/ui/button";
 import { HomeSkeleton } from "@/components/home-skeleton";
 import { TrackRow } from "@/components/track-row";
-import { Play, Pause, Share2, Heart, Music2, Sparkles } from "lucide-react";
+import { Play, Pause, Share2, Heart, Sparkles } from "lucide-react";
 import { hashHue } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -47,14 +47,15 @@ function TrackPage() {
   // Autoplay on page load if opened from a shared link
   useEffect(() => {
     if (!track) return;
-    if (current?.id !== track.id) {
+    const currentId = usePlayer.getState().current()?.id;
+    if (currentId !== track.id) {
       playTrack(track);
       toast.success(`Playing: "${track.title}"`, {
         description: `by ${track.artist}`,
         duration: 4000,
       });
     }
-  }, [track?.id]);
+  }, [track, playTrack]);
 
   if (trackQuery.isLoading) return <HomeSkeleton />;
 
@@ -162,7 +163,7 @@ function TrackPage() {
       {/* Recommended Songs */}
       {(relatedQuery.data ?? []).length ? (
         <section className="space-y-4">
-          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-3 px-1">
             More like this
           </h2>
           <div className="space-y-1">

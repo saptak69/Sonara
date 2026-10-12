@@ -11,6 +11,9 @@ export function QueueList({ className }: { className?: string }) {
   const upcoming = queue.slice(index + 1);
   const history = queue.slice(0, index);
 
+  const clearUpcoming = usePlayer((s) => s.clearUpcoming);
+  const clearRecents = usePlayer((s) => s.clearRecents);
+
   return (
     <div className={cn("flex-1 overflow-y-auto [scrollbar-width:none] px-4 md:px-8 pb-32", className)}>
       
@@ -21,7 +24,7 @@ export function QueueList({ className }: { className?: string }) {
           <div>
             <div className="flex items-end justify-between mb-4 px-2">
               <h2 className="text-xl font-bold text-white">Queue</h2>
-              <button className="text-sm font-medium text-accent hover:text-accent/80 transition-colors">
+              <button onClick={clearUpcoming} className="text-sm font-medium text-accent hover:text-accent/80 transition-colors">
                 Clear
               </button>
             </div>
@@ -41,7 +44,7 @@ export function QueueList({ className }: { className?: string }) {
                 <h2 className="text-xl font-bold text-white">Continue Playing</h2>
                 <span className="text-sm text-white/50">From your recent activity</span>
               </div>
-              <button className="text-sm font-medium text-accent hover:text-accent/80 transition-colors">
+              <button onClick={clearRecents} className="text-sm font-medium text-accent hover:text-accent/80 transition-colors">
                 Clear
               </button>
             </div>
@@ -75,7 +78,7 @@ export function QueuePanel() {
       {track && (
         <div className="absolute inset-0 z-[-1] overflow-hidden bg-black">
           <img
-            src={track.artworkLg || track.artwork}
+            src={track.artworkLg || track.artwork || undefined}
             alt=""
             className="w-full h-full object-cover opacity-60 saturate-[150%] blur-3xl scale-150"
             aria-hidden="true"

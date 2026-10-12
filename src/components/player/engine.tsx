@@ -234,7 +234,7 @@ export function PlayerEngine() {
   // Seamlessly auto-upgrade preview streams (30s previews) to full-length 320kbps master streams
   useEffect(() => {
     if (!current?.id || !current?.title) return;
-    const isPreview = current.streamUrl?.includes("dzcdn.net") || (current.duration && current.duration <= 35);
+    const isPreview = current.streamUrl?.includes("dzcdn.net") || current.streamUrl?.includes("pixabay.com") || (current.duration && current.duration <= 35);
     if (!isPreview) return;
 
     let cancelled = false;
@@ -247,6 +247,7 @@ export function PlayerEngine() {
         if (!audio || currentTrackIdRef.current !== current.id) return;
         const pos = audio.currentTime;
         const wasPlaying = !audio.paused;
+        current.streamUrl = full.streamUrl;
         audio.src = full.streamUrl;
         try {
           audio.currentTime = pos;
@@ -409,6 +410,8 @@ export function PlayerEngine() {
                    data: { title: currentT.title, artist: currentT.artist }
                 }).then(full => {
                    if (full?.streamUrl && full.streamUrl !== currentT.streamUrl) {
+                      currentT.streamUrl = full.streamUrl;
+                      if (full.duration) currentT.duration = full.duration;
                       const a = activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
                       if (a && usePlayer.getState().current()?.id === currentT.id) {
                          a.src = full.streamUrl;

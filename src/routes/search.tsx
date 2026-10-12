@@ -31,7 +31,6 @@ function SearchPage() {
   const [showAllSongs, setShowAllSongs] = useState(false);
   const [localQ, setLocalQ] = useState(q);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     setLocalQ(q);
@@ -200,7 +199,7 @@ function SearchPage() {
 
         {recents.length ? (
           <section className="space-y-3">
-            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">Recent Searches</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-2.5 px-1">Recent Searches</h2>
             <div className="flex flex-wrap gap-2">
               {recents.map((s) => (
                 <Link
@@ -232,7 +231,7 @@ function SearchPage() {
 
         {/* Trending culture & rock searches */}
         <section className="space-y-3">
-          <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">Trending & Featured</h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-2.5 px-1">Trending & Featured</h2>
           <div className="flex flex-wrap gap-2.5">
             {TRENDING_SEARCHES.map((item) => (
               <Link
@@ -329,7 +328,7 @@ function SearchPage() {
       {(tracks.data ?? []).length ? (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight">Songs</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight">Songs</h2>
             {(tracks.data ?? []).length > 6 ? (
               <Button
                 variant="ghost"
@@ -342,7 +341,7 @@ function SearchPage() {
             ) : null}
           </div>
           {(showAllSongs ? (tracks.data ?? []) : (tracks.data ?? []).slice(0, 6)).map((t, i) => (
-            <TrackRow key={t.id} track={t} index={i} queue={[]} showPlays />
+            <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
           ))}
         </section>
       ) : (

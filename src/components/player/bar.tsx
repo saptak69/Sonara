@@ -1,10 +1,9 @@
 import React from "react";
-import { Heart, ListMusic, Mic2, MonitorSpeaker, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, FastForward, Volume2, RadioTower, Play, Pause } from "lucide-react";
+import { ListMusic, Mic2, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { MarqueeText } from "@/components/marquee-text";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
 import { formatTime } from "@/lib/format";
 
 const Equalizer = React.memo(function Equalizer({ isPlaying }: { isPlaying: boolean }) {
@@ -33,13 +32,13 @@ export function PlayerBar() {
   const cycleRepeat = usePlayer((s) => s.cycleRepeat);
   const setExpanded = usePlayer((s) => s.setExpanded);
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
-  const likedIds = usePlayer((s) => s.likedIds);
-  const toggleLike = usePlayer((s) => s.toggleLike);
+  const volume = usePlayer((s) => s.volume);
+  const muted = usePlayer((s) => s.muted);
+  const setVolume = usePlayer((s) => s.setVolume);
+  const toggleMute = usePlayer((s) => s.toggleMute);
   const live = track?.kind === "radio";
   const progress =
     live || !duration || !Number.isFinite(duration) ? 0 : (currentTime / duration) * 100;
-  
-  const liked = Boolean(track && likedIds.includes(track.id));
 
   if (!track) {
     return null;
@@ -73,7 +72,7 @@ export function PlayerBar() {
             </div>
           </button>
 
-          <div className="flex items-center gap-5 shrink-0 pr-4 text-white">
+          <div className="flex items-center gap-3 sm:gap-5 shrink-0 pr-2 sm:pr-4 text-white">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -111,7 +110,7 @@ export function PlayerBar() {
       </div>
 
       {/* Desktop Bar - Apple Music Floating Pill Style */}
-      <div className="hidden lg:flex fixed bottom-8 left-1/2 -translate-x-1/2 h-[72px] bg-background/80 dark:bg-black/60 backdrop-blur-3xl border border-border/50 items-center justify-between px-6 z-50 rounded-full shadow-2xl min-w-[800px] overflow-hidden group">
+      <div className="hidden lg:flex fixed bottom-8 left-[calc(var(--spacing-sidebar)+((100vw-var(--spacing-sidebar))/2))] -translate-x-1/2 h-[72px] bg-background/80 dark:bg-black/60 backdrop-blur-3xl border border-border/50 items-center justify-between px-6 z-50 rounded-full shadow-2xl w-[calc(100vw-var(--spacing-sidebar)-3rem)] max-w-[860px] min-w-0 overflow-hidden group">
         
         {/* Scrubber Background (Spans top edge of pill) */}
         {!live && duration > 0 && (
@@ -135,7 +134,7 @@ export function PlayerBar() {
         {/* Dynamic Background Blur inside Pill */}
         <div className="absolute inset-0 z-[-1] overflow-hidden pointer-events-none rounded-full">
           <img
-            src={track.artwork}
+            src={track.artwork || undefined}
             alt=""
             className="w-full h-full object-cover opacity-20 saturate-200 blur-3xl transform scale-[2]"
             aria-hidden="true"
@@ -144,7 +143,7 @@ export function PlayerBar() {
         </div>
 
         {/* Left: Track Info */}
-        <div className="flex items-center gap-3 w-[260px] min-w-0" onClick={() => setExpanded(true)}>
+        <div className="flex items-center gap-3 w-[220px] xl:w-[260px] min-w-0 shrink" onClick={() => setExpanded(true)}>
           <div className="h-[48px] aspect-square rounded-[8px] overflow-hidden shadow-sm shrink-0">
             <Cover
               src={track.artwork}
@@ -205,9 +204,9 @@ export function PlayerBar() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-5 w-[260px] min-w-0">
+        <div className="flex items-center justify-end gap-3 xl:gap-5 w-[220px] xl:w-[260px] min-w-0 shrink">
           {!live && duration > 0 && (
-            <span className="text-[11px] font-medium text-muted font-mono tracking-tighter mr-2">
+            <span className="text-[11px] font-medium text-muted font-mono tracking-tighter mr-1 sm:mr-2">
               -{formatTime(duration - currentTime)}
             </span>
           )}
@@ -230,10 +229,30 @@ export function PlayerBar() {
             <ListMusic className="size-[18px]" strokeWidth={2} />
           </button>
           
-          <div className="flex items-center gap-2 group/vol w-[100px]">
-            <MonitorSpeaker className="size-[18px] text-muted group-hover/vol:text-fg transition-colors shrink-0" strokeWidth={2} />
-            <div className="flex-1 h-1.5 bg-white/10 rounded-full relative overflow-hidden group-hover/vol:h-2 transition-all cursor-pointer">
-              <div className="absolute left-0 top-0 bottom-0 bg-fg w-[80%] rounded-full" />
+          <div className="flex items-center gap-2 group/vol w-[110px]">
+            <button
+              onClick={toggleMute}
+              className="text-muted hover:text-fg transition-colors shrink-0"
+              title={muted ? "Unmute" : "Mute"}
+            >
+              {muted || volume === 0 ? (
+                <VolumeX className="size-[18px]" strokeWidth={2} />
+              ) : (
+                <Volume2 className="size-[18px]" strokeWidth={2} />
+              )}
+            </button>
+            <div
+              className="flex-1 h-1.5 bg-white/10 rounded-full relative overflow-hidden group-hover/vol:h-2 transition-all cursor-pointer"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                setVolume(pos);
+              }}
+            >
+              <div
+                className="absolute left-0 top-0 bottom-0 bg-fg rounded-full transition-[width]"
+                style={{ width: `${(muted ? 0 : volume) * 100}%` }}
+              />
             </div>
           </div>
         </div>

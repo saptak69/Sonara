@@ -1,4 +1,4 @@
-import { MoreVertical, Play, Pause, Radio } from "lucide-react";
+import { MoreVertical, Play, Radio } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { Equalizer } from "@/components/equalizer";
 import { TrackMenu } from "@/components/track-menu";
@@ -56,58 +56,58 @@ export function TrackRow({
         />
       )}
 
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            aria-label={active && isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
-            className="relative size-12 shrink-0 rounded-md overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/60 border border-white/10"
-            onClick={handlePlayToggle}
-          >
-            <Cover
-              src={track.artwork}
-              alt={track.title}
-              title={track.title}
-              className="size-12 rounded-md"
-            />
-            <span
-              className={cn(
-                "absolute inset-0 grid place-items-center bg-black/60 transition-opacity duration-150",
-                active ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100",
-              )}
+      <div className="flex items-center gap-3 shrink-0">
+        {typeof index === "number" ? (
+          <span className="hidden sm:inline-block w-5 text-right font-mono text-xs tabular-nums text-muted/70 shrink-0">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        ) : null}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={active && isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
+              className="relative size-12 shrink-0 rounded-md overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/60 border border-white/10"
+              onClick={handlePlayToggle}
             >
-              {active && isPlaying ? (
-                <Equalizer />
-              ) : (
-                <Play className="size-5 fill-fg text-fg ml-0.5" />
-              )}
-            </span>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          {active && isPlaying ? "Pause" : "Play"}
-        </TooltipContent>
-      </Tooltip>
+              <Cover
+                src={track.artwork}
+                alt={track.title}
+                title={track.title}
+                className="size-12 rounded-md"
+              />
+              <span
+                className={cn(
+                  "absolute inset-0 grid place-items-center bg-black/60 transition-opacity duration-150",
+                  active ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100",
+                )}
+              >
+                {active && isPlaying ? (
+                  <Equalizer />
+                ) : (
+                  <Play className="size-5 fill-fg text-fg ml-0.5" />
+                )}
+              </span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {active && isPlaying ? "Pause" : "Play"}
+          </TooltipContent>
+        </Tooltip>
+      </div>
 
       <div
         className="min-w-0 cursor-pointer"
         onClick={handlePlayToggle}
       >
-        <div className="flex items-center gap-2">
-          {typeof index === "number" ? (
-            <span className="hidden lg:inline-block w-5 text-right font-mono text-xs tabular-nums text-muted shrink-0">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-          ) : null}
-          <p
-            className={cn(
-              "truncate text-sm font-medium transition-colors",
-              active ? "text-accent font-medium" : "text-fg lg:group-hover:text-accent",
-            )}
-          >
-            {track.title}
-          </p>
-        </div>
+        <p
+          className={cn(
+            "truncate text-sm font-medium transition-colors",
+            active ? "text-accent font-semibold" : "text-fg lg:group-hover:text-accent",
+          )}
+        >
+          {track.title}
+        </p>
         <p className="truncate text-xs text-muted flex items-center gap-1.5 mt-0.5">
           {track.kind === "radio" && (
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-accent uppercase tracking-wider">

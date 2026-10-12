@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Play, Plus } from "lucide-react";
+import { Play } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ export const Route = createFileRoute("/playlist/$id")({ component: PlaylistPage 
 function PlaylistPage() {
   const { id } = Route.useParams();
   const playTracks = usePlayer((s) => s.playTracks);
-  const playNext = usePlayer((s) => s.playNext);
   const query = useQuery({
     queryKey: ["playlist", id],
     queryFn: () => fetchPlaylist(id),
@@ -53,7 +52,7 @@ function PlaylistPage() {
       <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden">
         {playlist.artworkLg || playlist.artwork ? (
           <img
-            src={playlist.artworkLg || playlist.artwork}
+            src={playlist.artworkLg || playlist.artwork || undefined}
             alt=""
             className="w-full h-full object-cover opacity-50 blur-3xl scale-125"
           />
@@ -64,10 +63,10 @@ function PlaylistPage() {
       <div className="px-4 md:px-12 pt-10 md:pt-12 pb-32">
         <div className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
           <Cover
-            src={playlist.artworkLg || playlist.artwork}
+            src={playlist.artworkLg || playlist.artwork || undefined}
             alt={playlist.name}
             title={playlist.name}
-            rounded="xl"
+            rounded="lg"
             className="size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
           />
           <div className="min-w-0 flex flex-col items-center md:items-start w-full">

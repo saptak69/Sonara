@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteFooter } from "@/components/site-footer";
-import { Music, Sparkles, Heart, Shield, FileText } from "lucide-react";
+import { Music, Sparkles, Shield, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/about")({
   component: AboutPage,

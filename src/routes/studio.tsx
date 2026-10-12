@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import {
@@ -16,9 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { GENRES, MOODS } from "@/lib/genres";
 import {
-  BarChart3,
   CheckCircle2,
-  Clock,
   Disc,
   Edit3,
   FileAudio,
@@ -30,11 +28,8 @@ import {
   Play,
   Plus,
   Share2,
-  ShieldCheck,
-  Sparkles,
   Trash2,
   Upload,
-  UserCheck,
   LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -326,6 +321,14 @@ function ArtistStudioPage() {
             Sign In or Create Account
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (isPending || (loading && !profile)) {
+    return (
+      <div className="min-h-[75vh] flex items-center justify-center">
+        <Disc className="size-10 text-accent animate-spin-slow" />
       </div>
     );
   }

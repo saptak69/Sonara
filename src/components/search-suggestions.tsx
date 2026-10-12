@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, Music, User, Disc, ArrowUpRight, History } from "lucide-react";
 import {
@@ -59,18 +59,21 @@ export function SearchSuggestions({
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const onLoadingChangeRef = useRef(onLoadingChange);
+  onLoadingChangeRef.current = onLoadingChange;
+
   // Fetch suggestions with 300ms debounce
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
       setData({ queries: [], topMatches: [] });
       setSelectedIndex(-1);
-      onLoadingChange?.(false);
+      onLoadingChangeRef.current?.(false);
       return;
     }
 
     setLoading(true);
-    onLoadingChange?.(true);
+    onLoadingChangeRef.current?.(true);
     const timer = setTimeout(() => {
       void fetchSearchSuggestionsServerFn({ data: { query: trimmed } })
         .then((res) => {
@@ -79,7 +82,7 @@ export function SearchSuggestions({
         })
         .finally(() => {
           setLoading(false);
-          onLoadingChange?.(false);
+          onLoadingChangeRef.current?.(false);
         });
     }, 300);
 
@@ -104,8 +107,32 @@ export function SearchSuggestions({
   const showRecents = query.trim().length === 0;
   
   const displayQueries = showRecents ? recentSearches : data.queries;
-  const displayMatches = showRecents ? [] : data.topMatches;
+  const displayMatches = useMemo(() => (showRecents ? [] : data.topMatches), [showRecents, data.topMatches]);
   const totalItems = displayMatches.length + displayQueries.length;
+
+  const handleSelectMatch = useCallback((match: SuggestionMatch) => {
+    onClose();
+    if (match.type === "artist" && match.entityId) {
+      void navigate({ to: "/artist/$id", params: { id: match.entityId } });
+    } else if (match.type === "album" && match.entityId) {
+      void navigate({ to: "/playlist/$id", params: { id: match.entityId } });
+    } else if (match.entityId) {
+      // Play track directly
+      void (async () => {
+        try {
+          const track = await fetchTrack(match.entityId!);
+          if (track) {
+            playTrack(track);
+          }
+        } catch {
+          // fallback to search
+          onSelectQuery(match.title);
+        }
+      })();
+    } else {
+      onSelectQuery(match.title);
+    }
+  }, [onClose, navigate, playTrack, onSelectQuery]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -134,31 +161,7 @@ export function SearchSuggestions({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, totalItems, selectedIndex, displayMatches, displayQueries, onSelectQuery, onClose]);
-
-  const handleSelectMatch = (match: SuggestionMatch) => {
-    onClose();
-    if (match.type === "artist" && match.entityId) {
-      void navigate({ to: "/artist/$id", params: { id: match.entityId } });
-    } else if (match.type === "album" && match.entityId) {
-      void navigate({ to: "/playlist/$id", params: { id: match.entityId } });
-    } else if (match.entityId) {
-      // Play track directly
-      void (async () => {
-        try {
-          const track = await fetchTrack(match.entityId!);
-          if (track) {
-            playTrack(track);
-          }
-        } catch {
-          // fallback to search
-          onSelectQuery(match.title);
-        }
-      })();
-    } else {
-      onSelectQuery(match.title);
-    }
-  };
+  }, [isOpen, totalItems, selectedIndex, displayMatches, displayQueries, onSelectQuery, onClose, handleSelectMatch]);
 
   if (!isOpen || (displayQueries.length === 0 && displayMatches.length === 0 && !loading)) {
     return null;

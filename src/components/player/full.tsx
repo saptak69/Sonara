@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronDown,
   Heart,
@@ -10,7 +10,6 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
-  MoreHorizontal
 } from "lucide-react";
 import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
@@ -21,7 +20,6 @@ import { Slider } from "@/components/ui/slider";
 import { formatTime } from "@/lib/format";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 /* ────────────────────────────────────────────────
@@ -98,7 +96,7 @@ export function FullPlayer() {
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
 
   const live = track?.kind === "radio";
-  const dominantColor = useArtworkColor(track?.artworkLg || track?.artwork);
+  const dominantColor = useArtworkColor(track?.artworkLg || track?.artwork || undefined);
 
   return (
     <div
@@ -166,7 +164,7 @@ export function FullPlayer() {
             <div className="flex flex-col w-full transition-all duration-500 lg:justify-center lg:w-[45%] lg:max-w-[440px]">
               
               {/* Artwork — large, centered, with shadow */}
-              <div className="w-[min(85vw,360px)] lg:w-full aspect-square mx-auto rounded-[32px] shadow-[0_32px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-8 lg:mb-10">
+              <div className="w-[min(76vw,320px)] sm:w-[min(85vw,360px)] lg:w-full aspect-square mx-auto rounded-[24px] sm:rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.5)] lg:shadow-[0_32px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-6 sm:mb-8 lg:mb-10">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}

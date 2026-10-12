@@ -44,7 +44,7 @@ export function Button({
   const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     try {
       Haptics.impact({ style: ImpactStyle.Light });
-    } catch (err) {
+    } catch {
       // Ignore if not on a device that supports haptics
     }
     onPointerDown?.(e);

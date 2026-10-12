@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { RepeatMode, Track, UserPlaylist } from "./types";
+import { CURATED_TRACKS } from "./music-api";
 
 type PlayerState = {
   queue: Track[];
@@ -57,13 +58,27 @@ type PlayerState = {
   removeFromPlaylist: (id: string, trackId: string) => void;
   deletePlaylist: (id: string) => void;
   rememberSearch: (q: string) => void;
-  clearRecents: () => void;  setHydrated: () => void;
+  clearRecents: () => void;
+  clearUpcoming: () => void;
+  setHydrated: () => void;
 };
 
 const MAX_RECENTS = 40;
 
+export function sanitizeTrack(t: Track): Track {
+  if (!t) return t;
+  if (t.id.startsWith("curated_") || t.streamUrl?.includes("pixabay.com")) {
+    const match = CURATED_TRACKS.find(
+      (c) => c.id === t.id || c.title.toLowerCase() === t.title.toLowerCase(),
+    );
+    if (match) return { ...t, ...match };
+  }
+  return t;
+}
+
 function remember(list: Track[], track: Track): Track[] {
-  return [track, ...list.filter((t) => t.id !== track.id)].slice(0, MAX_RECENTS);
+  const cleanTrack = sanitizeTrack(track);
+  return [cleanTrack, ...list.filter((t) => t.id !== cleanTrack.id).map(sanitizeTrack)].slice(0, MAX_RECENTS);
 }
 
 export function getNextIndex(state: PlayerState): number | null {
@@ -122,7 +137,7 @@ export const usePlayer = create<PlayerState>()(
       },
       isLiked: (id) => get().likedIds.includes(id),
       playTracks: (tracks, startIndex = 0) => {
-        const clean = tracks.filter(Boolean);
+        const clean = tracks.filter(Boolean).map(sanitizeTrack);
         if (!clean.length) return;
         const i = Math.min(Math.max(0, startIndex), clean.length - 1);
         const start = clean[i];
@@ -137,7 +152,8 @@ export const usePlayer = create<PlayerState>()(
         });
       },
       playTrack: (track, rest = []) => {
-        const queue = [track, ...rest.filter((t) => t.id !== track.id)];
+        const cleanTrack = sanitizeTrack(track);
+        const queue = [cleanTrack, ...rest.filter((t) => t.id !== cleanTrack.id).map(sanitizeTrack)];
         get().playTracks(queue, 0);
         // If queue is standalone (1-2 tracks), automatically fetch matching genre/artist songs
         if (queue.length <= 2) {
@@ -283,6 +299,10 @@ export const usePlayer = create<PlayerState>()(
         if (i === s.index) index = Math.min(index, Math.max(0, queue.length - 1));
         set({ queue, index, history: [], isPlaying: queue.length ? s.isPlaying : false });
       },
+      clearUpcoming: () => {
+        const s = get();
+        set({ queue: s.queue.slice(0, s.index + 1) });
+      },
       jumpTo: (i) => {
         const s = get();
         const track = s.queue[i];
@@ -366,7 +386,11 @@ export const usePlayer = create<PlayerState>()(
         volume: s.volume,
       }),
       onRehydrateStorage: () => (state) => {
-        state?.setHydrated();
+        if (state) {
+          state.recents = (state.recents || []).map(sanitizeTrack);
+          state.queue = (state.queue || []).map(sanitizeTrack);
+          state.setHydrated();
+        }
       },
     },
   ),

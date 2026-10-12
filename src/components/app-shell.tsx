@@ -1,7 +1,6 @@
-import { Compass, Disc, Home, Info, Library, LogOut, Plus, Radio, Search, User, X, Heart, Menu, Repeat, Shuffle, SkipBack, SkipForward, Play, Pause, MonitorSpeaker, Mic2, Volume2, ListMusic, LayoutGrid } from "lucide-react";
+import { Compass, Home, Info, LogOut, Plus, Radio, Search, User, X, Heart, ListMusic } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Logo } from "@/components/logo";
 import { PlayerEngine } from "@/components/player/engine";
 import { PlayerBar } from "@/components/player/bar";
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { Cover } from "@/components/cover";
@@ -96,16 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user } = useCurrentUserState();
   const hasTrack = usePlayer((s) => Boolean(s.queue[s.index]));
-  const current = usePlayer((s) => s.queue[s.index]);
-  const isPlaying = usePlayer((s) => s.isPlaying);
-  const toggle = usePlayer((s) => s.toggle);
-  const next = usePlayer((s) => s.next);
-  const prev = usePlayer((s) => s.prev);
-  const progress = usePlayer((s) => s.currentTime);
-  const duration = usePlayer((s) => s.duration);
-  const seek = usePlayer((s) => s.seekTo);
-  const queue = usePlayer((s) => s.queue);
-  const index = usePlayer((s) => s.index);
+  const currentArtwork = usePlayer((s) => s.queue[s.index]?.artwork);
   
   const rawPlaylists = usePlayer((s) => s.playlists);
   const playlists = useMemo(() => rawPlaylists.filter((p) => p.id !== "likes"), [rawPlaylists]);
@@ -182,8 +172,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     executeSearch(q);
   };
 
-  const upNext = queue.slice(index + 1, index + 5);
-
   return (
     <div className="bg-transparent min-h-dvh w-full text-fg relative isolate selection:bg-accent/30 selection:text-fg font-sans">
       <MahalayaPrompt />
@@ -198,16 +186,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
       {/* Mobile Dynamic Full-Screen Background */}
       <div className="fixed inset-0 z-[-2] lg:hidden pointer-events-none overflow-hidden bg-background">
-        {hasTrack && current?.artwork && (
+        {hasTrack && currentArtwork && (
           <motion.div
-            key={current.artwork}
+            key={currentArtwork}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
             className="absolute inset-0"
           >
             <img
-              src={current.artwork}
+              src={currentArtwork}
               alt=""
               className="w-full h-[120%] object-cover opacity-[0.85] saturate-[200%] blur-[100px] transform scale-125 origin-top"
             />
@@ -482,7 +470,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                        import("@capacitor/haptics").then(({ Haptics, ImpactStyle }) => {
                          Haptics.impact({ style: ImpactStyle.Light });
                        }).catch(() => {});
-                     } catch(e) { /* ignore */ }
+                     } catch { /* ignore */ }
                    }}
                    onClick={() => {
                      if (item.to === "/") {
@@ -527,11 +515,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function MoreHorizontal(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-  );
-}
 
 function SearchSpinner({ className }: { className?: string }) {
   return (

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import crypto from "node:crypto";
 import { serverCache, CACHE_TTL } from "./cache.server";
 import type { Artist, Playlist, Track } from "./types";
 
@@ -83,7 +84,18 @@ export type RawSaavnAlbum = {
  */
 export function decryptSaavnMediaUrl(encryptedUrl?: string): string | null {
   if (!encryptedUrl) return null;
-  return null;
+  try {
+    if (!crypto || typeof crypto.createDecipheriv !== "function") return null;
+    const key = Buffer.from("383465913834659138346591", "utf-8");
+    const decipher = crypto.createDecipheriv("des-ede3-ecb", key, null);
+    decipher.setAutoPadding(true);
+    let decrypted = decipher.update(encryptedUrl, "base64", "utf-8");
+    decrypted += decipher.final("utf-8");
+    // Request highest quality 320kbps MP4/AAC stream, upgrading from 48, 96, 160 or 320 preview URLs
+    return decrypted.replace(/_(?:48|96|160|320)\.(mp4|m4a)/, "_320.mp4");
+  } catch {
+    return null;
+  }
 }
 
 function cleanHtmlEntities(str?: string): string {
@@ -528,7 +540,7 @@ export const getSaavnArtistTracksServerFn = createServerFn({ method: "GET" })
         const deduped = mapped.filter((t) => {
           // Arijit Singh often has the same song multiple times with different co-artists or parenthetical subtitles
           // We deduplicate aggressively by the base title for artist pages.
-          const baseTitle = t.title.toLowerCase().replace(/\s*[\(\[].*?[\)\]]/g, '').trim();
+          const baseTitle = t.title.toLowerCase().replace(/\s*[([].*?[\])]/g, '').trim();
           if (seen.has(baseTitle)) return false;
           seen.add(baseTitle);
           return true;

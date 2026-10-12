@@ -58,7 +58,7 @@ export function MahalayaPrompt() {
             return `${year}-${month}-${day}`;
           }
           return new Date().toISOString().slice(0, 10);
-        } catch (e) {
+        } catch {
           return new Date().toISOString().slice(0, 10);
         }
       };

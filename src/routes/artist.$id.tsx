@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Disc, Play, ShieldCheck, Sparkles, User } from "lucide-react";
+import { CheckCircle2, Disc, Play, Sparkles } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
 import { Rail } from "@/components/rail";
@@ -116,7 +116,7 @@ function ArtistPage() {
         <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden">
           {profile.bannerUrl || profile.avatarUrl ? (
             <img
-              src={profile.bannerUrl || profile.avatarUrl}
+              src={profile.bannerUrl || profile.avatarUrl || undefined}
               alt=""
               className="w-full h-full object-cover opacity-50 blur-3xl scale-125"
             />
@@ -201,7 +201,7 @@ function ArtistPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <div>
-              <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-1">Releases & Discography</h2>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-1">Releases & Discography</h2>
               <p className="text-xs text-muted">Official audio uploaded and verified by {profile.displayName}</p>
             </div>
           </div>
@@ -252,7 +252,7 @@ function ArtistPage() {
       <div className="absolute top-0 left-0 w-full h-[60vh] -z-10 overflow-hidden">
         {a.artworkLg || a.artwork ? (
           <img
-            src={a.artworkLg || a.artwork}
+            src={a.artworkLg || a.artwork || undefined}
             alt=""
             className="w-full h-full object-cover opacity-50 blur-3xl scale-125"
           />
@@ -305,7 +305,7 @@ function ArtistPage() {
         </div>
 
       <section className="mt-10">
-        <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight mb-2 px-1">Popular</h2>
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-3 px-1">Popular</h2>
         {list.map((t, i) => (
           <TrackRow key={t.id} track={t} index={i} queue={list} showPlays />
         ))}

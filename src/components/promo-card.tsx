@@ -49,6 +49,7 @@ export const PromoCard = React.forwardRef<HTMLAnchorElement, PromoCardProps>(
 
     return (
       <Link
+        ref={ref}
         to={href}
         className={cn(promoCardVariants({ variant, className }))}
         {...props}

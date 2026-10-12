@@ -4,7 +4,7 @@ import { authClient } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Lock, Mail, Music2, Sparkles, User } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Music2, User } from "lucide-react";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { SocialLogin } from "@capgo/capacitor-social-login";
@@ -72,6 +72,7 @@ function LoginPage() {
           });
           const googleUser = await SocialLogin.login({
             provider: "google",
+            options: {},
           });
           const idToken = (googleUser as any).result?.idToken || (googleUser as any).result?.authentication?.idToken || (googleUser as any).idToken;
           

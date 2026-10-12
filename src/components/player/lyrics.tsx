@@ -84,7 +84,7 @@ export function LyricsDrawer() {
       {track && (
         <div className="absolute inset-0 z-[-1] overflow-hidden bg-black">
           <img
-            src={track.artworkLg || track.artwork}
+            src={track.artworkLg || track.artwork || undefined}
             alt=""
             className="w-full h-full object-cover opacity-60 saturate-[150%] blur-3xl scale-150"
             aria-hidden="true"

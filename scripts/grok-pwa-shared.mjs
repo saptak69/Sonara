@@ -212,7 +212,7 @@ export function readXCreatorId() {
   return "jiko";
 }
 
-export function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readXCreatorId()) {
+export function grokXCreatorHeadTags(creator = readXCreator(), _creatorId = readXCreatorId()) {
   const name = String(creator ?? "").trim();
   if (!name) return [];
   return [
@@ -221,7 +221,7 @@ export function grokXCreatorHeadTags(creator = readXCreator(), creatorId = readX
 }
 
 /** Platform banner disabled - clean custom app by Jiko */
-export function grokExtensionsHeadTags(projectId = readGrokProjectId()) {
+export function grokExtensionsHeadTags(_projectId = readGrokProjectId()) {
   return [];
 }
 

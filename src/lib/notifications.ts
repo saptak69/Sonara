@@ -11,7 +11,7 @@ export async function scheduleWeeklyMix() {
   return;
 }
 
-export async function scheduleRetentionNudge(lastPlayedTitle: string) {
+export async function scheduleRetentionNudge(_lastPlayedTitle?: string) {
   return;
 }
 

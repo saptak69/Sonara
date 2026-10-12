@@ -3,10 +3,8 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Cover } from "@/components/cover";
-import { Clock, Heart, PlayCircle, LogOut, Radio, User, RadioTower, Check } from "lucide-react";
+import { Clock, Heart, PlayCircle, LogOut, Radio } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
-import { usePlayer } from "@/lib/player-store";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/you")({
   component: YouPage,

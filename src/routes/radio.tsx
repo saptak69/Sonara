@@ -7,7 +7,6 @@ import { Rail } from "@/components/rail";
 import { fetchRadioStations, radioToTrack } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Play } from "lucide-react";
 import { Cover } from "@/components/cover";
 import type { RadioStation } from "@/lib/types";
@@ -101,19 +100,18 @@ function RadioTagRail({ tag }: { tag: string }) {
 }
 
 export function RadioContent() {
-  const playTracks = usePlayer((s) => s.playTracks);
   const popular = useQuery({
     queryKey: ["radio-popular"],
     queryFn: () => fetchRadioStations(24),
   });
 
-  const all = popular.data ?? [];
+  const popularData = popular.data;
   const featured = React.useMemo(() => {
-    if (!all.length) return null;
-    const randomIndex = Math.floor(Math.random() * Math.min(all.length, 10));
-    return all[randomIndex];
-  }, [all]);
-  const rest = all.filter(s => s?.id !== featured?.id);
+    if (!popularData || !popularData.length) return null;
+    const randomIndex = Math.floor(Math.random() * Math.min(popularData.length, 10));
+    return popularData[randomIndex];
+  }, [popularData]);
+  const rest = (popularData ?? []).filter((s: RadioStation) => s?.id !== featured?.id);
 
   if (popular.isLoading && !popular.data) return <HomeSkeleton />;
 

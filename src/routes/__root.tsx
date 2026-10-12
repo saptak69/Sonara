@@ -17,7 +17,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Sonara" },
+      { title: APP_NAME },
       { name: "description", content: "Sonara is a modern, fast, and cinematic music streaming platform." },
       { name: "keywords", content: "music, streaming, sonara, audio, songs, radio, podcasts" },
       { name: "theme-color", content: "var(--color-bg)" },

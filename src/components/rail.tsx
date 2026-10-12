@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type ReactNode, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
 
 type RailTo = "/explore" | "/radio" | "/library";
 
@@ -12,11 +13,12 @@ export function SectionHeader({
   title: string;
   to?: RailTo;
 }) {
+  if (!title) return null;
   const heading = (
-    <h2 className="text-[17px] md:text-[20px] font-bold text-fg tracking-tight flex items-center gap-1 group">
-      {title}
+    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight flex items-center gap-1.5 group">
+      <span className={cn(to && "group-hover:text-accent transition-colors")}>{title}</span>
       {to && (
-        <svg className="size-[14px] text-muted-foreground/60 mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+        <svg className="size-[15px] text-muted group-hover:text-accent transition-colors mt-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
       )}
     </h2>
   );

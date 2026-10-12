@@ -1,16 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { z } from "zod";
+import { useMemo } from "react";
 import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
-import { Rail } from "@/components/rail";
 import { TrackRow } from "@/components/track-row";
 import { RadioContent } from "@/routes/radio";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
 import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Compass, Heart, History, ListMusic, Plus, Trash2, Ghost, Sparkles } from "lucide-react";
+import { Compass, Heart, ListMusic, Plus, Trash2, Ghost, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -39,16 +37,9 @@ function LibraryPage() {
   const deletePlaylist = usePlayer((s) => s.deletePlaylist);
   const clearRecents = usePlayer((s) => s.clearRecents);
   
-  const [tab, setTab] = useState<"recents" | "favorites" | "playlists" | "radios">(initialTab || "recents");
-
-  useEffect(() => {
-    if (initialTab && initialTab !== tab) {
-      setTab(initialTab);
-    }
-  }, [initialTab]);
+  const tab = initialTab || "recents";
 
   const handleTabChange = (newTab: "recents" | "favorites" | "playlists" | "radios") => {
-    setTab(newTab);
     void navigate({ search: { tab: newTab }, replace: true });
   };
 
