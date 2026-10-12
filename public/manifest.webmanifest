@@ -4,6 +4,7 @@
   "description": "Free Music Streaming App",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#030303",
   "theme_color": "#030303",
   "icons": [

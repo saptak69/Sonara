@@ -520,3 +520,131 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Mobile & Android Horizontal (Landscape) Optimization
+   Activates when device is held in landscape mode with height <= 540px
+   ───────────────────────────────────────────────────────────── */
+@media (orientation: landscape) and (max-height: 540px) {
+  /* Full player switches to a luxury horizontal cockpit layout */
+  .full-player-main {
+    flex-direction: row !important;
+    padding-top: max(env(safe-area-inset-top), 14px) !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 14px) !important;
+    padding-left: max(env(safe-area-inset-left), 28px) !important;
+    padding-right: max(env(safe-area-inset-right), 28px) !important;
+    gap: 1.5rem !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-y: hidden !important;
+    max-height: 100dvh !important;
+    height: 100dvh !important;
+  }
+
+  .full-player-left-col {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 780px !important;
+    gap: 1.5rem !important;
+  }
+
+  .full-player-artwork-box {
+    width: min(62vh, 210px) !important;
+    height: min(62vh, 210px) !important;
+    max-width: 210px !important;
+    max-height: 210px !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-shrink: 0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  .full-player-info-box {
+    max-width: 440px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .full-player-title {
+    font-size: 1.25rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .full-player-artist {
+    font-size: 0.875rem !important;
+    margin-top: 2px !important;
+  }
+
+  .full-player-scrubber {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .full-player-controls {
+    margin-bottom: 0.25rem !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    max-width: 320px !important;
+  }
+
+  .full-player-play-btn {
+    width: 3.25rem !important;
+    height: 3.25rem !important;
+    min-width: 3.25rem !important;
+    min-height: 3.25rem !important;
+  }
+
+  .full-player-action-row {
+    padding-top: 0 !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Compact Docked Navigation & Mini-Player on Mobile Landscape */
+  .mobile-bottom-dock {
+    padding-bottom: max(env(safe-area-inset-bottom), 6px) !important;
+    padding-left: max(env(safe-area-inset-left), 12px) !important;
+    padding-right: max(env(safe-area-inset-right), 12px) !important;
+    gap: 0.35rem !important;
+  }
+
+  .mobile-player-pill-wrapper {
+    max-width: 580px !important;
+  }
+
+  .mobile-player-pill-bar {
+    height: 44px !important;
+  }
+
+  .mobile-player-pill-art {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .mobile-nav-pill-wrapper {
+    max-width: 580px !important;
+  }
+
+  .mobile-nav-bar {
+    height: 48px !important;
+  }
+
+  .mobile-nav-bar nav {
+    height: 48px !important;
+  }
+
+  .mobile-nav-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .mobile-nav-label {
+    font-size: 9px !important;
+  }
+}
+
+

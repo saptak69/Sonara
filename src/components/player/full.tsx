@@ -156,15 +156,15 @@ export function FullPlayer() {
 
           {/* ─── Main Layout ─── */}
           <div className={cn(
-            "relative flex-1 flex flex-col lg:flex-row px-6 lg:px-16 pt-[calc(env(safe-area-inset-top)+72px)] pb-[max(env(safe-area-inset-bottom),24px)] lg:pt-10 lg:pb-8 overflow-y-auto [scrollbar-width:none] w-full max-w-6xl mx-auto gap-6 lg:gap-16 items-center lg:items-center lg:justify-center",
+            "full-player-main relative flex-1 flex flex-col lg:flex-row px-6 lg:px-12 xl:px-20 pt-[calc(env(safe-area-inset-top)+64px)] pb-[max(env(safe-area-inset-bottom),20px)] lg:py-8 overflow-y-auto lg:overflow-hidden [scrollbar-width:none] w-full max-w-6xl mx-auto gap-4 sm:gap-6 lg:gap-12 xl:gap-20 items-center lg:justify-center",
             panelOpen ? "justify-start" : "justify-center"
           )}>
             
             {/* ─── Left: Artwork & Controls ─── */}
-            <div className="flex flex-col w-full transition-all duration-500 lg:justify-center lg:w-[45%] lg:max-w-[440px]">
+            <div className="full-player-left-col flex flex-col w-full transition-all duration-500 lg:justify-center items-center lg:items-stretch lg:w-[44%] lg:max-w-[390px] xl:max-w-[420px] flex-shrink-0">
               
-              {/* Artwork — large, centered, with shadow */}
-              <div className="w-[min(76vw,320px)] sm:w-[min(85vw,360px)] lg:w-full aspect-square mx-auto rounded-[24px] sm:rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.5)] lg:shadow-[0_32px_80px_rgba(0,0,0,0.5)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-6 sm:mb-8 lg:mb-10">
+              {/* Artwork — elegant, responsive, never overwhelming desktop */}
+              <div className="full-player-artwork-box w-[min(72vw,280px)] sm:w-[min(78vw,320px)] lg:w-[min(38vh,300px)] xl:w-[min(42vh,340px)] aspect-square mx-auto rounded-[20px] sm:rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-4 sm:mb-6 lg:mb-6">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
@@ -173,11 +173,11 @@ export function FullPlayer() {
               </div>
 
               {/* Track Info */}
-              <div className="w-full max-w-[340px] lg:max-w-none mx-auto">
-                <div className="flex items-start justify-between gap-3 mb-6 overflow-hidden">
+              <div className="full-player-info-box w-full max-w-[340px] sm:max-w-[380px] lg:max-w-none mx-auto">
+                <div className="flex items-start justify-between gap-3 mb-3 lg:mb-4 overflow-hidden">
                   <div className="min-w-0 flex-1 overflow-hidden">
-                    <MarqueeText text={track.title} className="font-extrabold text-white text-[28px] lg:text-3xl leading-tight tracking-tight" />
-                    <MarqueeText text={track.artist} className="text-white/70 font-semibold text-lg lg:text-xl mt-1" />
+                    <MarqueeText text={track.title} className="full-player-title font-extrabold text-white text-[22px] sm:text-2xl lg:text-[26px] leading-tight tracking-tight" />
+                    <MarqueeText text={track.artist} className="full-player-artist text-white/70 font-semibold text-base lg:text-lg mt-0.5" />
                   </div>
                   <button
                     aria-label={liked ? "Unlike" : "Like"}
@@ -189,7 +189,7 @@ export function FullPlayer() {
                 </div>
 
                 {/* Scrubber */}
-                <div className="w-full mb-4">
+                <div className="full-player-scrubber w-full mb-3 lg:mb-4">
                   <Slider
                     value={[live ? 0 : currentTime]}
                     min={0}
@@ -199,57 +199,57 @@ export function FullPlayer() {
                     onValueChange={([val]) => seekTo(val)}
                     className="w-full"
                   />
-                  <div className="mt-1.5 flex justify-between text-[11px] text-white/40 font-medium tabular-nums">
+                  <div className="mt-1.5 flex justify-between text-[11px] text-white/40 font-medium tabular-nums font-mono">
                     <span>{live ? "LIVE" : formatTime(currentTime)}</span>
                     <span>{live ? "∞" : `-${formatTime(Number.isFinite(duration) ? Math.max(0, duration - currentTime) : 0)}`}</span>
                   </div>
                 </div>
 
                 {/* Transport Controls */}
-                <div className="flex items-center justify-between w-full max-w-[320px] mx-auto mb-4">
+                <div className="full-player-controls flex items-center justify-between w-full max-w-[320px] mx-auto mb-2 lg:mb-3 py-1">
                   <button
-                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", shuffle && "text-white")}
+                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90", shuffle && "text-white")}
                     onClick={toggleShuffle}
                   >
-                    <Shuffle className="size-6" strokeWidth={2.5} />
+                    <Shuffle className="size-5" strokeWidth={2.5} />
                   </button>
                   <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={prev}>
-                    <SkipBack className="size-10 fill-current" />
+                    <SkipBack className="size-8 sm:size-9 fill-current" />
                   </button>
                   <PlayPauseButton
                     isPlaying={isPlaying}
                     onClick={toggle}
-                    className="size-20 rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-xl flex items-center justify-center transition-transform"
-                    iconClassName="size-8"
+                    className="full-player-play-btn size-16 sm:size-[68px] rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-2xl flex items-center justify-center transition-transform"
+                    iconClassName="size-7"
                   />
                   <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={next}>
-                    <SkipForward className="size-10 fill-current" />
+                    <SkipForward className="size-8 sm:size-9 fill-current" />
                   </button>
                   <button
-                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center", repeat !== "off" && "text-white")}
+                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90", repeat !== "off" && "text-white")}
                     onClick={cycleRepeat}
                   >
-                    {repeat === "one" ? <Repeat1 className="size-6" strokeWidth={2.5} /> : <Repeat className="size-6" strokeWidth={2.5} />}
+                    {repeat === "one" ? <Repeat1 className="size-5" strokeWidth={2.5} /> : <Repeat className="size-5" strokeWidth={2.5} />}
                   </button>
                 </div>
 
                 {/* Action Row — Mobile */}
-                <div className="flex lg:hidden items-center justify-center w-full gap-6 pt-2">
-                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => {
+                <div className="full-player-action-row flex lg:hidden items-center justify-center w-full gap-5 pt-1">
+                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" onClick={() => {
                     if (navigator.share) {
                       navigator.share({ title: track.title, text: `Listen to ${track.title} by ${track.artist} on Sonara`, url: window.location.href });
                     }
                   }}>
-                    <Share2 className="size-5" />
+                    <Share2 className="size-4 sm:size-5" />
                   </button>
                   <button
-                    className={cn("flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all min-h-[44px]", lyricsOpen ? "bg-white/20 text-white" : "text-white/50 hover:text-white")}
+                    className={cn("flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all min-h-[38px] active:scale-95", lyricsOpen ? "bg-white/20 text-white" : "text-white/50 hover:text-white")}
                     onClick={() => setLyricsOpen(!lyricsOpen)}
                   >
-                    <Mic2 className="size-4" /> Lyrics
+                    <Mic2 className="size-3.5 sm:size-4" /> Lyrics
                   </button>
-                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" onClick={() => setQueueOpen(true)}>
-                    <ListMusic className="size-5" />
+                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" onClick={() => setQueueOpen(true)}>
+                    <ListMusic className="size-4 sm:size-5" />
                   </button>
                 </div>
               </div>

@@ -47,14 +47,14 @@ export function PlayerBar() {
   return (
     <>
       {/* Mobile Player Pill (Apple Music iOS Style) */}
-      <div className="w-full lg:hidden relative rounded-full sonara-glass-strong overflow-hidden shadow-lg">
-        <div className="flex h-[60px] items-center gap-3 px-3">
+      <div className="mobile-player-pill-wrapper w-full lg:hidden relative rounded-full sonara-glass-strong overflow-hidden shadow-lg">
+        <div className="mobile-player-pill-bar flex h-[60px] items-center gap-3 px-3">
           <button
             type="button"
             className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.98] transition-transform"
             onClick={() => setExpanded(true)}
           >
-            <div className="relative size-[44px] shrink-0 rounded-[10px] overflow-hidden shadow-sm ml-0.5">
+            <div className="mobile-player-pill-art relative size-[44px] shrink-0 rounded-[10px] overflow-hidden shadow-sm ml-0.5">
               <Cover
                 src={track.artwork}
                 alt={track.title}

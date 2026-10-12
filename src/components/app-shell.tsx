@@ -130,6 +130,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
     });
 
+    const backButtonSub = CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      const state = usePlayer.getState();
+      if (state.lyricsOpen) {
+        state.setLyricsOpen(false);
+      } else if (state.queueOpen) {
+        state.setQueueOpen(false);
+      } else if (state.expanded) {
+        state.setExpanded(false);
+      } else if (canGoBack) {
+        window.history.back();
+      } else {
+        CapacitorApp.exitApp();
+      }
+    });
+
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
       const isSlash = e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement);
@@ -149,7 +164,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
-      appStateSub.then(s => s.remove());
+      appStateSub.then(s => s.remove()).catch(() => {});
+      backButtonSub.then(s => s.remove()).catch(() => {});
     };
   }, [navigate]);
 
@@ -446,18 +462,18 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <div className="max-w-7xl mx-auto pb-32 lg:pb-0">
+        <div className="max-w-7xl mx-auto pb-32 lg:pb-0 landscape:max-lg:pb-28">
           {children}
         </div>
       </main>
 
       {/* Mobile Bottom Navigation & Global Player Bar */}
-      <div className={cn("fixed inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col items-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] transition-transform duration-500 gap-2 lg:hidden")}>
-        <div className="pointer-events-auto w-full max-w-[440px] flex flex-col items-center">
+      <div className={cn("mobile-bottom-dock fixed inset-x-0 bottom-0 z-50 pointer-events-none flex flex-col items-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] transition-transform duration-500 gap-2 lg:hidden")}>
+        <div className="mobile-player-pill-wrapper pointer-events-auto w-full max-w-[440px] flex flex-col items-center">
           <PlayerBar />
         </div>
-        <div className="pointer-events-auto w-full max-w-[440px] rounded-full sonara-glass-strong overflow-hidden relative">
-          <nav className="relative isolate flex items-center justify-between px-2 h-[72px] w-full">
+        <div className="mobile-nav-pill-wrapper pointer-events-auto w-full max-w-[440px] rounded-full sonara-glass-strong overflow-hidden relative">
+          <nav className="mobile-nav-bar relative isolate flex items-center justify-between px-2 h-[72px] w-full">
             {MOBILE_NAV.map((item) => {
                const active = item.to === "/" ? path === "/" : (path.startsWith(item.to) && search.tab !== "favorites");
                const Icon = item.icon;
@@ -493,10 +509,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                      className={cn("transition-colors relative flex flex-col items-center gap-[4px]", active ? "text-accent" : "text-white/60 group-hover:opacity-70")}
                    >
-                     <div className="size-[26px] flex items-center justify-center">
+                     <div className="mobile-nav-icon size-[26px] flex items-center justify-center">
                        <Icon active={active} />
                      </div>
-                     <span className={cn("text-[10px] font-semibold leading-none tracking-tight", active ? "font-bold" : "")}>{item.label}</span>
+                     <span className={cn("mobile-nav-label text-[10px] font-semibold leading-none tracking-tight", active ? "font-bold" : "")}>{item.label}</span>
                    </motion.div>
                  </Link>
               );
