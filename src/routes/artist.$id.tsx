@@ -126,17 +126,17 @@ function ArtistPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
         </div>
 
-        <div className="px-4 md:px-12 pt-10 md:pt-12 pb-32 space-y-10">
-          <div className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
+        <div className="detail-header-container px-4 md:px-12 pt-10 md:pt-12 pb-32 space-y-10">
+          <div className="detail-header flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
             <Cover
               src={profile.avatarUrl}
               alt={profile.displayName}
               title={profile.displayName}
               rounded="full"
-              className="size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
+              className="detail-header-art size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
             />
             
-            <div className="min-w-0 flex flex-col items-center md:items-start w-full">
+            <div className="detail-header-info min-w-0 flex flex-col items-center md:items-start w-full">
               <div className="flex items-center justify-center md:justify-start gap-2 mb-2 md:mb-1">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-3 py-0.5 text-xs font-semibold text-accent border border-accent/30">
                   <Sparkles className="size-3.5" />
@@ -260,16 +260,16 @@ function ArtistPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
       </div>
 
-      <div className="px-4 md:px-12 pt-10 md:pt-12 pb-32 space-y-10">
-        <div className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
+      <div className="detail-header-container px-4 md:px-12 pt-10 md:pt-12 pb-32 space-y-10">
+        <div className="detail-header flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
           <Cover
             src={a.artworkLg || a.artwork}
             alt={a.name}
             title={a.name}
             rounded="full"
-            className="size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
+            className="detail-header-art size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
           />
-          <div className="min-w-0 flex flex-col items-center md:items-start w-full">
+          <div className="detail-header-info min-w-0 flex flex-col items-center md:items-start w-full">
             <p className="text-xs font-semibold tracking-[0.2em] text-white/60 uppercase mb-2 md:mb-1">Artist</p>
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">{a.name}</h1>
             <p className="mt-2 text-sm text-white/70 font-medium">

@@ -39,7 +39,7 @@ function WeeklyMixPage() {
   return (
     <div className="min-h-dvh pb-32 animate-in fade-in duration-500">
       <div className="px-4 py-8 md:px-8">
-        <div className="flex flex-col items-start gap-4 mb-8">
+        <div className="weekly-mix-header flex flex-col items-start gap-4 mb-8">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight text-fg">Your Weekly Mix</h1>
             <p className="text-muted text-sm">

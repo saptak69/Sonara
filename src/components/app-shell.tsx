@@ -221,6 +221,59 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </div>
 
+      {/* Mobile Landscape Left Rail (Dedicated Ergonomic Rail for horizontal mobile displays) */}
+      <aside className="mobile-landscape-rail fixed top-0 bottom-0 left-0 z-30 hidden w-16 flex-col items-center justify-between py-2.5 bg-bg/90 backdrop-blur-2xl border-r border-white/10 pl-[env(safe-area-inset-left,0px)]">
+        {/* Logo */}
+        <Logo compact={true} className="size-9 rounded-xl hover:bg-white/5 transition-colors" />
+
+        {/* Center Icons Rail */}
+        <nav className="flex flex-col items-center gap-1 w-full px-1.5">
+          {MOBILE_NAV.map((item) => {
+            const active = item.to === "/" ? path === "/" : (path.startsWith(item.to) && search.tab !== "favorites");
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                title={item.label}
+                onClick={() => {
+                  if (item.to === "/") {
+                    const main = document.getElementById("main-scroll-area");
+                    if (main) main.scrollTo({ top: 0, behavior: "instant" });
+                    window.scrollTo({ top: 0, behavior: "instant" });
+                  }
+                }}
+                className={cn(
+                  "relative flex flex-col items-center justify-center w-full h-10 rounded-xl transition-all active:scale-95",
+                  active ? "text-accent bg-accent/15" : "text-white/60 hover:text-white hover:bg-white/5"
+                )}
+              >
+                <div className="size-5 flex items-center justify-center">
+                  <Icon active={active} />
+                </div>
+                <span className="text-[8px] font-semibold tracking-tighter leading-none mt-0.5">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom Utilities / User / Login */}
+        <div className="flex flex-col items-center gap-1.5">
+          <Link to="/about" className="flex items-center justify-center size-7 rounded-full text-white/50 hover:text-white hover:bg-white/5 active:scale-95 transition-colors" title="About">
+            <Info className="size-3.5" />
+          </Link>
+          {user && !user.isDevFallback ? (
+            <Link to="/studio" className="size-7 rounded-full overflow-hidden border border-white/20 active:scale-95" title={user.displayName || "User"}>
+              <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-full" />
+            </Link>
+          ) : (
+            <Link to="/login" className="flex items-center justify-center size-7 rounded-full bg-accent/20 text-accent border border-accent/30 active:scale-95" title="Sign In">
+              <User className="size-3.5" />
+            </Link>
+          )}
+        </div>
+      </aside>
+
       {/* Left Sidebar */}
       <aside className="fixed top-0 left-0 z-20 hidden h-[100dvh] w-sidebar flex-col bg-bg/80 backdrop-blur-2xl border-r border-white/5 px-5 py-5 lg:flex">
         <Logo compact={false} />
@@ -374,13 +427,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ) : (
               <div className="flex items-center justify-between w-full lg:hidden pt-4 pb-2">
-                <h1 className="text-3xl leading-none font-bold tracking-tighter text-fg">
-                  {path === "/" ? "Listen Now" : 
-                   path.startsWith("/explore") ? "Browse" : 
-                   path.startsWith("/radio") ? "Radio" : 
-                   path.startsWith("/library") ? "Library" : 
-                   path.startsWith("/search") ? "Search" : "Sonara"}
-                </h1>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Logo compact={true} className="size-8 shrink-0 active:scale-95 transition-transform" />
+                  <h1 className="text-2xl sm:text-3xl leading-none font-bold tracking-tighter text-fg truncate">
+                    {path === "/" ? "Listen Now" : 
+                     path.startsWith("/explore") ? "Browse" : 
+                     path.startsWith("/radio") ? "Radio" : 
+                     path.startsWith("/library") ? "Library" : 
+                     path.startsWith("/search") ? "Search" : "Sonara"}
+                  </h1>
+                </div>
                 <div className="flex items-center gap-3">
                   <Link to="/about" className="p-2 text-muted hover:text-fg transition-colors">
                     <Info className="size-5" />

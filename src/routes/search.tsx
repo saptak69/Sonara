@@ -158,7 +158,7 @@ function SearchPage() {
     return (
       <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
         <header className="relative z-50">
-          <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
+          <form onSubmit={onSearchSubmit} className="search-input-form relative lg:hidden mb-6">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
             <input
               value={localQ}
@@ -192,7 +192,7 @@ function SearchPage() {
               }} 
             />
           </form>
-          <div className="hidden md:flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="hidden lg:flex items-center justify-between border-b border-white/10 pb-4">
             <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Search</h1>
           </div>
         </header>
@@ -267,7 +267,7 @@ function SearchPage() {
   return (
     <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
       <header className="relative z-50">
-        <form onSubmit={onSearchSubmit} className="relative md:hidden mb-6">
+        <form onSubmit={onSearchSubmit} className="search-input-form relative lg:hidden mb-6">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
           <input
             value={localQ}

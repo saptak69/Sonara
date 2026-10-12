@@ -70,7 +70,7 @@ export function QueuePanel() {
     <aside
       data-open={open}
       className={cn(
-        "fixed inset-0 z-50 flex md:hidden flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] liquid-glass",
+        "fixed inset-0 z-50 flex lg:hidden flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] liquid-glass",
         "data-[open=false]:translate-y-full"
       )}
     >

@@ -270,7 +270,7 @@ export function TopPickCard({
       type="button"
       onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
       onPointerDown={triggerHaptic}
-      className="group relative w-[310px] shrink-0 snap-start text-left rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:enabled:scale-[0.98] lg:hover:scale-[1.02] focus-visible:outline-none aspect-[4/5] overflow-hidden shadow-md lg:hover:shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
+      className="top-pick-card group relative w-[310px] shrink-0 snap-start text-left rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:enabled:scale-[0.98] lg:hover:scale-[1.02] focus-visible:outline-none aspect-[4/5] overflow-hidden shadow-md lg:hover:shadow-[0_12px_24px_rgba(0,0,0,0.2)]"
     >
       <Cover
         src={track.artworkLg || track.artwork}

@@ -60,16 +60,16 @@ function PlaylistPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg/80 to-bg" />
       </div>
 
-      <div className="px-4 md:px-12 pt-10 md:pt-12 pb-32">
-        <div className="flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
+      <div className="detail-header-container px-4 md:px-12 pt-10 md:pt-12 pb-32">
+        <div className="detail-header flex flex-col items-center text-center gap-6 md:flex-row md:items-end md:text-left">
           <Cover
             src={playlist.artworkLg || playlist.artwork || undefined}
             alt={playlist.name}
             title={playlist.name}
             rounded="lg"
-            className="size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
+            className="detail-header-art size-64 md:size-52 shrink-0 shadow-2xl mx-auto md:mx-0 border border-white/10"
           />
-          <div className="min-w-0 flex flex-col items-center md:items-start w-full">
+          <div className="detail-header-info min-w-0 flex flex-col items-center md:items-start w-full">
             <p className="text-xs font-semibold tracking-[0.2em] text-white/60 uppercase mb-2 md:mb-1">
               {playlist.isAlbum ? "Album" : "Playlist"}
             </p>
@@ -83,7 +83,7 @@ function PlaylistPage() {
               <p className="mt-3 line-clamp-2 max-w-xl text-sm text-white/50">{playlist.description}</p>
             ) : null}
             
-            <div className="mt-6 flex items-center gap-3 w-full max-w-[320px] mx-auto md:mx-0">
+            <div className="detail-header-actions mt-6 flex items-center gap-3 w-full max-w-[320px] mx-auto md:mx-0">
               <Button 
                 variant="solid" 
                 className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"

@@ -21,7 +21,7 @@ function RadioHero({ station }: { station: RadioStation }) {
   const track = radioToTrack(station);
 
   return (
-    <div className="relative isolate flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-16 p-5 md:p-12 rounded-[24px] md:rounded-[32px] overflow-hidden border border-border/50 bg-surface/50">
+    <div className="radio-hero relative isolate flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-16 p-5 md:p-12 rounded-[24px] md:rounded-[32px] overflow-hidden border border-border/50 bg-surface/50">
       {/* Ambient background glow */}
       <div className="absolute inset-0 z-0 opacity-[0.15] blur-[80px] saturate-200 pointer-events-none mix-blend-screen">
         <Cover
