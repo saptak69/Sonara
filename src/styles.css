@@ -199,6 +199,14 @@
   }
 }
 
+@utility liquid-glass {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
 .player-range {
   -webkit-appearance: none;
   appearance: none;
@@ -524,7 +532,7 @@
    Mobile & Android Horizontal (Landscape) Optimization
    Activates when device is held in landscape mode with height <= 540px
    ───────────────────────────────────────────────────────────── */
-@media (orientation: landscape) and (max-height: 560px) {
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 1023px) {
   /* Mobile Landscape Ergonomic Thumb Rail */
   .mobile-landscape-rail {
     display: flex !important;
