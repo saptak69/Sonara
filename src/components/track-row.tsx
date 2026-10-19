@@ -1,4 +1,4 @@
-import { MoreVertical, Play, Radio } from "lucide-react";
+import { Heart, MoreVertical, Play, Radio, Pause } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { Equalizer } from "@/components/equalizer";
 import { TrackMenu } from "@/components/track-menu";
@@ -26,7 +26,11 @@ export function TrackRow({
   const playTracks = usePlayer((s) => s.playTracks);
   const playTrack = usePlayer((s) => s.playTrack);
   const toggle = usePlayer((s) => s.toggle);
+  const likedIds = usePlayer((s) => s.likedIds);
+  const toggleLike = usePlayer((s) => s.toggleLike);
+
   const active = current?.id === track.id;
+  const isLiked = likedIds.includes(track.id);
   const startIndex = Math.max(0, queue.findIndex((t) => t.id === track.id));
 
   const handlePlayToggle = () => {
@@ -42,50 +46,63 @@ export function TrackRow({
   return (
     <div
       className={cn(
-        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 transition-colors duration-150 select-none",
+        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 transition-all duration-150 select-none",
         active
-          ? "bg-white/[0.06]"
-          : "lg:hover:bg-white/[0.04]",
+          ? "bg-white/[0.07] shadow-sm"
+          : "hover:bg-white/[0.04]",
       )}
     >
-      {/* Active verdigris ping indicator on far left */}
+      {/* Active Glowing Left Accent Indicator */}
       {active && (
         <span
-          className="absolute left-1.5 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-accent shadow-[0_0_6px_rgba(255,74,58,0.5)] animate-pulse"
+          className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-accent shadow-[0_0_10px_rgba(255,74,58,0.8)]"
           aria-hidden="true"
         />
       )}
 
       <div className="flex items-center gap-3 shrink-0">
         {typeof index === "number" ? (
-          <span className="hidden sm:inline-block w-5 text-right font-mono text-xs tabular-nums text-muted/70 shrink-0">
-            {String(index + 1).padStart(2, "0")}
+          <span 
+            className="hidden sm:inline-flex items-center justify-center w-6 text-right font-mono text-xs tabular-nums text-white/50 shrink-0 cursor-pointer"
+            onClick={handlePlayToggle}
+          >
+            {active && isPlaying ? (
+              <span className="text-accent flex items-center justify-center">
+                <Equalizer />
+              </span>
+            ) : (
+              <>
+                <span className="group-hover:hidden">{String(index + 1).padStart(2, "0")}</span>
+                <Play className="size-3.5 fill-white text-white hidden group-hover:block ml-0.5" />
+              </>
+            )}
           </span>
         ) : null}
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               aria-label={active && isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
-              className="relative size-12 shrink-0 rounded-md overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/60 border border-white/10"
+              className="relative size-12 shrink-0 rounded-lg overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 border border-white/10 shadow-sm transition-transform active:scale-95"
               onClick={handlePlayToggle}
             >
               <Cover
                 src={track.artwork}
                 alt={track.title}
                 title={track.title}
-                className="size-12 rounded-md"
+                className="size-12 rounded-lg object-cover"
               />
               <span
                 className={cn(
                   "absolute inset-0 grid place-items-center bg-black/60 transition-opacity duration-150",
-                  active ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100",
+                  active ? "opacity-100" : "opacity-0 group-hover:opacity-100",
                 )}
               >
                 {active && isPlaying ? (
-                  <Equalizer />
+                  <Pause className="size-5 fill-white text-white" />
                 ) : (
-                  <Play className="size-5 fill-fg text-fg ml-0.5" />
+                  <Play className="size-5 fill-white text-white ml-0.5" />
                 )}
               </span>
             </button>
@@ -102,15 +119,15 @@ export function TrackRow({
       >
         <p
           className={cn(
-            "truncate text-sm font-medium transition-colors",
-            active ? "text-accent font-semibold" : "text-fg lg:group-hover:text-accent",
+            "truncate text-[14px] font-semibold transition-colors leading-snug",
+            active ? "text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.3)]" : "text-white group-hover:text-white",
           )}
         >
           {track.title}
         </p>
-        <p className="truncate text-xs text-muted flex items-center gap-1.5 mt-0.5">
+        <p className="truncate text-xs text-white/55 flex items-center gap-1.5 mt-0.5 leading-snug">
           {track.kind === "radio" && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-accent uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-accent uppercase tracking-wider bg-accent/15 px-1.5 py-0.5 rounded">
               <Radio className="size-2.5 animate-pulse" /> Live
             </span>
           )}
@@ -118,7 +135,7 @@ export function TrackRow({
             <Link
               to="/artist/$id"
               params={{ id: track.artistId }}
-              className="lg:hover:text-fg lg:hover:underline transition-colors"
+              className="hover:text-white hover:underline transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {track.artist}
@@ -127,15 +144,34 @@ export function TrackRow({
             <span>{track.artist}</span>
           )}
           {showPlays && track.playCount ? (
-            <span className="text-muted/70 text-[10px]">
+            <span className="text-white/40 text-[11px]">
               · {formatCount(track.playCount)} plays
             </span>
           ) : null}
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="hidden w-12 text-right font-mono text-xs tabular-nums text-muted sm:block">
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Quick Like Button on Row Hover or when Liked */}
+        <button
+          type="button"
+          aria-label={isLiked ? "Unlike" : "Like"}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleLike(track);
+          }}
+          className={cn(
+            "p-1.5 rounded-full transition-all shrink-0 active:scale-90",
+            isLiked
+              ? "text-accent opacity-100"
+              : "text-white/40 opacity-0 group-hover:opacity-100 hover:text-white hover:bg-white/10"
+          )}
+          title={isLiked ? "Remove from Favorites" : "Add to Favorites"}
+        >
+          <Heart className={cn("size-4", isLiked && "fill-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.6)]")} strokeWidth={1.75} />
+        </button>
+
+        <span className="hidden w-12 text-right font-mono text-xs tabular-nums text-white/50 sm:block">
           {track.kind === "radio" ? (
             <span className="text-[10px] font-bold tracking-widest text-accent">LIVE</span>
           ) : (
@@ -150,9 +186,9 @@ export function TrackRow({
                 variant="icon"
                 size="iconSm"
                 aria-label={`Options for ${track.title}`}
-                className="opacity-70 lg:group-hover:opacity-100 transition-opacity lg:hover:bg-accent/10 lg:hover:text-fg"
+                className="opacity-70 group-hover:opacity-100 transition-opacity hover:bg-white/10 text-white/70 hover:text-white rounded-full size-8"
               >
-                <MoreVertical className="size-4 text-muted" />
+                <MoreVertical className="size-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">More options</TooltipContent>

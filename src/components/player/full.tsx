@@ -121,12 +121,19 @@ export function FullPlayer() {
               <img
                 src={track.artworkLg || track.artwork || ""}
                 alt=""
-                className="h-full w-full scale-[1.3] object-cover opacity-60 blur-3xl saturate-125 transition-all duration-1000 ease-out"
+                className="h-full w-full scale-[1.35] object-cover opacity-65 blur-3xl saturate-150 transition-all duration-1000 ease-out"
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             )}
-            {/* Subtle gradient to ensure text readability without a heavy black tint */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60 pointer-events-none mix-blend-multiply" />
+            {/* Vignette & subtle film grain for rich cinematic depth */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,rgba(0,0,0,0.6)_100%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 pointer-events-none mix-blend-multiply" />
+            <div 
+              className="absolute inset-0 opacity-[0.04] pointer-events-none" 
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+              }}
+            />
           </div>
 
           {/* ─── Header ─── */}
@@ -134,7 +141,7 @@ export function FullPlayer() {
             <button
               aria-label="Close player"
               onClick={() => setExpanded(false)}
-              className="pointer-events-auto p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/90 hover:bg-white/20 hover:text-white transition-all"
+              className="pointer-events-auto p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 hover:bg-white/20 hover:text-white transition-all active:scale-90 border border-white/10 shadow-lg"
             >
               <ChevronDown className="size-6" strokeWidth={2} />
             </button>
@@ -146,7 +153,7 @@ export function FullPlayer() {
             <div className="pointer-events-auto flex lg:hidden items-center gap-1">
               <button
                 aria-label="Queue"
-                className="p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white/90 hover:bg-white/20 transition-all"
+                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 hover:bg-white/20 transition-all active:scale-90 border border-white/10 shadow-lg"
                 onClick={() => setQueueOpen(true)}
               >
                 <ListMusic className="size-5" strokeWidth={1.5} />
@@ -163,29 +170,45 @@ export function FullPlayer() {
             {/* ─── Left: Artwork & Controls ─── */}
             <div className="full-player-left-col flex flex-col w-full transition-all duration-500 lg:justify-center items-center lg:items-stretch lg:w-[44%] lg:max-w-[390px] xl:max-w-[420px] flex-shrink-0">
               
-              {/* Artwork — elegant, responsive, never overwhelming desktop */}
-              <div className="full-player-artwork-box w-[min(72vw,280px)] sm:w-[min(78vw,320px)] lg:w-[min(38vh,300px)] xl:w-[min(42vh,340px)] aspect-square mx-auto rounded-[20px] sm:rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.55)] overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-4 sm:mb-6 lg:mb-6">
+              {/* Artwork — elegant, responsive, elevated depth */}
+              <div className="full-player-artwork-box w-[min(72vw,280px)] sm:w-[min(78vw,320px)] lg:w-[min(38vh,300px)] xl:w-[min(42vh,340px)] aspect-square mx-auto rounded-[24px] sm:rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.65)] ring-1 ring-white/15 overflow-hidden relative transition-all duration-500 flex-shrink-0 mb-4 sm:mb-6 lg:mb-6 group/art">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover/art:scale-105"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10 pointer-events-none" />
               </div>
 
               {/* Track Info */}
               <div className="full-player-info-box w-full max-w-[340px] sm:max-w-[380px] lg:max-w-none mx-auto">
-                <div className="flex items-start justify-between gap-3 mb-3 lg:mb-4 overflow-hidden">
+                <div className="flex items-start justify-between gap-3 mb-2 lg:mb-3 overflow-hidden">
                   <div className="min-w-0 flex-1 overflow-hidden">
                     <MarqueeText text={track.title} className="full-player-title font-extrabold text-white text-[22px] sm:text-2xl lg:text-[26px] leading-tight tracking-tight" />
                     <MarqueeText text={track.artist} className="full-player-artist text-white/70 font-semibold text-base lg:text-lg mt-0.5" />
+                    
+                    {/* Hi-Res Lossless Pill */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/10 text-[11px] font-semibold text-white/80 tracking-wide">
+                        <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+                        <span>Lossless · 24-bit / 48kHz</span>
+                      </div>
+                      {live && (
+                        <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30 text-[10px] font-bold tracking-wider uppercase">
+                          Live Radio
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <button
+                  <motion.button
                     aria-label={liked ? "Unlike" : "Like"}
-                    className="p-2 rounded-full text-white/70 hover:text-white transition-colors shrink-0 active:scale-90"
+                    whileTap={{ scale: 0.75 }}
+                    whileHover={{ scale: 1.15 }}
+                    className="p-2.5 rounded-full text-white/70 hover:text-white transition-colors shrink-0 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] shadow-md mt-1"
                     onClick={() => toggleLike(track)}
                   >
-                    <Heart className={cn("size-6", liked && "fill-accent text-accent")} strokeWidth={1.5} />
-                  </button>
+                    <Heart className={cn("size-6 transition-all duration-300", liked && "fill-accent text-accent drop-shadow-[0_0_12px_rgba(255,74,58,0.7)]")} strokeWidth={1.75} />
+                  </motion.button>
                 </div>
 
                 {/* Scrubber */}
@@ -199,7 +222,7 @@ export function FullPlayer() {
                     onValueChange={([val]) => seekTo(val)}
                     className="w-full"
                   />
-                  <div className="mt-1.5 flex justify-between text-[11px] text-white/40 font-medium tabular-nums font-mono">
+                  <div className="mt-1.5 flex justify-between text-[11px] text-white/50 font-medium tabular-nums font-mono">
                     <span>{live ? "LIVE" : formatTime(currentTime)}</span>
                     <span>{live ? "∞" : `-${formatTime(Number.isFinite(duration) ? Math.max(0, duration - currentTime) : 0)}`}</span>
                   </div>
@@ -208,26 +231,42 @@ export function FullPlayer() {
                 {/* Transport Controls */}
                 <div className="full-player-controls flex items-center justify-between w-full max-w-[320px] mx-auto mb-2 lg:mb-3 py-1">
                   <button
-                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90", shuffle && "text-white")}
+                    className={cn(
+                      "text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 rounded-full",
+                      shuffle && "text-accent hover:text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.5)]"
+                    )}
                     onClick={toggleShuffle}
+                    title={shuffle ? "Shuffle On" : "Shuffle Off"}
                   >
                     <Shuffle className="size-5" strokeWidth={2.5} />
                   </button>
-                  <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={prev}>
+                  <button 
+                    className="text-white hover:text-white/80 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" 
+                    onClick={prev}
+                    title="Previous"
+                  >
                     <SkipBack className="size-8 sm:size-9 fill-current" />
                   </button>
                   <PlayPauseButton
                     isPlaying={isPlaying}
                     onClick={toggle}
-                    className="full-player-play-btn size-16 sm:size-[68px] rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-2xl flex items-center justify-center transition-transform"
+                    className="full-player-play-btn size-16 sm:size-[68px] rounded-full bg-white text-black hover:scale-105 active:scale-95 shadow-[0_12px_32px_rgba(255,255,255,0.25)] flex items-center justify-center transition-transform"
                     iconClassName="size-7"
                   />
-                  <button className="text-white hover:text-white/70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" onClick={next}>
+                  <button 
+                    className="text-white hover:text-white/80 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90" 
+                    onClick={next}
+                    title="Next"
+                  >
                     <SkipForward className="size-8 sm:size-9 fill-current" />
                   </button>
                   <button
-                    className={cn("text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90", repeat !== "off" && "text-white")}
+                    className={cn(
+                      "text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 rounded-full",
+                      repeat !== "off" && "text-accent hover:text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.5)]"
+                    )}
                     onClick={cycleRepeat}
+                    title={`Repeat: ${repeat}`}
                   >
                     {repeat === "one" ? <Repeat1 className="size-5" strokeWidth={2.5} /> : <Repeat className="size-5" strokeWidth={2.5} />}
                   </button>
@@ -235,21 +274,32 @@ export function FullPlayer() {
 
                 {/* Action Row — Mobile */}
                 <div className="full-player-action-row flex lg:hidden items-center justify-center w-full gap-5 pt-1">
-                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({ title: track.title, text: `Listen to ${track.title} by ${track.artist} on Sonara`, url: window.location.href });
-                    }
-                  }}>
-                    <Share2 className="size-4 sm:size-5" />
+                  <button 
+                    className="text-white/60 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" 
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({ title: track.title, text: `Listen to ${track.title} by ${track.artist} on Sonara`, url: window.location.href });
+                      }
+                    }}
+                    title="Share"
+                  >
+                    <Share2 className="size-5" />
                   </button>
                   <button
-                    className={cn("flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all min-h-[38px] active:scale-95", lyricsOpen ? "bg-white/20 text-white" : "text-white/50 hover:text-white")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all min-h-[38px] active:scale-95 border",
+                      lyricsOpen ? "bg-white/20 text-white border-white/20 shadow-md" : "text-white/60 hover:text-white border-white/10 bg-white/[0.05]"
+                    )}
                     onClick={() => setLyricsOpen(!lyricsOpen)}
                   >
                     <Mic2 className="size-3.5 sm:size-4" /> Lyrics
                   </button>
-                  <button className="text-white/50 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" onClick={() => setQueueOpen(true)}>
-                    <ListMusic className="size-4 sm:size-5" />
+                  <button 
+                    className="text-white/60 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" 
+                    onClick={() => setQueueOpen(true)}
+                    title="Queue"
+                  >
+                    <ListMusic className="size-5" />
                   </button>
                 </div>
               </div>

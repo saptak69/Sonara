@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { RepeatMode, Track, UserPlaylist } from "./types";
+import type { Playlist, RepeatMode, Track, UserPlaylist } from "./types";
 import { CURATED_TRACKS } from "./music-api";
 
 type PlayerState = {
@@ -24,6 +24,7 @@ type PlayerState = {
   recents: Track[];
   playlists: UserPlaylist[];
   recentSearches: string[];
+  autoplay: boolean;
 
   hydrated: boolean;
   current: () => Track | null;
@@ -42,6 +43,8 @@ type PlayerState = {
   toggleMute: () => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
+  toggleAutoplay: () => void;
+  setAutoplay: (v: boolean) => void;
   toggleLike: (track: Track) => void;
   addToQueue: (track: Track) => void;
   appendQueue: (tracks: Track[]) => void;
@@ -61,6 +64,7 @@ type PlayerState = {
   clearRecents: () => void;
   clearUpcoming: () => void;
   setHydrated: () => void;
+  syncFromDatabase: () => Promise<void>;
 };
 
 const MAX_RECENTS = 40;
@@ -129,6 +133,7 @@ export const usePlayer = create<PlayerState>()(
       recents: [],
       playlists: [],
       recentSearches: [],
+      autoplay: true,
 
       hydrated: false,
       current: () => {
@@ -241,28 +246,34 @@ export const usePlayer = create<PlayerState>()(
         const i = order.indexOf(get().repeat);
         set({ repeat: order[(i + 1) % order.length] ?? "off" });
       },
+      toggleAutoplay: () => set({ autoplay: !get().autoplay }),
+      setAutoplay: (v: boolean) => set({ autoplay: v }),
       toggleLike: (track) => {
-        const liked = get().likedIds.includes(track.id);
+        const cleanTrack = sanitizeTrack(track);
+        const liked = get().likedIds.includes(cleanTrack.id);
         set({
           likedIds: liked
-            ? get().likedIds.filter((id) => id !== track.id)
-            : [track.id, ...get().likedIds],
+            ? get().likedIds.filter((id) => id !== cleanTrack.id)
+            : [cleanTrack.id, ...get().likedIds],
         });
         if (!liked) {
           const likes = get().playlists.find((p) => p.id === "likes");
           if (!likes) {
             set({
               playlists: [
-                { id: "likes", name: "Liked songs", tracks: [track], createdAt: Date.now() },
+                { id: "likes", name: "Liked songs", tracks: [cleanTrack], createdAt: Date.now() },
                 ...get().playlists,
               ],
             });
           } else {
-            get().addToPlaylist("likes", track);
+            get().addToPlaylist("likes", cleanTrack);
           }
         } else {
-          get().removeFromPlaylist("likes", track.id);
+          get().removeFromPlaylist("likes", cleanTrack.id);
         }
+        void import("./library-service").then(({ toggleUserFavoriteServerFn }) => {
+          void toggleUserFavoriteServerFn({ data: { track: cleanTrack } }).catch(() => {});
+        });
       },
       addToQueue: (track) => {
         const s = get();
@@ -327,21 +338,35 @@ export const usePlayer = create<PlayerState>()(
           typeof crypto !== "undefined" && crypto.randomUUID
             ? crypto.randomUUID()
             : `pl_${Date.now()}`;
+        const cleanTracks = tracks.map(sanitizeTrack);
         set({
           playlists: [
-            { id, name: name.trim() || "New playlist", tracks, createdAt: Date.now() },
+            { id, name: name.trim() || "New playlist", tracks: cleanTracks, createdAt: Date.now() },
             ...get().playlists,
           ],
+        });
+        void import("./library-service").then(({ createUserPlaylistServerFn, addTrackToPlaylistServerFn }) => {
+          void createUserPlaylistServerFn({ data: { name: name.trim() || "New playlist" } }).then((res) => {
+            if (res?.id && cleanTracks.length) {
+              for (const t of cleanTracks) {
+                void addTrackToPlaylistServerFn({ data: { playlistId: res.id, track: t } }).catch(() => {});
+              }
+            }
+          }).catch(() => {});
         });
         return id;
       },
       addToPlaylist: (id, track) => {
+        const cleanTrack = sanitizeTrack(track);
         set({
           playlists: get().playlists.map((p) =>
-            p.id === id && !p.tracks.some((t) => t.id === track.id)
-              ? { ...p, tracks: [track, ...p.tracks] }
+            p.id === id && !p.tracks.some((t) => t.id === cleanTrack.id)
+              ? { ...p, tracks: [cleanTrack, ...p.tracks] }
               : p,
           ),
+        });
+        void import("./library-service").then(({ addTrackToPlaylistServerFn }) => {
+          void addTrackToPlaylistServerFn({ data: { playlistId: id, track: cleanTrack } }).catch(() => {});
         });
       },
       removeFromPlaylist: (id, trackId) => {
@@ -350,10 +375,16 @@ export const usePlayer = create<PlayerState>()(
             p.id === id ? { ...p, tracks: p.tracks.filter((t) => t.id !== trackId) } : p,
           ),
         });
+        void import("./library-service").then(({ removeTrackFromPlaylistServerFn }) => {
+          void removeTrackFromPlaylistServerFn({ data: { playlistId: id, trackId } }).catch(() => {});
+        });
       },
       deletePlaylist: (id) => {
         if (id === "likes") return;
         set({ playlists: get().playlists.filter((p) => p.id !== id) });
+        void import("./library-service").then(({ deleteUserPlaylistServerFn }) => {
+          void deleteUserPlaylistServerFn({ data: { id } }).catch(() => {});
+        });
       },
       rememberSearch: (q) => {
         const v = q.trim();
@@ -365,6 +396,35 @@ export const usePlayer = create<PlayerState>()(
       clearRecents: () => set({ recents: [] }),
 
       setHydrated: () => set({ hydrated: true }),
+
+      syncFromDatabase: async () => {
+        try {
+          const { getUserPlaylistsServerFn, getUserFavoritesServerFn } = await import("./library-service");
+          const [dbPlaylists, dbFavorites] = await Promise.all([
+            getUserPlaylistsServerFn().catch(() => [] as Playlist[]),
+            getUserFavoritesServerFn().catch(() => [] as Track[]),
+          ]);
+          if (dbFavorites.length) {
+            const favIds = dbFavorites.map((t) => t.id);
+            set((s) => ({ likedIds: Array.from(new Set([...favIds, ...s.likedIds])) }));
+          }
+          if (dbPlaylists.length) {
+            const mapped: UserPlaylist[] = dbPlaylists.map((p) => ({
+              id: p.id,
+              name: p.name,
+              tracks: (p.tracks || []).map(sanitizeTrack),
+              createdAt: Date.now(),
+            }));
+            set((s) => {
+              const existingIds = new Set(s.playlists.map((p) => p.id));
+              const newOnes = mapped.filter((p) => !existingIds.has(p.id));
+              return { playlists: [...newOnes, ...s.playlists] };
+            });
+          }
+        } catch {
+          // ignore
+        }
+      },
     }),
     {
       name: "sonara-v1",
@@ -382,6 +442,7 @@ export const usePlayer = create<PlayerState>()(
         recents: s.recents,
         playlists: s.playlists,
         recentSearches: s.recentSearches,
+        autoplay: s.autoplay,
 
         volume: s.volume,
       }),

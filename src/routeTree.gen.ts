@@ -21,6 +21,7 @@ import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WeeklyMixRouteImport } from './routes/weekly-mix'
 import { Route as YouRouteImport } from './routes/you'
+import { Route as ApiStreamRouteImport } from './routes/api/stream'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ArtistIdRouteImport } from './routes/artist.$id'
 import { Route as GenreSlugRouteImport } from './routes/genre.$slug'
@@ -89,6 +90,11 @@ const YouRoute = YouRouteImport.update({
   path: '/you',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStreamRoute = ApiStreamRouteImport.update({
+  id: '/api/stream',
+  path: '/api/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiVersionRoute = ApiVersionRouteImport.update({
   id: '/api/version',
   path: '/api/version',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/stream': typeof ApiStreamRoute
   '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/stream': typeof ApiStreamRoute
   '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/stream': typeof ApiStreamRoute
   '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
   '/genre/$slug': typeof GenreSlugRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/weekly-mix'
     | '/you'
+    | '/api/stream'
     | '/api/version'
     | '/artist/$id'
     | '/genre/$slug'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/weekly-mix'
     | '/you'
+    | '/api/stream'
     | '/api/version'
     | '/artist/$id'
     | '/genre/$slug'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/weekly-mix'
     | '/you'
+    | '/api/stream'
     | '/api/version'
     | '/artist/$id'
     | '/genre/$slug'
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WeeklyMixRoute: typeof WeeklyMixRoute
   YouRoute: typeof YouRoute
+  ApiStreamRoute: typeof ApiStreamRoute
   ApiVersionRoute: typeof ApiVersionRoute
   ArtistIdRoute: typeof ArtistIdRoute
   GenreSlugRoute: typeof GenreSlugRoute
@@ -363,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YouRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/stream': {
+      id: '/api/stream'
+      path: '/api/stream'
+      fullPath: '/api/stream'
+      preLoaderRoute: typeof ApiStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/version': {
       id: '/api/version'
       path: '/api/version'
@@ -428,6 +448,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WeeklyMixRoute: WeeklyMixRoute,
   YouRoute: YouRoute,
+  ApiStreamRoute: ApiStreamRoute,
   ApiVersionRoute: ApiVersionRoute,
   ArtistIdRoute: ArtistIdRoute,
   GenreSlugRoute: GenreSlugRoute,

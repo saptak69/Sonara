@@ -1,12 +1,15 @@
-import { X } from "lucide-react";
+import { X, Infinity as InfinityIcon } from "lucide-react";
 import { TrackRow } from "@/components/track-row";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
 
 export function QueueList({ className }: { className?: string }) {
   const queue = usePlayer((s) => s.queue);
   const index = usePlayer((s) => s.index);
+  const autoplay = usePlayer((s) => s.autoplay);
+  const toggleAutoplay = usePlayer((s) => s.toggleAutoplay);
   const current = queue[index];
   const upcoming = queue.slice(index + 1);
   const history = queue.slice(0, index);
@@ -16,7 +19,23 @@ export function QueueList({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex-1 overflow-y-auto [scrollbar-width:none] px-4 md:px-8 pb-32", className)}>
-      
+      {/* Autoplay (Infinity Mode) Control */}
+      <div className="flex items-center justify-between p-3.5 mb-6 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-accent/20 text-accent">
+            <InfinityIcon className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white tracking-tight">Autoplay (Infinity Mode)</div>
+            <div className="text-xs text-white/50">Similar tracks keep playing when queue ends</div>
+          </div>
+        </div>
+        <Switch
+          checked={autoplay}
+          onCheckedChange={toggleAutoplay}
+          aria-label="Toggle Autoplay Infinity Mode"
+        />
+      </div>
 
       <div className="space-y-10">
         {/* Queue (Upcoming) */}

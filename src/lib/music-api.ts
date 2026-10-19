@@ -28,6 +28,7 @@ import {
   searchSoundCloudTracksServerFn,
   getSoundCloudTrackServerFn,
 } from "./soundcloud-api";
+import { getDatabaseTrendingServerFn } from "./library-service";
 import { createServerFn } from "@tanstack/react-start";
 
 const APP = "sonara_music";
@@ -95,7 +96,6 @@ export const CURATED_TRACKS: Track[] = [
     streamUrl: "https://aac.saavncdn.com/111/cf81f6eb5b6768fe2e1ddf9335124a5f_320.mp4",
     genre: "Pop",
     mood: "Upbeat",
-    playCount: 1520000,
     kind: "track",
   },
   {
@@ -108,7 +108,6 @@ export const CURATED_TRACKS: Track[] = [
     streamUrl: "https://aac.saavncdn.com/707/761fa325ce0600e1463336f0431d82b3_320.mp4",
     genre: "Alternative",
     mood: "Melancholic",
-    playCount: 2380000,
     kind: "track",
   },
   {
@@ -121,7 +120,6 @@ export const CURATED_TRACKS: Track[] = [
     streamUrl: "https://aac.saavncdn.com/567/0a21433a1e19335c6580ea70297a54c4_320.mp4",
     genre: "Hip-Hop",
     mood: "Energetic",
-    playCount: 1950000,
     kind: "track",
   },
   {
@@ -134,7 +132,6 @@ export const CURATED_TRACKS: Track[] = [
     streamUrl: "https://aac.saavncdn.com/168/cd86b04270077273602465fcb5ca21f9_320.mp4",
     genre: "Country",
     mood: "Upbeat",
-    playCount: 1820000,
     kind: "track",
   },
   {
@@ -147,7 +144,6 @@ export const CURATED_TRACKS: Track[] = [
     streamUrl: "https://aac.saavncdn.com/974/4a0d062679a537a93da367a9e4b6e3cb_320.mp4",
     genre: "Hip-Hop",
     mood: "Aggressive",
-    playCount: 3100000,
     kind: "track",
   },
   {
@@ -160,10 +156,10 @@ export const CURATED_TRACKS: Track[] = [
     streamUrl: "https://aac.saavncdn.com/812/1f3b1c54dda25e953e21b534f0def3cd_320.mp4",
     genre: "Pop",
     mood: "Chill",
-    playCount: 1120000,
     kind: "track",
   }
 ];
+
 
 export const CURATED_RADIO: RadioStation[] = [
   {
@@ -384,11 +380,22 @@ export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]
       return combined.slice(0, limit);
     }
 
-    // Homepage Listen Now: Fully Dynamic "Properly Trending" Charts
-    // We fetch official trending songs via getSaavnTrendingServerFn
-    const trendingTracks = await getSaavnTrendingServerFn({ data: { limit } });
-    if (trendingTracks.length > 0) {
-      return trendingTracks;
+    // Homepage Listen Now: Real DB aggregations + Dynamic Trending Charts
+    const dbTrendingPromise = getDatabaseTrendingServerFn({ data: { limit: 6 } }).catch(() => [] as Track[]);
+    const liveTrendingPromise = getSaavnTrendingServerFn({ data: { limit } }).catch(() => [] as Track[]);
+
+    const [dbTracks, liveTracks] = await Promise.all([dbTrendingPromise, liveTrendingPromise]);
+
+    if (dbTracks.length > 0 || liveTracks.length > 0) {
+      const combined = [...dbTracks, ...liveTracks];
+      const seen = new Set<string>();
+      const deduped = combined.filter((t) => {
+        const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (deduped.length > 0) return deduped.slice(0, limit);
     }
 
     // Fallback if launch data fails

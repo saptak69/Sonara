@@ -2,10 +2,37 @@ import { useEffect, useRef } from "react";
 import { usePlayer, getNextIndex } from "@/lib/player-store";
 import { recordStreamServerFn } from "@/lib/artist-studio";
 import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
+import { recordPlayHistoryServerFn } from "@/lib/library-service";
 import { fetchTrack } from "@/lib/music-api";
 import { toast } from "sonner";
 
 import type { Track as _Track } from "@/lib/types";
+
+export function resolvePlayableUrl(track?: _Track | null): string {
+  if (!track?.streamUrl) return "";
+  const url = track.streamUrl;
+  if (track.kind === "radio" || url.includes(".m3u8") || url.includes("/listen")) return url;
+  if (url.startsWith("/api/stream") || url.startsWith("blob:") || url.startsWith("data:")) return url;
+
+  // Major high-speed audio CDNs that have native CORS headers and HTTP 206 Byte-Range streaming.
+  // Playing them directly in the browser gives zero proxy overhead, instant seeking, and zero server socket resets.
+  const isDirectCdn =
+    url.includes("saavncdn.com") ||
+    url.includes("sndcdn.com") ||
+    url.includes("audius.co") ||
+    url.includes("archive.org") ||
+    url.includes("pixabay.com");
+
+  if (isDirectCdn) {
+    return url;
+  }
+
+  // Fallback to proxy for obscure/mixed-content streams
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return `/api/stream?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
 
 export function PlayerEngine() {
   const audio1Ref = useRef<HTMLAudioElement>(null);
@@ -149,7 +176,31 @@ export function PlayerEngine() {
     return () => clearInterval(interval);
   }, [sleepTimer, setPlaying, setSleepTimer]);
 
+  const historyRecordedRef = useRef<Set<string>>(new Set());
+
+  // Record real play history in database after 5 seconds of playback
+  useEffect(() => {
+    if (!isPlaying || !current?.id) return;
+    const timer = setTimeout(() => {
+      if (current?.id && !historyRecordedRef.current.has(current.id)) {
+        historyRecordedRef.current.add(current.id);
+        void recordPlayHistoryServerFn({
+          data: {
+            track: current,
+            sessionId: sessionIdRef.current,
+          },
+        }).catch(() => {
+          /* ignore */
+        });
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [isPlaying, current]);
+
   const currentTrackIdRef = useRef<string | null>(null);
+  const currentTrackRef = useRef<_Track | null>(null);
+  const maxTimePlayedRef = useRef<number>(0);
+  const completionLoggedRef = useRef<Set<string>>(new Set());
   const preloadedTrackRef = useRef<string | null>(null);
 
   // Synchronous, atomic track switching and playback management
@@ -160,6 +211,7 @@ export function PlayerEngine() {
       if (a1) { a1.pause(); a1.removeAttribute("src"); a1.load(); }
       if (a2) { a2.pause(); a2.removeAttribute("src"); a2.load(); }
       currentTrackIdRef.current = null;
+      currentTrackRef.current = null;
       return;
     }
 
@@ -169,7 +221,29 @@ export function PlayerEngine() {
 
     const isNewTrack = currentTrackIdRef.current !== current.id;
     if (isNewTrack) {
+      // Early Skip Detection: if previous track was skipped < 30 seconds
+      const prevTrack = currentTrackRef.current;
+      const prevTime = maxTimePlayedRef.current;
+      if (
+        prevTrack?.id &&
+        !completionLoggedRef.current.has(prevTrack.id) &&
+        prevTime < 30 &&
+        (prevTrack.duration ? prevTrack.duration >= 35 : true)
+      ) {
+        void recordPlayHistoryServerFn({
+          data: {
+            track: prevTrack,
+            sessionId: sessionIdRef.current,
+            durationPlayed: Math.round(prevTime),
+            earlySkip: true,
+            explicitSkip: true,
+          },
+        }).catch(() => {});
+      }
+
       currentTrackIdRef.current = current.id;
+      currentTrackRef.current = current;
+      maxTimePlayedRef.current = 0;
       
       // If we preloaded this track on the inactive audio, instantly swap active player
       if (preloadedTrackRef.current === current.id) {
@@ -190,7 +264,7 @@ export function PlayerEngine() {
          // Did not preload (e.g., user clicked a specific track from search)
          activeAudio.pause();
          try { activeAudio.currentTime = 0; } catch { /* ignore error */ }
-         activeAudio.src = current.streamUrl;
+         activeAudio.src = resolvePlayableUrl(current);
          activeAudio.load();
          if (isPlaying) {
              activeAudio.play().catch((err) => {
@@ -222,7 +296,7 @@ export function PlayerEngine() {
           if (nextT && nextT.id !== preloadedTrackRef.current && nextT.id !== currentT.id) {
               const inactive = getInactive();
               if (inactive) {
-                  inactive.src = nextT.streamUrl;
+                  inactive.src = resolvePlayableUrl(nextT);
                   inactive.load();
                   preloadedTrackRef.current = nextT.id;
               }
@@ -247,8 +321,21 @@ export function PlayerEngine() {
         if (!audio || currentTrackIdRef.current !== current.id) return;
         const pos = audio.currentTime;
         const wasPlaying = !audio.paused;
-        current.streamUrl = full.streamUrl;
-        audio.src = full.streamUrl;
+
+        usePlayer.setState((state) => {
+          const newQueue = [...state.queue];
+          const idx = state.index;
+          if (newQueue[idx] && newQueue[idx].id === current.id) {
+            newQueue[idx] = {
+              ...newQueue[idx],
+              streamUrl: full.streamUrl,
+              duration: full.duration || newQueue[idx].duration,
+            };
+          }
+          return { queue: newQueue, duration: full.duration || state.duration };
+        });
+
+        audio.src = resolvePlayableUrl({ ...current, streamUrl: full.streamUrl });
         try {
           audio.currentTime = pos;
         } catch {
@@ -261,34 +348,37 @@ export function PlayerEngine() {
       })
       .catch(() => {});
 
+
     return () => {
       cancelled = true;
     };
   }, [current?.id, current?.title, current?.artist, current?.streamUrl, current?.duration, setDuration]);
 
-  // Continuous Smart Vibe Queue: dynamically fetch related tracks
+  // Continuous Smart Autoplay & Infinity Queue (Spotify BART Contextual Continuity)
   const fetchingRelatedRef = useRef<string | null>(null);
   const queueLength = usePlayer((s) => s.queue.length);
   const queueIndex = usePlayer((s) => s.index);
-  const shuffle = usePlayer((s) => s.shuffle);
+  const autoplay = usePlayer((s) => s.autoplay);
+  const recents = usePlayer((s) => s.recents);
 
   useEffect(() => {
-    if (!current?.id || queueLength === 0) return;
-    
-    // Trigger if we are near the end of the queue, OR if shuffle is on and we want to ensure similar tracks are available
-    // We only fetch once per 'current.id' to avoid spamming
-    if ((queueIndex >= queueLength - 2 || shuffle) && fetchingRelatedRef.current !== current.id) {
+    if (!current?.id || queueLength === 0 || !autoplay) return;
+
+    // Trigger when user's current queue has 1 song remaining (queueIndex >= queueLength - 1)
+    if (queueIndex >= queueLength - 1 && fetchingRelatedRef.current !== current.id) {
       fetchingRelatedRef.current = current.id;
-      void import("@/lib/music-api").then(({ fetchRelatedQueue }) => {
-        void fetchRelatedQueue(current, 10).then((related) => {
-          if (related.length) {
-            usePlayer.getState().appendQueue(related);
+      const historyContext = recents.length ? recents.slice(0, 5) : [current];
+      void import("@/lib/recommendation-engine").then(({ getNextAutoplayTracksServerFn }) => {
+        void getNextAutoplayTracksServerFn({
+          data: { sessionHistory: historyContext, limit: 10 },
+        }).then((autoplayTracks) => {
+          if (autoplayTracks?.length) {
+            usePlayer.getState().appendQueue(autoplayTracks);
           }
-        });
+        }).catch(() => {});
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.id, queueLength, queueIndex, shuffle]);
+  }, [current?.id, queueLength, queueIndex, autoplay, recents]);
 
   // Volume, Muted, and Playback Rate
   useEffect(() => {
@@ -379,17 +469,48 @@ export function PlayerEngine() {
   const createEventHandlers = (audioIndex: 1 | 2) => ({
     onTimeUpdate: (e: React.SyntheticEvent<HTMLAudioElement>) => {
       if (activeIndexRef.current === audioIndex) {
-          setCurrentTime(e.currentTarget.currentTime);
+        const ct = e.currentTarget.currentTime;
+        const dur = e.currentTarget.duration || current?.duration || 0;
+        setCurrentTime(ct);
+        if (ct > maxTimePlayedRef.current) {
+          maxTimePlayedRef.current = ct;
+        }
+
+        // High Completion Rate (> 70%): report completion telemetry
+        if (current?.id && dur > 0 && !completionLoggedRef.current.has(current.id)) {
+          if (ct / dur >= 0.7) {
+            completionLoggedRef.current.add(current.id);
+            void recordPlayHistoryServerFn({
+              data: {
+                track: current,
+                sessionId: sessionIdRef.current,
+                durationPlayed: Math.round(ct),
+                completed: true,
+              },
+            }).catch(() => {});
+          }
+        }
       }
     },
     onDurationChange: (e: React.SyntheticEvent<HTMLAudioElement>) => {
       if (activeIndexRef.current === audioIndex) {
-          setDuration(e.currentTarget.duration || 0);
+        setDuration(e.currentTarget.duration || 0);
       }
     },
     onEnded: () => {
       if (activeIndexRef.current === audioIndex) {
-          next();
+        if (current?.id) {
+          completionLoggedRef.current.add(current.id);
+          void recordPlayHistoryServerFn({
+            data: {
+              track: current,
+              sessionId: sessionIdRef.current,
+              durationPlayed: Math.round(maxTimePlayedRef.current || current.duration || 0),
+              completed: true,
+            },
+          }).catch(() => {});
+        }
+        next();
       }
     },
     onPlay: () => {
@@ -405,16 +526,36 @@ export function PlayerEngine() {
             lastErrorRef.current = now;
             const currentT = usePlayer.getState().current();
             if (currentT && usePlayer.getState().isPlaying) {
+                const a = activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
+
+                // Step 1: If direct playback failed and we haven't tried the hardened stream proxy yet, try it
+                if (a && a.src && !a.src.includes("/api/stream") && currentT.streamUrl) {
+                  a.src = `/api/stream?url=${encodeURIComponent(currentT.streamUrl)}`;
+                  a.load();
+                  a.play().catch(() => {});
+                  return;
+                }
+
+                // Step 2: Try resolving alternative 320kbps master stream
                 toast.loading(`Recovering audio for "${currentT.title}"...`, { id: 'fallback' });
                 void resolveFullTrackStreamServerFn({
                    data: { title: currentT.title, artist: currentT.artist }
                 }).then(full => {
                    if (full?.streamUrl && full.streamUrl !== currentT.streamUrl) {
-                      currentT.streamUrl = full.streamUrl;
-                      if (full.duration) currentT.duration = full.duration;
-                      const a = activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
+                      usePlayer.setState((state) => {
+                        const newQueue = [...state.queue];
+                        const idx = state.index;
+                        if (newQueue[idx] && newQueue[idx].id === currentT.id) {
+                          newQueue[idx] = {
+                            ...newQueue[idx],
+                            streamUrl: full.streamUrl,
+                            duration: full.duration || newQueue[idx].duration,
+                          };
+                        }
+                        return { queue: newQueue, duration: full.duration || state.duration };
+                      });
                       if (a && usePlayer.getState().current()?.id === currentT.id) {
-                         a.src = full.streamUrl;
+                         a.src = resolvePlayableUrl({ ...currentT, streamUrl: full.streamUrl });
                          a.load();
                          a.play().catch(() => {});
                          toast.success("Stream recovered successfully", { id: 'fallback' });

@@ -10,6 +10,7 @@ export function LyricsPanel() {
   const track = usePlayer((s) => s.queue[s.index]);
   const currentTime = usePlayer((s) => s.currentTime);
   const open = usePlayer((s) => s.lyricsOpen);
+  const seekTo = usePlayer((s) => s.seekTo);
   const activeRef = useRef<HTMLParagraphElement>(null);
 
   const { data, isLoading } = useQuery({
@@ -31,37 +32,52 @@ export function LyricsPanel() {
   const customLyrics = track?.lyrics;
 
   return (
-    <div className="mt-6 md:mt-0 flex-1 w-full overflow-y-auto px-2 md:px-8 text-center md:text-left [scrollbar-width:none] mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)">
+    <div className="mt-6 md:mt-0 flex-1 w-full overflow-y-auto px-2 md:px-8 text-center md:text-left [scrollbar-width:none] [mask-image:linear-gradient(to_bottom,transparent_0%,black_15%,black_85%,transparent_100%)]">
       {isLoading ? (
-        <p className="text-sm text-muted">Finding lyrics…</p>
+        <div className="flex flex-col items-center justify-center h-48 space-y-3">
+          <div className="size-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+          <p className="text-sm font-medium text-white/50 tracking-wide">Syncing real-time lyrics…</p>
+        </div>
       ) : data?.synced ? (
-        <div className="space-y-3">
-          {data.synced.map((line, i) => (
-            <p
-              key={`${line.time}-${i}`}
-              ref={i === activeIndex ? activeRef : undefined}
-              className={cn(
-                "transition-all duration-300 py-2",
-                i === activeIndex
-                  ? "text-2xl md:text-4xl font-bold text-white scale-105 origin-left"
-                  : "text-lg md:text-2xl text-white/40 hover:text-white/60 blur-[1px] hover:blur-none"
-              )}
-            >
-              {line.text || " "}
-            </p>
-          ))}
+        <div className="space-y-4 py-12">
+          {data.synced.map((line, i) => {
+            const isActive = i === activeIndex;
+            return (
+              <p
+                key={`${line.time}-${i}`}
+                ref={isActive ? activeRef : undefined}
+                onClick={() => seekTo(line.time)}
+                className={cn(
+                  "cursor-pointer transition-all duration-300 py-2.5 px-3 rounded-2xl select-none leading-snug",
+                  isActive
+                    ? "text-2xl md:text-4xl font-extrabold text-white scale-[1.03] origin-left drop-shadow-[0_4px_24px_rgba(255,255,255,0.4)]"
+                    : "text-lg md:text-2xl font-semibold text-white/35 hover:text-white/70 hover:scale-[1.01] hover:bg-white/[0.04]"
+                )}
+              >
+                {line.text || "♪"}
+              </p>
+            );
+          })}
         </div>
       ) : data?.plain ? (
-        <p className="whitespace-pre-wrap text-sm leading-7 text-muted">{data.plain}</p>
+        <div className="py-8">
+          <p className="whitespace-pre-wrap text-base leading-8 text-white/80 font-medium">{data.plain}</p>
+        </div>
       ) : customLyrics ? (
-        <div className="space-y-2 text-center">
-          <p className="text-xs uppercase tracking-wider text-accent font-semibold">Artist Lyrics</p>
-          <p className="whitespace-pre-wrap text-sm leading-7 text-fg/90">{customLyrics}</p>
+        <div className="space-y-3 text-center py-8">
+          <span className="inline-block px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-xs uppercase tracking-wider text-accent font-bold">
+            Artist Lyrics
+          </span>
+          <p className="whitespace-pre-wrap text-base leading-8 text-white/90 font-medium">{customLyrics}</p>
         </div>
       ) : data?.instrumental ? (
-        <p className="text-sm text-muted">Instrumental</p>
+        <div className="flex items-center justify-center h-48">
+          <p className="text-base font-semibold text-white/50 tracking-wider uppercase">Instrumental Track</p>
+        </div>
       ) : (
-        <p className="text-sm text-muted">Lyrics not available for this track.</p>
+        <div className="flex items-center justify-center h-48">
+          <p className="text-sm text-white/40">Lyrics not available for this track.</p>
+        </div>
       )}
     </div>
   );

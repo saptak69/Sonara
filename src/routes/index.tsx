@@ -7,6 +7,8 @@ import { Rail } from "@/components/rail";
 import { fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
 import { SiteFooter } from "@/components/site-footer";
 import { usePlayer } from "@/lib/player-store";
+import { Compass } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -56,6 +58,47 @@ function Home() {
 
         {/* Algorithmic Smart Playlists */}
         <Rail title="Algorithmic Smart Playlists" to="/explore">
+          {/* Discovery Station (Strictly Unheard Music) */}
+          <button
+            onClick={async () => {
+              toast.loading("Tuning Discovery Station...", { id: "discovery" });
+              try {
+                const { getDiscoveryStationTracksServerFn } = await import("@/lib/recommendation-engine");
+                const tracks = await getDiscoveryStationTracksServerFn({ data: { limit: 20 } });
+                if (tracks.length) {
+                  playTracks(tracks, 0);
+                  toast.success("Playing Discovery Station", {
+                    id: "discovery",
+                    description: "100% unheard music tailored to your taste",
+                  });
+                } else {
+                  toast.error("Could not find new unheard tracks right now.", { id: "discovery" });
+                }
+              } catch {
+                toast.error("Discovery Station unavailable", { id: "discovery" });
+              }
+            }}
+            className="group text-left w-40 shrink-0 snap-start sm:w-44 rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025] focus-visible:outline-none cursor-pointer"
+          >
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-950 via-purple-900 to-black p-4 aspect-square flex flex-col justify-between border border-white/10 group-hover:border-accent/40 shadow-lg group-hover:shadow-accent/20 transition-all">
+              <div className="p-2.5 rounded-xl bg-accent/20 text-accent w-max">
+                <Compass className="size-6 animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-accent">Apple Music Mode</span>
+                <h3 className="text-sm font-bold text-white leading-tight">Discovery Station</h3>
+              </div>
+            </div>
+            <div className="mt-2.5 px-0.5">
+              <span className="block truncate text-sm font-medium text-fg leading-snug lg:group-hover:text-accent transition-colors">
+                Discovery Station
+              </span>
+              <span className="block truncate text-xs text-muted mt-0.5 leading-snug">
+                Strictly unheard music
+              </span>
+            </div>
+          </button>
+
           <Link
             to="/weekly-mix"
             className="group w-40 shrink-0 snap-start sm:w-44 rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025] focus-visible:outline-none"
@@ -101,10 +144,12 @@ function Home() {
         {/* Artists You Might Like */}
         <Rail title="Artists You Might Like">
           {topTracks.map((t) => (
-            <div
+            <Link
               key={t.id}
+              to={t.artistId ? "/artist/$id" : "/search"}
+              params={t.artistId ? { id: t.artistId } : undefined}
+              search={!t.artistId ? { q: t.artist } : undefined}
               className="w-36 md:w-44 shrink-0 group cursor-pointer flex flex-col items-center transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025]"
-              onClick={() => playTracks([t], 0)}
             >
               <div className="w-full aspect-square rounded-full overflow-hidden shadow-md lg:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-shadow duration-[0.25s] relative">
                 <Cover src={t.artwork} alt={t.artist} className="w-full h-full object-cover" />
@@ -112,7 +157,7 @@ function Home() {
               </div>
               <p className="text-center font-medium text-fg text-[13px] sm:text-sm truncate w-full mt-3 lg:group-hover:text-accent transition-colors">{t.artist}</p>
               <p className="text-center text-xs text-muted mt-0.5">Artist</p>
-            </div>
+            </Link>
           ))}
         </Rail>
       </div>

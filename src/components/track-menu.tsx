@@ -85,16 +85,28 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
+            toast.loading(`Tuning into "${track.title}" Radio...`, { id: "track-radio" });
             try {
-              const more = await fetchTrending(24, track.genre);
-              playTracks([track, ...more.filter((t) => t.id !== track.id)], 0);
+              const { getTrackRadioServerFn } = await import("@/lib/recommendation-engine");
+              const radioTracks = await getTrackRadioServerFn({ data: { seedTrackId: track.id, limit: 25 } });
+              if (radioTracks?.length) {
+                playTracks(radioTracks, 0);
+                toast.success(`Started "${track.title}" Radio`, {
+                  id: "track-radio",
+                  description: `${radioTracks.length} cohesive songs loaded`,
+                });
+              } else {
+                playTracks(rest?.length ? [track, ...rest] : [track], 0);
+                toast.dismiss("track-radio");
+              }
             } catch {
               playTracks(rest?.length ? [track, ...rest] : [track], 0);
+              toast.dismiss("track-radio");
             }
           }}
         >
           <Radio className="size-4 text-muted" />
-          Start radio
+          Start Track Radio
         </DropdownMenuItem>
         {track.artistId ? (
           <DropdownMenuItem

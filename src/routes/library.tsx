@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
@@ -36,6 +36,11 @@ function LibraryPage() {
   const createPlaylist = usePlayer((s) => s.createPlaylist);
   const deletePlaylist = usePlayer((s) => s.deletePlaylist);
   const clearRecents = usePlayer((s) => s.clearRecents);
+  const syncFromDatabase = usePlayer((s) => s.syncFromDatabase);
+
+  useEffect(() => {
+    void syncFromDatabase();
+  }, [syncFromDatabase]);
   
   const tab = initialTab || "recents";
 
