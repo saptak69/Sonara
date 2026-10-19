@@ -19,8 +19,26 @@ import { QueueList } from "@/components/player/queue";
 import { Slider } from "@/components/ui/slider";
 import { formatTime } from "@/lib/format";
 import { usePlayer } from "@/lib/player-store";
+import type { Track } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+
+function getTrackAudioFormat(track: Track | undefined): { label: string; format: string } {
+  if (!track) return { label: "Standard", format: "Stereo" };
+  if (track.kind === "radio" || track.streamUrl?.includes(".m3u8") || track.streamUrl?.includes("/listen") || track.streamUrl?.includes("zeno.fm")) {
+    return { label: "Live Broadcast", format: "Stream" };
+  }
+  if (track.id?.startsWith("saavn_") || track.streamUrl?.includes("saavncdn.com")) {
+    return { label: "High Quality", format: "320 kbps AAC" };
+  }
+  if (track.id?.startsWith("sc_") || track.streamUrl?.includes("sndcdn.com") || track.streamUrl?.includes("soundcloud.com")) {
+    return { label: "Standard Audio", format: "128 kbps MP3" };
+  }
+  if (track.streamUrl?.includes("archive.org")) {
+    return { label: "Archival Audio", format: "MP3" };
+  }
+  return { label: "Standard Audio", format: "Stereo" };
+}
 
 /* ────────────────────────────────────────────────
    Extract dominant color from artwork using canvas
@@ -96,6 +114,7 @@ export function FullPlayer() {
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
 
   const live = track?.kind === "radio";
+  const audioFormat = getTrackAudioFormat(track);
   const dominantColor = useArtworkColor(track?.artworkLg || track?.artwork || undefined);
 
   return (
@@ -187,11 +206,11 @@ export function FullPlayer() {
                     <MarqueeText text={track.title} className="full-player-title font-extrabold text-white text-[22px] sm:text-2xl lg:text-[26px] leading-tight tracking-tight" />
                     <MarqueeText text={track.artist} className="full-player-artist text-white/70 font-semibold text-base lg:text-lg mt-0.5" />
                     
-                    {/* Hi-Res Lossless Pill */}
+                    {/* Truthful Audio Quality Pill */}
                     <div className="flex items-center gap-2 mt-2">
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/10 text-[11px] font-semibold text-white/80 tracking-wide">
-                        <span className="size-1.5 rounded-full bg-accent animate-pulse" />
-                        <span>Lossless · 24-bit / 48kHz</span>
+                        <span className="size-1.5 rounded-full bg-emerald-400/90 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                        <span>{audioFormat.label} · {audioFormat.format}</span>
                       </div>
                       {live && (
                         <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30 text-[10px] font-bold tracking-wider uppercase">
