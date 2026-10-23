@@ -85,17 +85,17 @@ function SearchPage() {
         return remote;
       }
     },
-    enabled: q.length > 1,
+    enabled: q.trim().length > 0,
   });
   const albums = useQuery({
     queryKey: ["search-albums", q],
     queryFn: () => searchAlbums(q, 16),
-    enabled: q.length > 1,
+    enabled: q.trim().length > 0,
   });
   const playlists = useQuery({
     queryKey: ["search-playlists", q],
     queryFn: () => searchPlaylists(q, 12),
-    enabled: q.length > 1,
+    enabled: q.trim().length > 0,
   });
   const artists = useQuery({
     queryKey: ["search-artists", q],
@@ -133,12 +133,12 @@ function SearchPage() {
         return remote;
       }
     },
-    enabled: q.length > 1,
+    enabled: q.trim().length > 0,
   });
   const radio = useQuery({
     queryKey: ["search-radio", q],
     queryFn: () => searchRadio(q, 8),
-    enabled: q.length > 1,
+    enabled: q.trim().length > 0,
   });
 
   const TRENDING_SEARCHES = [

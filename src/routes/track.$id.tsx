@@ -48,7 +48,10 @@ function TrackPage() {
   useEffect(() => {
     if (!track) return;
     const currentId = usePlayer.getState().current()?.id;
-    if (currentId !== track.id) {
+    const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
+    const shouldAutoplay =
+      url?.searchParams.get("play") === "1" || url?.searchParams.get("autoplay") === "true";
+    if (shouldAutoplay && currentId !== track.id) {
       playTrack(track);
       toast.success(`Playing: "${track.title}"`, {
         description: `by ${track.artist}`,

@@ -15,7 +15,7 @@ const TrackSchema = z.object({
   artwork: z.string().nullable().optional(),
   artworkLg: z.string().nullable().optional(),
   duration: z.number().default(0),
-  streamUrl: z.string().url(),
+  streamUrl: z.string().min(1),
   genre: z.string().optional(),
   mood: z.string().optional(),
   kind: z.enum(["track", "radio"]).default("track"),

@@ -10,7 +10,6 @@ import {
   getSaavnArtistServerFn,
   getSaavnArtistTracksServerFn,
   getSaavnArtistAlbumsServerFn,
-  resolveFullTrackStreamServerFn,
   getSimilarSongsServerFn,
   getSaavnTrendingServerFn,
   getSaavnTopPlaylistsServerFn,
@@ -22,7 +21,6 @@ import {
 import { getDatabaseTrendingServerFn } from "./library-service";
 import { createServerFn } from "@tanstack/react-start";
 
-const APP = "sonara_music";
 
 const RADIO_NODES = [
   "https://all.api.radio-browser.info/json",
@@ -409,59 +407,6 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
       owner: "Sonara Pop",
     },
   ];
-}
-
-async function fetchArchiveOrgTracks(query: string, limit = 12): Promise<Track[]> {
-  try {
-    const cleanQuery = query.trim().replace(/[^\w\s-]/g, "");
-    if (!cleanQuery) return [];
-    const q = `(${cleanQuery}) AND mediatype:(audio) AND (format:(MP3) OR format:(VBR MP3))`;
-    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,year,description&sort[]=downloads+desc&rows=${limit}&page=1&output=json`;
-    const data = await getJson<{
-      response?: {
-        docs?: Array<{ identifier: string; title?: string; creator?: string; year?: string }>;
-      };
-    }>(url, 3500);
-
-    const docs = data?.response?.docs ?? [];
-    const tracks: Track[] = [];
-
-    await Promise.allSettled(
-      docs.slice(0, 8).map(async (doc) => {
-        try {
-          const meta = await getJson<{
-            files?: Array<{ name: string; length?: string; format?: string }>;
-          }>(`https://archive.org/metadata/${encodeURIComponent(doc.identifier)}`, 3000);
-
-          const mp3 = meta?.files?.find(
-            (f) => f.name.endsWith(".mp3") && !f.name.includes("_vbr") && !f.name.includes("_sample"),
-          );
-
-          if (mp3) {
-            const streamUrl = `https://archive.org/download/${doc.identifier}/${encodeURIComponent(mp3.name)}`;
-            const artwork = `https://archive.org/services/img/${doc.identifier}`;
-            tracks.push({
-              id: `archive_${doc.identifier}`,
-              title: doc.title || "Classic Audio Track",
-              artist: doc.creator || "Classic Master",
-              artwork,
-              artworkLg: artwork,
-              duration: Math.round(Number(mp3.length) || 210),
-              streamUrl,
-              genre: "Classics",
-              kind: "track",
-            });
-          }
-        } catch {
-          // ignore individual item failure
-        }
-      }),
-    );
-
-    return tracks;
-  } catch {
-    return [];
-  }
 }
 
 export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
@@ -921,6 +866,26 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   }
   if (id.startsWith("saavn_pl_")) {
     return getSaavnPlaylistServerFn({ data: { id } });
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const { usePlayer } = await import("./player-store");
+      const userPl = usePlayer.getState().playlists.find((p) => p.id === id);
+      if (userPl) {
+        return {
+          id: userPl.id,
+          name: userPl.name,
+          trackCount: userPl.tracks.length,
+          isAlbum: false,
+          artwork: userPl.tracks[0]?.artwork,
+          artworkLg: userPl.tracks[0]?.artworkLg,
+          tracks: userPl.tracks,
+          owner: "You",
+        };
+      }
+    } catch {
+      // ignore
+    }
   }
   return null;
 }

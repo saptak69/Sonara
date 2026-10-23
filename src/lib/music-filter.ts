@@ -16,7 +16,7 @@ function isCoverTrack(t: string, a: string): boolean {
   // 1. Bracketed or parenthesized cover descriptors:
   // e.g. "(Cover)", "(Acoustic Cover)", "[Piano Cover]", "(Cover by Boyce Avenue)", "(Taylor Swift Cover)"
   if (
-    /[([{\/](?:[^\w\s]*\s*)?(?:acoustic\s+|piano\s+|guitar\s+|rock\s+|metal\s+|jazz\s+|live\s+|female\s+|male\s+|lo-?fi\s+|violin\s+|drum\s+)?cover(?:\s+(?:version|by|edit|video))?[^\w\s]*[)\]}\/]/i.test(
+    /[([{/](?:[^\w\s]*\s*)?(?:acoustic\s+|piano\s+|guitar\s+|rock\s+|metal\s+|jazz\s+|live\s+|female\s+|male\s+|lo-?fi\s+|violin\s+|drum\s+)?cover(?:\s+(?:version|by|edit|video))?[^\w\s]*[)\]}/]/i.test(
       t,
     )
   ) {
@@ -83,7 +83,7 @@ function isDerivativeEdit(t: string): boolean {
   }
   // Bracketed or hyphenated derivative tags
   if (
-    /[-–—:|([{\/]\s*(?:slowed|reverb|nightcore|sped\s*up|speed\s*up|8d\s*audio|16d\s*audio|3d\s*audio|daycore|bass\s*boosted|mega\s*bass|pitch\s*shifted|chipmunk)\b/i.test(t)
+    /[-–—:|([{/]\s*(?:slowed|reverb|nightcore|sped\s*up|speed\s*up|8d\s*audio|16d\s*audio|3d\s*audio|daycore|bass\s*boosted|mega\s*bass|pitch\s*shifted|chipmunk)\b/i.test(t)
   ) {
     return true;
   }
@@ -103,7 +103,7 @@ function isDerivativeEdit(t: string): boolean {
     return true;
   }
   // Lo-Fi amateur derivatives
-  if (/[-–—:|([{\/]\s*lo-?fi\s*(?:remix|flip|edit|version)\b/i.test(t)) {
+  if (/[-–—:|([{/]\s*lo-?fi\s*(?:remix|flip|edit|version)\b/i.test(t)) {
     return true;
   }
   return false;
@@ -117,7 +117,7 @@ function isKaraokeOrBacking(t: string): boolean {
     return true;
   }
   // Bracketed or suffixed instrumental: "(Instrumental)", "- Instrumental"
-  if (/[-–—:|([{\/]\s*instrumental(?:\s+version)?\s*[)\]}]?/i.test(t)) {
+  if (/[-–—:|([{/]\s*instrumental(?:\s+version)?\s*[)\]}]?/i.test(t)) {
     return true;
   }
   return false;

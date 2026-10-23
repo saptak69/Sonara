@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useId } from "react";
+import { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface MarqueeTextProps {
@@ -24,7 +24,6 @@ export function MarqueeText({
   const containerRef = useRef<HTMLDivElement>(null);
   const measurerRef = useRef<HTMLSpanElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-  const uniqueId = useId();
 
   useEffect(() => {
     const container = containerRef.current;

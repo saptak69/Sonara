@@ -10,7 +10,6 @@ import {
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
 import { useNavigate } from "@tanstack/react-router";
-import { fetchTrending } from "@/lib/music-api";
 import type { ReactNode } from "react";
 
 export function TrackMenu({ track, rest, children }: { track: Track; rest?: Track[]; children: ReactNode }) {

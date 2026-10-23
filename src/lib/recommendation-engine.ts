@@ -386,7 +386,7 @@ export const getNextAutoplayTracksServerFn = createServerFn({ method: "POST" })
     if (!sessionHistory.length) return [];
 
     const lastTrack = sessionHistory[sessionHistory.length - 1];
-    let candidates: Track[] = [];
+    const candidates: Track[] = [];
 
     // Step 1: Candidate Generation via Similar Songs API
     try {

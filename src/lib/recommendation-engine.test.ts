@@ -5,7 +5,6 @@ import {
   filterUnheardTracks,
   orderAutoplayCandidates,
   buildTrackRadio,
-  type UserInteractionSignals,
   type SessionContext,
 } from "./recommendation-engine.ts";
 import type { Track } from "./types.ts";
