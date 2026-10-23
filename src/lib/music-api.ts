@@ -1,14 +1,5 @@
 import type { Artist, Playlist, RadioStation, Track } from "./types";
 import {
-  searchDeezerTracksServerFn,
-  searchDeezerPlaylistsServerFn,
-  searchDeezerArtistsServerFn,
-  getDeezerTrackServerFn,
-  getDeezerPlaylistServerFn,
-  getDeezerArtistServerFn,
-  getDeezerArtistTracksServerFn,
-} from "./deezer-api";
-import {
   searchSaavnTracksServerFn,
   searchSaavnPlaylistsServerFn,
   searchSaavnArtistsServerFn,
@@ -613,9 +604,8 @@ async function fetchArchiveOrgTracks(query: string, limit = 12): Promise<Track[]
 }
 
 export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
-  const [saavnRes, deezerRes, soundcloudRes, audiusRes, archiveRes] = await Promise.allSettled([
+  const [saavnRes, soundcloudRes, audiusRes, archiveRes] = await Promise.allSettled([
     searchSaavnTracksServerFn({ data: { query, limit: Math.min(20, limit) } }),
-    searchDeezerTracksServerFn({ data: { query, limit: Math.min(12, limit) } }),
     searchSoundCloudTracksServerFn({ data: { query, limit: Math.min(10, limit) } }),
     fetchFromAudius<AudiusTrack[]>("/tracks/search", { query, limit: String(Math.min(6, limit)) }),
     fetchArchiveOrgTracks(query, Math.min(4, limit)),
@@ -623,9 +613,6 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
 
   const saavnTracks =
     saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
-
-  const deezerTracks =
-    deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
 
   const soundcloudTracks =
     soundcloudRes.status === "fulfilled" && soundcloudRes.value ? soundcloudRes.value : [];
@@ -638,8 +625,8 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
   const archiveTracks =
     archiveRes.status === "fulfilled" && archiveRes.value ? archiveRes.value : [];
 
-  // Priority: Full-length 320kbps master tracks first, then SoundCloud, Deezer, Archive
-  const combined = [...saavnTracks, ...soundcloudTracks, ...deezerTracks, ...audiusTracks, ...archiveTracks];
+  // Priority: Full-length 320kbps master tracks first, then SoundCloud, Audius, Archive
+  const combined = [...saavnTracks, ...soundcloudTracks, ...audiusTracks, ...archiveTracks];
 
   if (combined.length) {
     const seen = new Set<string>();
@@ -829,9 +816,8 @@ export async function fetchRelatedQueue(track: Track, limit = 15, _recents: Trac
 
 export async function searchPlaylists(query: string, limit = 12): Promise<Playlist[]> {
   try {
-    const [saavnRes, deezerRes, audiusRes] = await Promise.allSettled([
+    const [saavnRes, audiusRes] = await Promise.allSettled([
       searchSaavnPlaylistsServerFn({ data: { query, limit } }),
-      searchDeezerPlaylistsServerFn({ data: { query, limit } }),
       fetchFromAudius<AudiusPlaylist[]>("/playlists/search", {
         query,
         limit: String(limit),
@@ -841,15 +827,12 @@ export async function searchPlaylists(query: string, limit = 12): Promise<Playli
     const saavnPlaylists =
       saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
 
-    const deezerPlaylists =
-      deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
-
     const audiusPlaylists =
       audiusRes.status === "fulfilled" && audiusRes.value
         ? audiusRes.value.map(mapPlaylist).filter((x): x is Playlist => Boolean(x))
         : [];
 
-    const merged = [...saavnPlaylists, ...deezerPlaylists, ...audiusPlaylists];
+    const merged = [...saavnPlaylists, ...audiusPlaylists];
     if (merged.length) return merged.slice(0, limit);
   } catch {
     // fallback
@@ -1045,9 +1028,8 @@ export async function searchAlbums(query: string, limit = 16): Promise<Playlist[
 
 export async function searchArtists(query: string, limit = 12): Promise<Artist[]> {
   try {
-    const [saavnRes, deezerRes, audiusRes] = await Promise.allSettled([
+    const [saavnRes, audiusRes] = await Promise.allSettled([
       searchSaavnArtistsServerFn({ data: { query, limit } }),
-      searchDeezerArtistsServerFn({ data: { query, limit } }),
       fetchFromAudius<AudiusUser[]>("/users/search", {
         query,
         limit: String(limit),
@@ -1057,15 +1039,12 @@ export async function searchArtists(query: string, limit = 12): Promise<Artist[]
     const saavnArtists =
       saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
 
-    const deezerArtists =
-      deezerRes.status === "fulfilled" && deezerRes.value ? deezerRes.value : [];
-
     const audiusArtists =
       audiusRes.status === "fulfilled" && audiusRes.value
         ? audiusRes.value.map(mapArtist).filter((x): x is Artist => Boolean(x))
         : [];
 
-    const merged = [...saavnArtists, ...deezerArtists, ...audiusArtists];
+    const merged = [...saavnArtists, ...audiusArtists];
     if (merged.length) return merged.slice(0, limit);
   } catch {
     // fallback
@@ -1105,9 +1084,6 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   if (id.startsWith("saavn_pl_")) {
     return getSaavnPlaylistServerFn({ data: { id } });
   }
-  if (id.startsWith("deezer_pl_")) {
-    return getDeezerPlaylistServerFn({ data: { id } });
-  }
   try {
     const raw = await fetchFromAudius<AudiusPlaylist | AudiusPlaylist[]>(`/playlists/${encodeURIComponent(id)}`);
     const data = Array.isArray(raw) ? raw[0] : raw;
@@ -1140,9 +1116,6 @@ export async function fetchArtist(id: string): Promise<Artist | null> {
   if (id.startsWith("saavn_artist_")) {
     return getSaavnArtistServerFn({ data: { id } });
   }
-  if (id.startsWith("deezer_artist_")) {
-    return getDeezerArtistServerFn({ data: { id } });
-  }
   try {
     const raw = await fetchFromAudius<AudiusUser | AudiusUser[]>(`/users/${encodeURIComponent(id)}`);
     const data = Array.isArray(raw) ? raw[0] : raw;
@@ -1158,9 +1131,6 @@ export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]
   }
   if (id.startsWith("saavn_artist_")) {
     return getSaavnArtistTracksServerFn({ data: { id, limit } });
-  }
-  if (id.startsWith("deezer_artist_")) {
-    return getDeezerArtistTracksServerFn({ data: { id, limit } });
   }
   try {
     const fetchLimit = limit * 3;
@@ -1194,27 +1164,6 @@ export async function fetchTrack(id: string): Promise<Track | null> {
 
   if (id.startsWith("soundcloud_")) {
     return getSoundCloudTrackServerFn({ data: { id } });
-  }
-
-  if (id.startsWith("deezer_")) {
-    const track = await getDeezerTrackServerFn({ data: { id } });
-    if (track) {
-      try {
-        const full = await resolveFullTrackStreamServerFn({
-          data: { title: track.title, artist: track.artist },
-        });
-        if (full?.streamUrl) {
-          return {
-            ...track,
-            streamUrl: full.streamUrl,
-            duration: full.duration,
-          };
-        }
-      } catch {
-        // use base track
-      }
-    }
-    return track;
   }
 
   if (id.startsWith("archive_")) {
