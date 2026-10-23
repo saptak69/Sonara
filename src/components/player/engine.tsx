@@ -19,7 +19,6 @@ export function resolvePlayableUrl(track?: _Track | null): string {
   const isDirectCdn =
     url.includes("saavncdn.com") ||
     url.includes("sndcdn.com") ||
-    url.includes("audius.co") ||
     url.includes("archive.org") ||
     url.includes("pixabay.com");
 

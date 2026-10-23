@@ -66,7 +66,7 @@ function ArtistPage() {
     enabled: Boolean(communityProfileQuery.data),
   });
 
-  // 2. Try fetching as remote Audius/Jamendo artist if community artist not found
+  // 2. Try fetching as remote catalog artist if community artist not found
   const remoteArtistQuery = useQuery({
     queryKey: ["remote-artist", id],
     queryFn: () => fetchArtist(id),
@@ -233,7 +233,7 @@ function ArtistPage() {
     );
   }
 
-  // Remote Audius/Jamendo artist view
+  // Remote catalog artist view
   const a = remoteArtistQuery.data;
   if (!a) {
     return (

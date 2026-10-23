@@ -24,56 +24,14 @@ import { createServerFn } from "@tanstack/react-start";
 
 const APP = "sonara_music";
 
-// Multiple Audius discovery nodes for resilient failover
-const AUDIUS_NODES = [
-  "https://discoveryprovider.audius.co/v1",
-  "https://api.audius.co/v1",
-];
-
 const RADIO_NODES = [
   "https://all.api.radio-browser.info/json",
   "https://de1.api.radio-browser.info/json",
 ];
 
-type ArtworkMap = {
-  "150x150"?: string;
-  "480x480"?: string;
-  "1000x1000"?: string;
-} | null;
+import { isCoverOrDerivative } from "./music-filter";
+export { isCoverOrDerivative };
 
-type AudiusUser = {
-  id?: string;
-  name?: string;
-  handle?: string;
-  bio?: string;
-  follower_count?: number;
-  track_count?: number;
-  profile_picture?: ArtworkMap;
-};
-
-type AudiusTrack = {
-  id?: string;
-  title?: string;
-  duration?: number;
-  genre?: string;
-  mood?: string;
-  play_count?: number;
-  is_streamable?: boolean;
-  is_stream_gated?: boolean;
-  artwork?: ArtworkMap;
-  user?: AudiusUser;
-};
-
-type AudiusPlaylist = {
-  id?: string;
-  playlist_name?: string;
-  description?: string;
-  track_count?: number;
-  is_album?: boolean;
-  artwork?: ArtworkMap;
-  user?: AudiusUser;
-  tracks?: AudiusTrack[];
-};
 
 // High-fidelity fallback music catalog curated for Sonara by Jiko
 export const CURATED_TRACKS: Track[] = [
@@ -275,100 +233,14 @@ async function getJson<T>(url: string, timeoutMs = 6000): Promise<T> {
   }
 }
 
-async function fetchFromAudius<T>(path: string, params: Record<string, string> = {}): Promise<T | null> {
-  const query = new URLSearchParams({ app_name: APP, ...params }).toString();
-  for (const node of AUDIUS_NODES) {
-    try {
-      const url = `${node}${path}?${query}`;
-      const json = await getJson<{ data?: T } | T>(url, 4500);
-      const data = unwrap<T>(json);
-      if (data) return data;
-    } catch {
-      // try next node
-    }
-  }
-  return null;
-}
 
-function unwrap<T>(payload: { data?: T } | T): T {
-  if (payload && typeof payload === "object" && "data" in payload) {
-    return (payload as { data: T }).data;
-  }
-  return payload as T;
-}
-
-function pickArt(art: ArtworkMap, size: keyof NonNullable<ArtworkMap>): string | null {
-  if (!art) return null;
-  const raw = art[size] || art["480x480"] || art["150x150"] || art["1000x1000"] || null;
-  if (!raw) return null;
-  return raw.startsWith("http://") ? raw.replace("http://", "https://") : raw;
-}
-
-export function trackStreamUrl(id: string): string {
-  return `${AUDIUS_NODES[0]}/tracks/${encodeURIComponent(id)}/stream?app_name=${APP}`;
-}
-
-export function mapTrack(t: AudiusTrack): Track | null {
-  if (!t.id || !t.title) return null;
-  if (t.is_streamable === false || t.is_stream_gated) return null;
-  const artist = t.user?.name || t.user?.handle || "Unknown artist";
-  return {
-    id: t.id,
-    title: t.title,
-    artist,
-    artistId: t.user?.id,
-    album: undefined,
-    artwork: pickArt(t.artwork ?? null, "150x150"),
-    artworkLg: pickArt(t.artwork ?? null, "480x480") || pickArt(t.artwork ?? null, "1000x1000"),
-    duration: Number(t.duration) || 0,
-    streamUrl: trackStreamUrl(t.id),
-    genre: t.genre,
-    mood: t.mood,
-    playCount: t.play_count,
-    kind: "track",
-  };
-}
-
-export function mapPlaylist(p: AudiusPlaylist): Playlist | null {
-  if (!p.id || !p.playlist_name) return null;
-  const tracks = (p.tracks ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-  return {
-    id: p.id,
-    name: p.playlist_name,
-    description: p.description || undefined,
-    artwork: pickArt(p.artwork ?? null, "480x480"),
-    artworkLg: pickArt(p.artwork ?? null, "480x480") || pickArt(p.artwork ?? null, "1000x1000"),
-    trackCount: p.track_count ?? tracks.length,
-    isAlbum: Boolean(p.is_album),
-    owner: p.user?.name,
-    ownerId: p.user?.id,
-    tracks: tracks.length ? tracks : undefined,
-  };
-}
-
-export function mapArtist(u: AudiusUser): Artist | null {
-  if (!u.id || !u.name) return null;
-  return {
-    id: u.id,
-    name: u.name,
-    handle: u.handle,
-    bio: u.bio,
-    artwork: pickArt(u.profile_picture ?? null, "480x480"),
-    artworkLg: pickArt(u.profile_picture ?? null, "480x480") || pickArt(u.profile_picture ?? null, "1000x1000"),
-    followerCount: u.follower_count,
-    trackCount: u.track_count,
-  };
-}
 
 export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]> {
   try {
     if (genre) {
-      const saavnTracks = await searchSaavnTracksServerFn({ data: { query: `${genre} hits`, limit } });
-      if (saavnTracks.length >= 6) return saavnTracks;
-      const audius = await fetchFromAudius<AudiusTrack[]>("/tracks/trending", { limit: String(limit), genre });
-      const mapped = (audius ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-      const combined = [...saavnTracks, ...mapped];
-      return combined.slice(0, limit);
+      const saavnTracks = await searchSaavnTracksServerFn({ data: { query: `${genre} hits`, limit } }).catch(() => [] as Track[]);
+      const clean = saavnTracks.filter((t) => !isCoverOrDerivative(t.title, t.artist));
+      return clean.slice(0, limit);
     }
 
     // Homepage Listen Now: Real DB aggregations + Dynamic Trending Charts
@@ -447,11 +319,9 @@ export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]
 
 export async function fetchUnderground(limit = 16): Promise<Track[]> {
   try {
-    const raw = await fetchFromAudius<AudiusTrack[]>("/tracks/trending/underground", {
-      limit: String(limit),
-    });
-    const mapped = (raw ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-    if (mapped.length >= 4) return mapped;
+    const raw = await searchSaavnTracksServerFn({ data: { query: "Indie India Originals", limit } });
+    const clean = raw.filter((t) => !isCoverOrDerivative(t.title, t.artist));
+    if (clean.length >= 4) return clean.slice(0, limit);
   } catch {
     // fallback
   }
@@ -465,16 +335,7 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
       return topPlaylists;
     }
 
-    const [saavnPlaylistsRes, audiusPlaylistsRes] = await Promise.allSettled([
-      searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Hollywood Hits", limit: 8 } }),
-      fetchFromAudius<AudiusPlaylist[]>("/playlists/trending", { limit: String(limit) }),
-    ]);
-
-    const saavnPlaylists = saavnPlaylistsRes.status === "fulfilled" ? saavnPlaylistsRes.value : [];
-    const audiusPlaylists =
-      audiusPlaylistsRes.status === "fulfilled" && audiusPlaylistsRes.value
-        ? audiusPlaylistsRes.value.map(mapPlaylist).filter((x): x is Playlist => Boolean(x))
-        : [];
+    const saavnPlaylists = await searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Hollywood Hits", limit: 8 } }).catch(() => [] as Playlist[]);
 
     const curatedPlaylists: Playlist[] = [
       {
@@ -521,7 +382,7 @@ export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
       },
     ];
 
-    const merged = [...curatedPlaylists, ...saavnPlaylists, ...audiusPlaylists];
+    const merged = [...curatedPlaylists, ...saavnPlaylists];
     if (merged.length) return merged.slice(0, limit);
   } catch {
     // fallback
@@ -604,50 +465,53 @@ async function fetchArchiveOrgTracks(query: string, limit = 12): Promise<Track[]
 }
 
 export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
-  const [saavnRes, soundcloudRes, audiusRes, archiveRes] = await Promise.allSettled([
-    searchSaavnTracksServerFn({ data: { query, limit: Math.min(20, limit) } }),
-    searchSoundCloudTracksServerFn({ data: { query, limit: Math.min(10, limit) } }),
-    fetchFromAudius<AudiusTrack[]>("/tracks/search", { query, limit: String(Math.min(6, limit)) }),
-    fetchArchiveOrgTracks(query, Math.min(4, limit)),
-  ]);
+  const cleanQ = query.trim();
+  if (!cleanQ) return [];
 
-  const saavnTracks =
-    saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
+  // 1. Primary Sovereign Source: JioSaavn verified original studio recordings
+  const saavnTracks = await searchSaavnTracksServerFn({
+    data: { query: cleanQ, limit: Math.min(30, limit * 2) },
+  }).catch(() => [] as Track[]);
 
-  const soundcloudTracks =
-    soundcloudRes.status === "fulfilled" && soundcloudRes.value ? soundcloudRes.value : [];
+  // Filter out any amateur covers, karaoke, or bootleg derivatives
+  const originalSaavn = saavnTracks.filter((t) => !isCoverOrDerivative(t.title, t.artist, cleanQ));
 
-  const audiusTracks =
-    audiusRes.status === "fulfilled" && audiusRes.value
-      ? audiusRes.value.map(mapTrack).filter((x): x is Track => Boolean(x))
-      : [];
+  // If JioSaavn has high-confidence authentic studio releases, return them directly!
+  // This guarantees 100% original master quality and prevents feed dilution.
+  if (originalSaavn.length >= 6) {
+    return originalSaavn.slice(0, limit);
+  }
 
-  const archiveTracks =
-    archiveRes.status === "fulfilled" && archiveRes.value ? archiveRes.value : [];
+  // 2. Secondary fallback: SoundCloud with STRICT anti-cover filter
+  const soundcloudTracks = await searchSoundCloudTracksServerFn({
+    data: { query: cleanQ, limit: Math.min(10, limit) },
+  }).catch(() => [] as Track[]);
 
-  // Priority: Full-length 320kbps master tracks first, then SoundCloud, Audius, Archive
-  const combined = [...saavnTracks, ...soundcloudTracks, ...audiusTracks, ...archiveTracks];
+  const originalSoundCloud = soundcloudTracks.filter((t) => !isCoverOrDerivative(t.title, t.artist, cleanQ));
+
+  // Merge: Original studio recordings first, then clean verified SoundCloud tracks
+  const combined = [...originalSaavn, ...originalSoundCloud];
 
   if (combined.length) {
     const seen = new Set<string>();
-    return combined.filter((t) => {
-      const key = `${t.title.toLowerCase()}_${t.artist.toLowerCase()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, limit);
+    return combined
+      .filter((t) => {
+        const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, limit);
   }
 
-  const q = query.toLowerCase();
-  const matched = CURATED_TRACKS.filter(
+  // 3. Fallback: curated catalog
+  const q = cleanQ.toLowerCase();
+  return CURATED_TRACKS.filter(
     (t) =>
       t.title.toLowerCase().includes(q) ||
       t.artist.toLowerCase().includes(q) ||
       (t.genre && t.genre.toLowerCase().includes(q)),
-  );
-  if (matched.length) return matched.slice(0, limit);
-
-  return CURATED_TRACKS.slice(0, limit);
+  ).slice(0, limit);
 }
 
 export async function generateWeeklyMix(recents: Track[]): Promise<Track[]> {
@@ -816,24 +680,8 @@ export async function fetchRelatedQueue(track: Track, limit = 15, _recents: Trac
 
 export async function searchPlaylists(query: string, limit = 12): Promise<Playlist[]> {
   try {
-    const [saavnRes, audiusRes] = await Promise.allSettled([
-      searchSaavnPlaylistsServerFn({ data: { query, limit } }),
-      fetchFromAudius<AudiusPlaylist[]>("/playlists/search", {
-        query,
-        limit: String(limit),
-      }),
-    ]);
-
-    const saavnPlaylists =
-      saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
-
-    const audiusPlaylists =
-      audiusRes.status === "fulfilled" && audiusRes.value
-        ? audiusRes.value.map(mapPlaylist).filter((x): x is Playlist => Boolean(x))
-        : [];
-
-    const merged = [...saavnPlaylists, ...audiusPlaylists];
-    if (merged.length) return merged.slice(0, limit);
+    const saavnPlaylists = await searchSaavnPlaylistsServerFn({ data: { query, limit } });
+    if (saavnPlaylists && saavnPlaylists.length) return saavnPlaylists.slice(0, limit);
   } catch {
     // fallback
   }
@@ -1028,24 +876,8 @@ export async function searchAlbums(query: string, limit = 16): Promise<Playlist[
 
 export async function searchArtists(query: string, limit = 12): Promise<Artist[]> {
   try {
-    const [saavnRes, audiusRes] = await Promise.allSettled([
-      searchSaavnArtistsServerFn({ data: { query, limit } }),
-      fetchFromAudius<AudiusUser[]>("/users/search", {
-        query,
-        limit: String(limit),
-      }),
-    ]);
-
-    const saavnArtists =
-      saavnRes.status === "fulfilled" && saavnRes.value ? saavnRes.value : [];
-
-    const audiusArtists =
-      audiusRes.status === "fulfilled" && audiusRes.value
-        ? audiusRes.value.map(mapArtist).filter((x): x is Artist => Boolean(x))
-        : [];
-
-    const merged = [...saavnArtists, ...audiusArtists];
-    if (merged.length) return merged.slice(0, limit);
+    const saavnArtists = await searchSaavnArtistsServerFn({ data: { query, limit } });
+    if (saavnArtists && saavnArtists.length) return saavnArtists.slice(0, limit);
   } catch {
     // fallback
   }
@@ -1084,13 +916,7 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   if (id.startsWith("saavn_pl_")) {
     return getSaavnPlaylistServerFn({ data: { id } });
   }
-  try {
-    const raw = await fetchFromAudius<AudiusPlaylist | AudiusPlaylist[]>(`/playlists/${encodeURIComponent(id)}`);
-    const data = Array.isArray(raw) ? raw[0] : raw;
-    return data ? mapPlaylist(data) : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export async function fetchArtistAlbums(id: string, limit = 20): Promise<Playlist[]> {
@@ -1116,13 +942,7 @@ export async function fetchArtist(id: string): Promise<Artist | null> {
   if (id.startsWith("saavn_artist_")) {
     return getSaavnArtistServerFn({ data: { id } });
   }
-  try {
-    const raw = await fetchFromAudius<AudiusUser | AudiusUser[]>(`/users/${encodeURIComponent(id)}`);
-    const data = Array.isArray(raw) ? raw[0] : raw;
-    return data ? mapArtist(data) : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]> {
@@ -1131,25 +951,6 @@ export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]
   }
   if (id.startsWith("saavn_artist_")) {
     return getSaavnArtistTracksServerFn({ data: { id, limit } });
-  }
-  try {
-    const fetchLimit = limit * 3;
-    const raw = await fetchFromAudius<AudiusTrack[]>(`/users/${encodeURIComponent(id)}/tracks`, {
-      limit: String(fetchLimit),
-    });
-    const mapped = (raw ?? []).map(mapTrack).filter((x): x is Track => Boolean(x));
-    if (mapped.length) {
-      const seen = new Set<string>();
-      const deduped = mapped.filter((t) => {
-        const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-      return deduped.slice(0, limit);
-    }
-  } catch {
-    // fallback
   }
   return CURATED_TRACKS.slice(0, limit);
 }
@@ -1195,13 +996,7 @@ export async function fetchTrack(id: string): Promise<Track | null> {
     }
   }
 
-  try {
-    const raw = await fetchFromAudius<AudiusTrack | AudiusTrack[]>(`/tracks/${encodeURIComponent(id)}`);
-    const data = Array.isArray(raw) ? raw[0] : raw;
-    return data ? mapTrack(data) : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 export function mapRadio(s: {
