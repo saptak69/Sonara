@@ -25,6 +25,7 @@ type PlayerState = {
   playlists: UserPlaylist[];
   recentSearches: string[];
   autoplay: boolean;
+  volumeNormalization: boolean;
 
   hydrated: boolean;
   current: () => Track | null;
@@ -45,11 +46,14 @@ type PlayerState = {
   cycleRepeat: () => void;
   toggleAutoplay: () => void;
   setAutoplay: (v: boolean) => void;
+  toggleVolumeNormalization: () => void;
   toggleLike: (track: Track) => void;
   addToQueue: (track: Track) => void;
   appendQueue: (tracks: Track[]) => void;
   playNext: (track: Track) => void;
   removeFromQueue: (i: number) => void;
+  reorderQueue: (fromIndex: number, toIndex: number) => void;
+  moveUpcoming: (fromIdx: number, toIdx: number) => void;
   jumpTo: (i: number) => void;
   setExpanded: (v: boolean) => void;
   setQueueOpen: (v: boolean) => void;
@@ -61,6 +65,7 @@ type PlayerState = {
   removeFromPlaylist: (id: string, trackId: string) => void;
   deletePlaylist: (id: string) => void;
   rememberSearch: (q: string) => void;
+  removeRecentSearch: (q: string) => void;
   clearRecents: () => void;
   clearUpcoming: () => void;
   setHydrated: () => void;
@@ -134,6 +139,7 @@ export const usePlayer = create<PlayerState>()(
       playlists: [],
       recentSearches: [],
       autoplay: true,
+      volumeNormalization: false,
 
       hydrated: false,
       current: () => {
@@ -248,6 +254,7 @@ export const usePlayer = create<PlayerState>()(
       },
       toggleAutoplay: () => set({ autoplay: !get().autoplay }),
       setAutoplay: (v: boolean) => set({ autoplay: v }),
+      toggleVolumeNormalization: () => set({ volumeNormalization: !get().volumeNormalization }),
       toggleLike: (track) => {
         const cleanTrack = sanitizeTrack(track);
         const liked = get().likedIds.includes(cleanTrack.id);
@@ -386,6 +393,28 @@ export const usePlayer = create<PlayerState>()(
           void deleteUserPlaylistServerFn({ data: { id } }).catch(() => {});
         });
       },
+      removeRecentSearch: (q) => {
+        set({ recentSearches: get().recentSearches.filter((s) => s !== q) });
+      },
+      reorderQueue: (fromIndex, toIndex) => {
+        const queue = [...get().queue];
+        if (fromIndex < 0 || fromIndex >= queue.length || toIndex < 0 || toIndex >= queue.length) return;
+        const [moved] = queue.splice(fromIndex, 1);
+        queue.splice(toIndex, 0, moved);
+        set({ queue });
+      },
+      moveUpcoming: (fromIdx, toIdx) => {
+        const state = get();
+        const currentIndex = state.index;
+        const actualFrom = currentIndex + 1 + fromIdx;
+        const actualTo = currentIndex + 1 + toIdx;
+        const queue = [...state.queue];
+        if (actualFrom <= currentIndex || actualFrom >= queue.length) return;
+        if (actualTo <= currentIndex || actualTo >= queue.length) return;
+        const [moved] = queue.splice(actualFrom, 1);
+        queue.splice(actualTo, 0, moved);
+        set({ queue });
+      },
       rememberSearch: (q) => {
         const v = q.trim();
         if (!v) return;
@@ -443,6 +472,7 @@ export const usePlayer = create<PlayerState>()(
         playlists: s.playlists,
         recentSearches: s.recentSearches,
         autoplay: s.autoplay,
+        volumeNormalization: s.volumeNormalization,
 
         volume: s.volume,
       }),

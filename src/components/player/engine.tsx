@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import type { Track as _Track } from "@/lib/types";
 
-export function resolvePlayableUrl(track?: _Track | null): string {
+function resolvePlayableUrl(track?: _Track | null): string {
   if (!track?.streamUrl) return "";
   const url = track.streamUrl;
   if (track.kind === "radio" || url.includes(".m3u8") || url.includes("/listen")) return url;
@@ -351,7 +351,7 @@ export function PlayerEngine() {
     return () => {
       cancelled = true;
     };
-  }, [current?.id, current?.title, current?.artist, current?.streamUrl, current?.duration, setDuration]);
+  }, [current, setDuration]);
 
   // Continuous Smart Autoplay & Infinity Queue (Spotify BART Contextual Continuity)
   const fetchingRelatedRef = useRef<string | null>(null);
@@ -377,7 +377,7 @@ export function PlayerEngine() {
         }).catch(() => {});
       });
     }
-  }, [current?.id, queueLength, queueIndex, autoplay, recents]);
+  }, [current, queueLength, queueIndex, autoplay, recents]);
 
   // Volume, Muted, and Playback Rate
   useEffect(() => {

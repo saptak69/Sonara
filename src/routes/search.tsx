@@ -235,17 +235,22 @@ function TopResultCard({
   );
 }
 
+type SearchFilter = "all" | "songs" | "albums" | "artists" | "playlists" | "radio";
+
 function SearchPage() {
   const { q } = Route.useSearch();
   const navigate = useNavigate();
   const recents = usePlayer((s) => s.recentSearches);
   const rememberSearch = usePlayer((s) => s.rememberSearch);
+  const removeRecentSearch = usePlayer((s) => s.removeRecentSearch);
   const [showAllSongs, setShowAllSongs] = useState(false);
+  const [filter, setFilter] = useState<SearchFilter>("all");
   const [localQ, setLocalQ] = useState(q);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   useEffect(() => {
     setLocalQ(q);
+    setFilter("all");
   }, [q]);
 
   const onSearchSubmit = (e: React.FormEvent) => {
@@ -424,15 +429,32 @@ function SearchPage() {
             <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-2.5 px-1">Recent Searches</h2>
             <div className="flex flex-wrap gap-2">
               {recents.map((s) => (
-                <Link
+                <div
                   key={s}
-                  to="/search"
-                  search={{ q: s }}
-                  className="rounded-full sonara-glass-light px-3.5 py-1.5 text-xs text-fg/80 hover:text-white hover:brightness-110 transition-all"
-                  onClick={() => rememberSearch(s)}
+                  className="group inline-flex items-center gap-1.5 rounded-full sonara-glass-light pl-3.5 pr-2 py-1 text-xs text-fg/80 hover:text-white hover:brightness-110 transition-all shadow-sm"
                 >
-                  {s}
-                </Link>
+                  <Link
+                    to="/search"
+                    search={{ q: s }}
+                    className="font-medium"
+                    onClick={() => rememberSearch(s)}
+                  >
+                    {s}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      removeRecentSearch(s);
+                    }}
+                    title={`Remove "${s}"`}
+                    aria-label={`Remove "${s}"`}
+                    className="size-4 rounded-full flex items-center justify-center text-muted hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
               ))}
             </div>
           </section>
@@ -493,9 +515,9 @@ function SearchPage() {
     (radio.data ?? []).length > 0;
 
   return (
-    <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
-      <header className="relative z-50">
-        <form onSubmit={onSearchSubmit} className="search-input-form relative lg:hidden mb-6">
+    <div className="w-full stagger-in space-y-8 md:space-y-10 px-4 md:px-12 pt-10 md:pt-12 pb-32">
+      <header className="relative z-50 space-y-4">
+        <form onSubmit={onSearchSubmit} className="search-input-form relative lg:hidden">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
           <input
             value={localQ}
@@ -533,9 +555,40 @@ function SearchPage() {
             }} 
           />
         </form>
-        <div className="hidden lg:flex items-center justify-between border-b border-white/10 pb-4 mb-4 mt-8 md:mt-0">
+
+        <div className="hidden lg:flex items-center justify-between border-b border-white/10 pb-4">
           <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">“{q}”</h1>
         </div>
+
+        {/* Category Filter Chips (Spotify & Apple Music Standard) */}
+        {hasAnyResults && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+            {[
+              { id: "all", label: "All" },
+              { id: "songs", label: `Songs (${tracks.data?.length ?? 0})`, count: tracks.data?.length },
+              { id: "albums", label: `Albums (${albums.data?.length ?? 0})`, count: albums.data?.length },
+              { id: "artists", label: `Artists (${artists.data?.length ?? 0})`, count: artists.data?.length },
+              { id: "playlists", label: `Playlists (${playlists.data?.length ?? 0})`, count: playlists.data?.length },
+              { id: "radio", label: `Radio (${radio.data?.length ?? 0})`, count: radio.data?.length },
+            ]
+              .filter((tab) => tab.id === "all" || (tab.count ?? 0) > 0)
+              .map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFilter(tab.id as typeof filter)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all shrink-0 active:scale-95",
+                    filter === tab.id
+                      ? "bg-white text-black shadow-md shadow-white/10 font-bold"
+                      : "bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+          </div>
+        )}
       </header>
 
       {!hasAnyResults && !tracks.isLoading ? (
@@ -547,78 +600,158 @@ function SearchPage() {
         </div>
       ) : (
         <>
-          {/* 1. Hero: Top Result + Songs (Spotify / Apple Music Industry Standard) */}
-          {topResult || (tracks.data ?? []).length > 0 ? (
-            <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {topResult ? (
-                <div className={cn((tracks.data ?? []).length > 0 ? "lg:col-span-5" : "lg:col-span-12")}>
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-3">
-                    Top result
-                  </h2>
-                  <TopResultCard result={topResult} queue={tracks.data ?? []} />
-                </div>
+          {/* View: ALL (Spotify & Apple Music Industry Standard Layout) */}
+          {filter === "all" && (
+            <div className="space-y-12 md:space-y-14">
+              {/* 1. Hero: Top Result + Songs */}
+              {topResult || (tracks.data ?? []).length > 0 ? (
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {topResult ? (
+                    <div className={cn((tracks.data ?? []).length > 0 ? "lg:col-span-5" : "lg:col-span-12")}>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight mb-3">
+                        Top result
+                      </h2>
+                      <TopResultCard result={topResult} queue={tracks.data ?? []} />
+                    </div>
+                  ) : null}
+
+                  {(tracks.data ?? []).length > 0 ? (
+                    <div className={cn(topResult ? "lg:col-span-7" : "lg:col-span-12")}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight">Songs</h2>
+                        {(tracks.data ?? []).length > 4 ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-muted hover:text-white"
+                            onClick={() => setShowAllSongs((prev) => !prev)}
+                          >
+                            {showAllSongs ? "Show less" : `Show all ${(tracks.data ?? []).length}`}
+                          </Button>
+                        ) : null}
+                      </div>
+                      <div className="space-y-1">
+                        {(showAllSongs ? (tracks.data ?? []) : (tracks.data ?? []).slice(0, 4)).map((t, i) => (
+                          <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </section>
               ) : null}
 
-              {(tracks.data ?? []).length > 0 ? (
-                <div className={cn(topResult ? "lg:col-span-7" : "lg:col-span-12")}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight">Songs</h2>
-                    {(tracks.data ?? []).length > 4 ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-muted hover:text-white"
-                        onClick={() => setShowAllSongs((prev) => !prev)}
-                      >
-                        {showAllSongs ? "Show less" : `Show all ${(tracks.data ?? []).length}`}
-                      </Button>
-                    ) : null}
-                  </div>
-                  <div className="space-y-1">
-                    {(showAllSongs ? (tracks.data ?? []) : (tracks.data ?? []).slice(0, 4)).map((t, i) => (
-                      <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
-                    ))}
-                  </div>
-                </div>
+              {/* 2. Albums Rail */}
+              {(albums.data ?? []).length ? (
+                <Rail title="Albums">
+                  {(albums.data ?? []).map((album) => (
+                    <PlaylistCard key={album.id} playlist={album} />
+                  ))}
+                </Rail>
               ) : null}
+
+              {/* 3. Artists Rail */}
+              {(artists.data ?? []).length ? (
+                <Rail title="Artists">
+                  {(artists.data ?? []).map((a) => (
+                    <ArtistCard key={a.id} artist={a} />
+                  ))}
+                </Rail>
+              ) : null}
+
+              {/* 4. Playlists Rail */}
+              {(playlists.data ?? []).length ? (
+                <Rail title="Playlists">
+                  {(playlists.data ?? []).map((p) => (
+                    <PlaylistCard key={p.id} playlist={p} />
+                  ))}
+                </Rail>
+              ) : null}
+
+              {/* 5. Radio Stations Rail */}
+              {(radio.data ?? []).length ? (
+                <Rail title="Radio">
+                  {(radio.data ?? []).map((s) => (
+                    <RadioCard key={s.id} station={s} />
+                  ))}
+                </Rail>
+              ) : null}
+            </div>
+          )}
+
+          {/* View: SONGS */}
+          {filter === "songs" && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">Songs</h2>
+                <span className="text-xs text-muted">{tracks.data?.length ?? 0} results</span>
+              </div>
+              <div className="space-y-1">
+                {(tracks.data ?? []).map((t, i) => (
+                  <TrackRow key={t.id} track={t} index={i} queue={tracks.data ?? []} showPlays />
+                ))}
+              </div>
             </section>
-          ) : null}
+          )}
 
-          {/* 2. Albums Rail */}
-          {(albums.data ?? []).length ? (
-            <Rail title="Albums">
-              {(albums.data ?? []).map((album) => (
-                <PlaylistCard key={album.id} playlist={album} />
-              ))}
-            </Rail>
-          ) : null}
+          {/* View: ALBUMS */}
+          {filter === "albums" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">Albums</h2>
+                <span className="text-xs text-muted">{albums.data?.length ?? 0} releases</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                {(albums.data ?? []).map((album) => (
+                  <PlaylistCard key={album.id} playlist={album} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          {/* 3. Artists Rail */}
-          {(artists.data ?? []).length ? (
-            <Rail title="Artists">
-              {(artists.data ?? []).map((a) => (
-                <ArtistCard key={a.id} artist={a} />
-              ))}
-            </Rail>
-          ) : null}
+          {/* View: ARTISTS */}
+          {filter === "artists" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">Artists</h2>
+                <span className="text-xs text-muted">{artists.data?.length ?? 0} artists</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                {(artists.data ?? []).map((a) => (
+                  <ArtistCard key={a.id} artist={a} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          {/* 4. Playlists Rail */}
-          {(playlists.data ?? []).length ? (
-            <Rail title="Playlists">
-              {(playlists.data ?? []).map((p) => (
-                <PlaylistCard key={p.id} playlist={p} />
-              ))}
-            </Rail>
-          ) : null}
+          {/* View: PLAYLISTS */}
+          {filter === "playlists" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">Playlists</h2>
+                <span className="text-xs text-muted">{playlists.data?.length ?? 0} playlists</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                {(playlists.data ?? []).map((p) => (
+                  <PlaylistCard key={p.id} playlist={p} />
+                ))}
+              </div>
+            </section>
+          )}
 
-          {/* 5. Radio Stations Rail */}
-          {(radio.data ?? []).length ? (
-            <Rail title="Radio">
-              {(radio.data ?? []).map((s) => (
-                <RadioCard key={s.id} station={s} />
-              ))}
-            </Rail>
-          ) : null}
+          {/* View: RADIO */}
+          {filter === "radio" && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">Live Broadcast Radio</h2>
+                <span className="text-xs text-muted">{radio.data?.length ?? 0} stations</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+                {(radio.data ?? []).map((s) => (
+                  <RadioCard key={s.id} station={s} />
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
     </div>
