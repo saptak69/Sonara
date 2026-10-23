@@ -52,11 +52,24 @@ export const Route = createFileRoute("/api/stream")({
         }
 
         try {
-          const upstream = await fetch(targetUrl, {
+          let upstream = await fetch(targetUrl, {
             headers: upstreamHeaders,
             redirect: "follow",
             signal: abortController.signal,
           });
+
+          // Resilient audio quality fallback: If JioSaavn 320kbps returns 404, fallback to 160kbps
+          if (upstream.status === 404 && targetUrl.includes("saavncdn.com") && targetUrl.includes("_320.mp4")) {
+            const fallback160 = targetUrl.replace("_320.mp4", "_160.mp4");
+            const retry = await fetch(fallback160, {
+              headers: upstreamHeaders,
+              redirect: "follow",
+              signal: abortController.signal,
+            });
+            if (retry.ok || retry.status === 206) {
+              upstream = retry;
+            }
+          }
 
           if (!upstream.ok && upstream.status !== 206) {
             return new Response(`Upstream error: ${upstream.statusText}`, {

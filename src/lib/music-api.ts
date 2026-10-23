@@ -478,8 +478,14 @@ export async function searchTracks(query: string, limit = 24): Promise<Track[]> 
 
   // If JioSaavn has high-confidence authentic studio releases, return them directly!
   // This guarantees 100% original master quality and prevents feed dilution.
-  if (originalSaavn.length >= 6) {
-    return originalSaavn.slice(0, limit);
+  if (originalSaavn.length > 0) {
+    const qLower = cleanQ.toLowerCase();
+    const hasStrongMatch = originalSaavn.some(
+      (t) => t.title.toLowerCase().includes(qLower) || t.artist.toLowerCase().includes(qLower),
+    );
+    if (hasStrongMatch || originalSaavn.length >= 3) {
+      return originalSaavn.slice(0, limit);
+    }
   }
 
   // 2. Secondary fallback: SoundCloud with STRICT anti-cover filter

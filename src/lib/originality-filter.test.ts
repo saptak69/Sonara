@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { isCoverOrDerivative } from "./music-filter.ts";
 
 describe("isCoverOrDerivative - Sonara Studio Originality Guard", () => {
-  describe("1. Legitimate songs with 'cover' in title/artist (Zero False Positives)", () => {
+  describe("1. Legitimate songs with sensitive words (Zero False Positives)", () => {
     it("preserves legitimate studio recordings containing 'cover' in their name", () => {
       assert.equal(isCoverOrDerivative("Cover Me In Sunshine", "P!nk, Willow Sage Hart"), false);
       assert.equal(isCoverOrDerivative("Under Cover of Darkness", "The Strokes"), false);
@@ -22,9 +22,15 @@ describe("isCoverOrDerivative - Sonara Studio Originality Guard", () => {
       assert.equal(isCoverOrDerivative("Show Me", "The Cover Girls"), false);
     });
 
-    it("preserves legitimate electronic tracks containing 'Reverb'", () => {
+    it("preserves legitimate tracks with 'Reverb', 'Bass', 'Speed', 'Slow', or 'DJ'", () => {
       assert.equal(isCoverOrDerivative("Reverb (Original Mix)", "Soundprank"), false);
       assert.equal(isCoverOrDerivative("Slow Down", "Selena Gomez"), false);
+      assert.equal(isCoverOrDerivative("Slow Hands", "Niall Horan"), false);
+      assert.equal(isCoverOrDerivative("All About That Bass", "Meghan Trainor"), false);
+      assert.equal(isCoverOrDerivative("Super Bass", "Nicki Minaj"), false);
+      assert.equal(isCoverOrDerivative("Speed of Sound", "Coldplay"), false);
+      assert.equal(isCoverOrDerivative("Night Changes", "One Direction"), false);
+      assert.equal(isCoverOrDerivative("DJ Got Us Fallin' In Love", "Usher"), false);
     });
   });
 
@@ -46,12 +52,20 @@ describe("isCoverOrDerivative - Sonara Studio Originality Guard", () => {
       assert.equal(isCoverOrDerivative("As Made Famous by Bruno Mars - Uptown Funk", "Backing Stars"), true);
     });
 
-    it("rejects slowed, reverb, nightcore, and 8D edits", () => {
+    it("rejects slowed, reverb, nightcore, 8D, and bass-boosted edits", () => {
       assert.equal(isCoverOrDerivative("Starboy (Slowed + Reverb)", "The Weeknd"), true);
       assert.equal(isCoverOrDerivative("Starboy - Slowed Down", "VibeEdits"), true);
       assert.equal(isCoverOrDerivative("Nightcore - Titanium", "Nightcore Lab"), true);
       assert.equal(isCoverOrDerivative("Sped up - Golden Hour", "JVKE"), true);
       assert.equal(isCoverOrDerivative("8D Audio - Daylight", "David Kushner"), true);
+      assert.equal(isCoverOrDerivative("Believer (Bass Boosted)", "BassEdits"), true);
+      assert.equal(isCoverOrDerivative("Faded - Mega Bass", "CarBass"), true);
+      assert.equal(isCoverOrDerivative("Chipmunk Version - Bad Romance", "MemeTunes"), true);
+    });
+
+    it("rejects regional synthetic bootlegs (Jhankar, Dholki Mix)", () => {
+      assert.equal(isCoverOrDerivative("Tip Tip Barsa Paani (Jhankar Beats)", "DJ Jhankar"), true);
+      assert.equal(isCoverOrDerivative("Chura Ke Dil Mera - Dholki Mix", "Desi Mix"), true);
     });
 
     it("rejects karaoke and backing tracks", () => {

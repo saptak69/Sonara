@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "node:crypto";
 import { serverCache, CACHE_TTL } from "./cache.server";
 import type { Artist, Playlist, Track } from "./types";
+import { isCoverOrDerivative } from "./music-filter";
 
 export type RawSaavnSong = {
   id: string;
@@ -98,12 +99,24 @@ export function decryptSaavnMediaUrl(encryptedUrl?: string): string | null {
   }
 }
 
-function cleanHtmlEntities(str?: string): string {
+export function cleanHtmlEntities(str?: string): string {
   if (!str) return "";
   return str
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
+    .replace(/&#039;|&#39;|&apos;|&rsquo;|&lsquo;/g, "'")
+    .replace(/&ldquo;|&rdquo;/g, '"')
+    .replace(/&ndash;/g, "–")
+    .replace(/&mdash;/g, "—")
+    .replace(/&hellip;/g, "…")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code) => {
+      try {
+        return String.fromCharCode(Number(code));
+      } catch {
+        return "";
+      }
+    })
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
 }
@@ -272,6 +285,11 @@ export const resolveFullTrackStreamServerFn = createServerFn({ method: "GET" })
 
         const songs = json?.results ?? [];
         for (const s of songs) {
+          const sTitle = cleanHtmlEntities(s.song || s.title || "");
+          const sArtist = cleanHtmlEntities(s.primary_artists || s.singers || "");
+          if (isCoverOrDerivative(sTitle, sArtist, data.title)) {
+            continue;
+          }
           const streamUrl = decryptSaavnMediaUrl(s.encrypted_media_url);
           if (streamUrl) {
             const duration = Math.round(Number(s.duration) || 200);

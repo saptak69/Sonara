@@ -74,7 +74,7 @@ function isCoverTrack(t: string, a: string): boolean {
 }
 
 /**
- * Checks for viral derivative edits (Slowed, Reverb, Nightcore, Sped up, 8D audio)
+ * Checks for viral derivative edits (Slowed, Reverb, Nightcore, Sped up, 8D audio, Jhankar, Bass Boosted)
  */
 function isDerivativeEdit(t: string): boolean {
   // Slowed / Reverb combinations
@@ -83,15 +83,27 @@ function isDerivativeEdit(t: string): boolean {
   }
   // Bracketed or hyphenated derivative tags
   if (
-    /[-–—:|([{\/]\s*(?:slowed|reverb|nightcore|sped\s*up|speed\s*up|8d\s*audio|daycore)\b/i.test(t)
+    /[-–—:|([{\/]\s*(?:slowed|reverb|nightcore|sped\s*up|speed\s*up|8d\s*audio|16d\s*audio|3d\s*audio|daycore|bass\s*boosted|mega\s*bass|pitch\s*shifted|chipmunk)\b/i.test(t)
   ) {
     return true;
   }
-  // Standalone viral remix / nightcore tags
-  if (/\b(?:nightcore|8d\s*audio|daycore)\b/i.test(t)) {
+  // Standalone viral remix / nightcore / audio modification tags
+  if (
+    /\b(?:nightcore|8d\s*audio|16d\s*audio|daycore|bass\s*boosted|mega\s*bass|car\s*bass|chipmunk|pitch\s*shifted)\b/i.test(
+      t,
+    )
+  ) {
     return true;
   }
-  if (/\bsped\s*up\s*(?:version|edit)?\b/i.test(t)) {
+  if (/\b(?:sped\s*up|speed\s*up)\s*(?:version|edit)?\b/i.test(t)) {
+    return true;
+  }
+  // Amateur South Asian synthetic overlays (Jhankar, Dholki mix, DJ remix bootlegs)
+  if (/\b(?:jhankar\s*beats?|sonic\s*jhankar|dholki\s*mix|dholak\s*mix|dj\s*jhankar)\b/i.test(t)) {
+    return true;
+  }
+  // Lo-Fi amateur derivatives
+  if (/[-–—:|([{\/]\s*lo-?fi\s*(?:remix|flip|edit|version)\b/i.test(t)) {
     return true;
   }
   return false;
@@ -124,7 +136,7 @@ function isAiOrSynthetic(t: string): boolean {
  * Checks for unauthorized bootlegs or audio leaks
  */
 function isBootlegOrRip(t: string): boolean {
-  return /\b(bootleg\s+remix|unauthorized\s+bootleg|studio\s+leak|audio\s+rip|unreleased\s+rip)\b/i.test(
+  return /\b(bootleg\s+remix|unauthorized\s+bootleg|studio\s+leak|audio\s+rip|unreleased\s+rip|tiktok\s+version|tik\s*tok\s+edit)\b/i.test(
     t,
   );
 }

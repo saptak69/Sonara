@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { Track } from "./types";
+import { cleanHtmlEntities } from "./saavn-api";
+import { isCoverOrDerivative } from "./music-filter";
 
 // Known reliable public client IDs with dynamic fallback
 const SOUNDCLOUD_CLIENT_IDS = [
@@ -118,8 +120,8 @@ function mapSoundCloudTrack(t: SoundCloudRawTrack, streamUrl: string): Track {
 
   return {
     id: `soundcloud_${t.id}`,
-    title: t.title || "SoundCloud Track",
-    artist: t.user?.username || "SoundCloud Artist",
+    title: cleanHtmlEntities(t.title || "SoundCloud Track"),
+    artist: cleanHtmlEntities(t.user?.username || "SoundCloud Artist"),
     artwork,
     artworkLg: artwork,
     duration: Math.round((t.duration || 180000) / 1000),
@@ -161,7 +163,11 @@ export const searchSoundCloudTracksServerFn = createServerFn({ method: "GET" })
 
       // Filter to full-length tracks (over 45 seconds) with streamable media
       const valid = items.filter(
-        (t) => (t.duration || 0) >= 45000 && t.media?.transcodings?.length,
+        (t) =>
+          (t.duration || 0) >= 45000 &&
+          (t.duration || 0) <= 660000 &&
+          t.media?.transcodings?.length &&
+          !isCoverOrDerivative(t.title || "", t.user?.username, data.query),
       );
 
       const resolved: Track[] = [];

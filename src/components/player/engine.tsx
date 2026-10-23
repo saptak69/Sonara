@@ -527,8 +527,14 @@ export function PlayerEngine() {
             if (currentT && usePlayer.getState().isPlaying) {
                 const a = activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
 
-                // Step 1: If direct playback failed and we haven't tried the hardened stream proxy yet, try it
+                // Step 1: If direct playback failed, try instant 160kbps fallback if 320kbps was 404, or stream proxy
                 if (a && a.src && !a.src.includes("/api/stream") && currentT.streamUrl) {
+                  if (currentT.streamUrl.includes("saavncdn.com") && currentT.streamUrl.includes("_320.mp4") && !a.src.includes("_160.mp4")) {
+                    a.src = currentT.streamUrl.replace("_320.mp4", "_160.mp4");
+                    a.load();
+                    a.play().catch(() => {});
+                    return;
+                  }
                   a.src = `/api/stream?url=${encodeURIComponent(currentT.streamUrl)}`;
                   a.load();
                   a.play().catch(() => {});
