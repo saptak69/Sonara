@@ -2,47 +2,56 @@
 @import "tw-animate-css";
 
 @theme {
-  --color-abyss: #000000;
-  --color-ink: #0a0a0a;
-  --color-ink-2: #141414;
-  --color-paper: #ffffff;
-  --color-brass: #ff4a3a;
-  --color-brass-dim: #d13a2d;
-  --color-verdigris: #ff4a3a;
+  --color-abyss: #0B0A0A;
+  --color-ink: #0B0A0A;
+  --color-ink-2: #151211;
+  --color-paper: #F4EFEA;
 
-  --color-bg: #000000;
-  --color-surface: #0a0a0a;
-  --color-elevated: #111111;
-  --color-chip: #1a1a1a;
-  --color-hover: #1a1a1a;
-  --color-fg: #ffffff;
-  --color-muted: #a1a1aa;
-  --color-subtle: #52525b;
-  --color-accent: #ff4a3a;
-  --color-accent-fg: #ffffff;
-  --color-ok: #ff4a3a;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-glow: rgba(255, 74, 58, 0.2);
+  --color-bg: #0B0A0A;
+  --color-bg-sunken: #090808;
+  --color-surface: #151211;
+  --color-surface-2: #1E1A18;
+  --color-surface-3: #28231F;
+  --color-elevated: #151211;
+  --color-chip: #1E1A18;
+  --color-hover: #1E1A18;
+  --color-fg: #F4EFEA;
+  --color-text-primary: #F4EFEA;
+  --color-text-secondary: #A9A19B;
+  --color-muted: #A9A19B;
+  --color-subtle: #7A726C;
+  --color-text-muted: #7A726C;
+  --color-accent: #FF5B2E;
+  --color-accent-hover: #FF6E45;
+  --color-accent-pressed: #E64E24;
+  --color-accent-soft: rgba(255, 91, 46, 0.12);
+  --color-accent-ink: #0B0A0A;
+  --color-accent-fg: #0B0A0A;
+  --color-ok: #52B58A;
+  --color-status-ok: #52B58A;
+  --color-border: rgba(255, 238, 225, 0.07);
+  --color-hairline: rgba(255, 238, 225, 0.07);
+  --color-glow: rgba(255, 91, 46, 0.15);
 
-  --font-display: "Outfit", system-ui, sans-serif;
+  --font-display: "Outfit", "Noto Sans Bengali", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
-  --font-sans: "Outfit", system-ui, sans-serif;
+  --font-sans: "Outfit", "Noto Sans Bengali", "Noto Sans Devanagari", system-ui, sans-serif;
 
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --radius-2xl: 36px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 24px;
   --radius-pill: 9999px;
 
   --spacing-player: 4.75rem;
   --spacing-nav: 4rem;
-  --spacing-sidebar: 15.25rem;
+  --spacing-sidebar: 14rem;
   --spacing-right-sidebar: 20rem;
 
-  --shadow-play: 0 4px 12px rgba(255, 74, 58, 0.2);
-  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.75);
+  --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {
@@ -544,7 +553,7 @@
    Mobile & Android Horizontal (Landscape) Optimization
    Activates when device is held in landscape mode with height <= 540px
    ───────────────────────────────────────────────────────────── */
-@media (orientation: landscape) and (max-height: 560px) and (max-width: 1023px) {
+@media (orientation: landscape) and (max-height: 620px) and (max-width: 1023px) {
   /* Mobile Landscape Ergonomic Thumb Rail */
   .mobile-landscape-rail {
     display: flex !important;
@@ -747,8 +756,8 @@
   /* Full Screen Player Studio Cockpit in Mobile Landscape */
   .full-player-main {
     flex-direction: row !important;
-    padding-top: max(env(safe-area-inset-top), 10px) !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 10px) !important;
+    padding-top: max(env(safe-area-inset-top), 52px) !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 12px) !important;
     padding-left: max(env(safe-area-inset-left), 24px) !important;
     padding-right: max(env(safe-area-inset-right), 24px) !important;
     gap: 1.75rem !important;
@@ -769,10 +778,10 @@
   }
 
   .full-player-artwork-box {
-    width: min(64vh, 215px) !important;
-    height: min(64vh, 215px) !important;
-    max-width: 215px !important;
-    max-height: 215px !important;
+    width: min(54vh, 185px) !important;
+    height: min(54vh, 185px) !important;
+    max-width: 185px !important;
+    max-height: 185px !important;
     margin-bottom: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -806,7 +815,7 @@
 
   .full-player-controls {
     margin-bottom: 0.25rem !important;
-    padding-top: 0 !important;
+    padding-top: 0.25rem !important;
     padding-bottom: 0 !important;
     max-width: 340px !important;
   }
@@ -819,8 +828,15 @@
   }
 
   .full-player-action-row {
-    padding-top: 0 !important;
+    padding-top: 0.25rem !important;
     gap: 0.75rem !important;
+  }
+  .full-player-action-row button {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.75rem !important;
   }
 }
 

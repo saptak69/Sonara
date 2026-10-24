@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useEffect, useState } from "react";
 import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
 import { useOfflineTracks, getOfflineStorageUsage, downloadTrackAudio } from "@/lib/offline-cache";
 import { PlaylistImportModal } from "@/components/playlist-import-modal";
+import { EmptyState } from "@/components/empty-state";
 import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Compass, Heart, ListMusic, Plus, Trash2, Ghost, Sparkles, Download, ArrowDownCircle, HardDrive } from "lucide-react";
@@ -119,70 +120,45 @@ function LibraryPage() {
   };
 
   return (
-    <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-        <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Library</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="chip"
-            size="sm"
-            className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20"
-            onClick={() => setImportModalOpen(true)}
-          >
-            <Download className="size-4 mr-1.5" />
-            Import Playlist
-          </Button>
-          <Button
-            variant="chip"
-            size="sm"
-            onClick={() => {
-              const name = `Playlist ${playlists.length + 1}`;
-              createPlaylist(name);
-              toast.success(`Created "${name}"`);
-            }}
-          >
-            <Plus className="size-4 mr-1.5" />
-            New playlist
-          </Button>
-          <Button
-            variant="chip"
-            size="sm"
-            className="bg-accent/10 text-accent hover:bg-accent/20 border-accent/20"
-            onClick={() => {
-              const fromPlaylists = playlists.find((p) => p.id === "likes")?.tracks ?? [];
-              const fromRecents = recents.filter((t) => likedIds.includes(t.id));
-              const map = new Map(fromPlaylists.map((t) => [t.id, t]));
-              for (const t of fromRecents) map.set(t.id, t);
-              const allLiked = likedIds.map((id) => map.get(id)).filter((t): t is NonNullable<typeof t> => Boolean(t));
-              
-              if (allLiked.length === 0 && recents.length === 0) {
-                toast.error("Play or like some songs first to generate a Smart Mix!");
-                return;
-              }
+    <div className="w-full space-y-8 md:space-y-10 px-4 md:px-10 pt-6 md:pt-8 pb-32">
+      <header className="flex items-center justify-between pb-1">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white">Library</h1>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 px-4 rounded-full bg-white/[0.06] border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-xs font-medium inline-flex items-center gap-1.5 transition-all"
+          onClick={() => {
+            const fromPlaylists = playlists.find((p) => p.id === "likes")?.tracks ?? [];
+            const fromRecents = recents.filter((t) => likedIds.includes(t.id));
+            const map = new Map(fromPlaylists.map((t) => [t.id, t]));
+            for (const t of fromRecents) map.set(t.id, t);
+            const allLiked = likedIds.map((id) => map.get(id)).filter((t): t is NonNullable<typeof t> => Boolean(t));
+            
+            if (allLiked.length === 0 && recents.length === 0) {
+              toast.error("Play or like some songs first to generate a Smart Mix!");
+              return;
+            }
 
-              const mixPool = [...allLiked, ...recents];
-              // Deduplicate
-              const uniquePool = Array.from(new Map(mixPool.map((t) => [t.id, t])).values());
-              
-              // Shuffle and take up to 20 tracks
-              const shuffled = uniquePool.sort(() => 0.5 - Math.random()).slice(0, 20);
-              
-              const name = `Smart Mix • ${new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
-              createPlaylist(name, shuffled);
-              toast.success(`Generated "${name}" with ${shuffled.length} tracks`);
-              
-              if (tab !== "playlists") {
-                handleTabChange("playlists");
-              }
-            }}
-          >
-            <Sparkles className="size-4 mr-1.5" />
-            Auto-Mix
-          </Button>
-        </div>
+            const mixPool = [...allLiked, ...recents];
+            const uniquePool = Array.from(new Map(mixPool.map((t) => [t.id, t])).values());
+            const shuffled = uniquePool.sort(() => 0.5 - Math.random()).slice(0, 20);
+            
+            const name = `Smart Mix • ${new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+            createPlaylist(name, shuffled);
+            toast.success(`Generated "${name}" with ${shuffled.length} tracks`);
+            
+            if (tab !== "playlists") {
+              handleTabChange("playlists");
+            }
+          }}
+        >
+          <Sparkles className="size-3.5 text-white/60" />
+          Auto-Mix
+        </Button>
       </header>
 
-      <div className="flex gap-2 border-b border-border/40 pb-3 overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* Underline Tabs */}
+      <div className="flex gap-6 border-b border-white/[0.08] overflow-x-auto [scrollbar-width:none] -mx-4 px-4 sm:mx-0 sm:px-0">
         {(
           [
             ["recents", "Recents", recents.length],
@@ -191,38 +167,43 @@ function LibraryPage() {
             ["downloads", "Downloads", downloadedTracks.length],
             ["radios", "Radios", 0],
           ] as const
-        ).map(([id, label, count]) => (
-          <button
-            key={id}
-            type="button"
-            className="group relative isolate flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-150 md:text-sm active:scale-95"
-            onClick={() => handleTabChange(id)}
-          >
-            {tab === id && (
-              <motion.div
-                layoutId="library-tab-glow"
-                className="absolute inset-0 z-[-1] rounded-full"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              />
-            )}
-            <span className={cn("transition-colors relative z-10", tab === id ? "text-fg" : "text-muted group-hover:text-fg")}>{label}</span>
-            {count > 0 ? (
-              <span className={cn("text-[10px] font-mono transition-colors relative z-10", tab === id ? "text-fg/80" : "text-muted/60 group-hover:text-fg/80")}>({count})</span>
-            ) : null}
-          </button>
-        ))}
+        ).map(([id, label, count]) => {
+          const active = tab === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={cn(
+                "relative pb-3 text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 cursor-pointer",
+                active ? "text-white" : "text-white/50 hover:text-white/80"
+              )}
+              onClick={() => handleTabChange(id)}
+            >
+              <span>{label}</span>
+              {count > 0 && (
+                <span className="text-xs text-white/40 tabular-nums font-mono">({count})</span>
+              )}
+              {active && (
+                <motion.div
+                  layoutId="library-tab-underline"
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {tab === "recents" ? (
         recents.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted">{recents.length} recently played tracks</p>
+              <p className="text-sm text-[#A9A19B]">{recents.length} recently played tracks</p>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-muted hover:text-red-400"
+                className="text-xs text-[#A9A19B] hover:text-red-400"
                 onClick={() => {
                   clearRecents();
                   toast("Listening history cleared");
@@ -239,11 +220,11 @@ function LibraryPage() {
             </div>
           </div>
         ) : (
-          <Empty
+          <EmptyState
             icon={Ghost}
             title="No listening history yet"
-            text="Songs and live stations you play will automatically appear here."
-            action={{ label: "Explore trending tracks", to: "/explore" }}
+            description="Songs and live stations you play will automatically appear here."
+            primaryAction={{ label: "Explore trending tracks", onClick: () => navigate({ to: "/explore" }) }}
           />
         )
       ) : null}
@@ -252,8 +233,13 @@ function LibraryPage() {
         likedTracks.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted">{likedTracks.length} favorite tracks</p>
-              <Button variant="solid" size="sm" onClick={() => playTracks(likedTracks, 0)}>
+              <p className="text-sm text-[#A9A19B]">{likedTracks.length} favorite tracks</p>
+              <Button 
+                variant="solid" 
+                size="sm" 
+                className="rounded-full bg-white text-black font-semibold hover:bg-white/90 text-xs px-4"
+                onClick={() => playTracks(likedTracks, 0)}
+              >
                 Play all
               </Button>
             </div>
@@ -262,92 +248,102 @@ function LibraryPage() {
             ))}
           </div>
         ) : (
-          <Empty
+          <EmptyState
             icon={Heart}
-            title="Oops! There's no favorites"
-            text="Tap the heart icon on any song you like to add it to your favorites."
-            action={{ label: "Discover new music", to: "/explore" }}
+            title="No favorites yet"
+            description="Tap the heart icon on any song you love to build your personal collection."
+            primaryAction={{ label: "Discover new music", onClick: () => navigate({ to: "/explore" }) }}
           />
         )
       ) : null}
 
       {tab === "playlists" ? (
         userPlaylists.length ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {playlists
-              .filter((p) => p.id !== "likes")
-              .map((p) => (
-                <div key={p.id} className="group relative flex flex-col justify-between p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-all">
-                  <button
-                    type="button"
-                    className="w-full text-left"
-                    onClick={() => p.tracks.length && playTracks(p.tracks, 0)}
-                  >
-                    <Cover
-                      src={p.tracks[0]?.artworkLg || p.tracks[0]?.artwork}
-                      alt={p.name}
-                      title={p.name}
-                      className="aspect-square w-full rounded-xl shadow-md"
-                    />
-                    <p className="mt-2.5 truncate text-sm font-semibold text-fg">{p.name}</p>
-                    <p className="text-xs text-muted">{p.tracks.length} tracks</p>
-                  </button>
-                  <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-[11px] text-subtle">Personal</span>
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-[#A9A19B]">{userPlaylists.length} custom playlists</p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 rounded-full bg-white/[0.06] text-white/80 hover:text-white border border-white/10 text-xs font-medium"
+                  onClick={() => setImportModalOpen(true)}
+                >
+                  <Download className="size-3.5 mr-1.5" />
+                  Import
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 rounded-full bg-white/[0.06] text-white/80 hover:text-white border border-white/10 text-xs font-medium"
+                  onClick={() => {
+                    const name = `Playlist ${playlists.length + 1}`;
+                    createPlaylist(name);
+                    toast.success(`Created "${name}"`);
+                  }}
+                >
+                  <Plus className="size-3.5 mr-1.5" />
+                  New Playlist
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {playlists
+                .filter((p) => p.id !== "likes")
+                .map((p) => (
+                  <div key={p.id} className="group relative flex flex-col justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all">
                     <button
                       type="button"
-                      className="text-xs text-muted hover:text-red-400 transition-colors p-1"
-                      onClick={() => {
-                        deletePlaylist(p.id);
-                        toast(`Deleted ${p.name}`);
-                      }}
-                      title="Delete playlist"
+                      className="w-full text-left"
+                      onClick={() => p.tracks.length && playTracks(p.tracks, 0)}
                     >
-                      <Trash2 className="size-3.5" />
+                      <Cover
+                        src={p.tracks[0]?.artworkLg || p.tracks[0]?.artwork}
+                        alt={p.name}
+                        title={p.name}
+                        className="aspect-square w-full rounded-lg shadow-sm"
+                      />
+                      <p className="mt-2.5 truncate text-sm font-semibold text-white">{p.name}</p>
+                      <p className="text-xs text-[#A9A19B]">{p.tracks.length} tracks</p>
                     </button>
+                    <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between">
+                      <span className="text-[11px] text-white/40">Personal</span>
+                      <button
+                        type="button"
+                        className="text-xs text-white/40 hover:text-red-400 transition-colors p-1"
+                        onClick={() => {
+                          deletePlaylist(p.id);
+                          toast(`Deleted ${p.name}`);
+                        }}
+                        title="Delete playlist"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-          </div>
-        ) : (
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full bg-emerald-400" />
-            <motion.div 
-              className="relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4 bg-emerald-400/10 border-emerald-400/20 text-emerald-400"
-              animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.05, 1] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <ListMusic className="size-8 drop-shadow-sm" />
-            </motion.div>
-            <h3 className="relative text-lg font-bold text-fg tracking-tight">No playlists created yet</h3>
-            <p className="relative mt-2 text-sm text-muted max-w-sm mx-auto leading-relaxed">
-              Create a fresh playlist or import your existing playlists from Spotify and Apple Music with one tap.
-            </p>
-            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Button
-                variant="solid"
-                size="sm"
-                className="rounded-full px-5 py-2.5 font-bold text-sm bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                onClick={() => setImportModalOpen(true)}
-              >
-                <Download className="size-4 mr-2" />
-                Import from Spotify / Apple Music
-              </Button>
-              <Button
-                variant="chip"
-                size="sm"
-                className="rounded-full px-4 py-2 text-sm"
-                onClick={() => {
-                  const name = `Playlist ${playlists.length + 1}`;
-                  createPlaylist(name);
-                  toast.success(`Created "${name}"`);
-                }}
-              >
-                <Plus className="size-4 mr-1.5" />
-                New Playlist
-              </Button>
+                ))}
             </div>
           </div>
+        ) : (
+          <EmptyState
+            icon={ListMusic}
+            title="No playlists created yet"
+            description="Create a fresh playlist or import your existing playlists from Spotify and Apple Music with one tap."
+            primaryAction={{
+              label: "Import from Spotify / Apple Music",
+              onClick: () => setImportModalOpen(true),
+              icon: Download,
+            }}
+            secondaryAction={{
+              label: "New Playlist",
+              onClick: () => {
+                const name = `Playlist ${playlists.length + 1}`;
+                createPlaylist(name);
+                toast.success(`Created "${name}"`);
+              },
+              icon: Plus,
+            }}
+          />
         )
       ) : null}
 
@@ -355,9 +351,9 @@ function LibraryPage() {
         downloadedTracks.length ? (
           <div>
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2.5 text-sm text-muted">
-                <span><strong className="text-fg font-semibold">{downloadedTracks.length}</strong> offline tracks ready</span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-xs text-emerald-400 font-medium">
+              <div className="flex flex-wrap items-center gap-2.5 text-sm text-[#A9A19B]">
+                <span><strong className="text-white font-semibold">{downloadedTracks.length}</strong> offline tracks ready</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-xs text-[#52B58A] font-medium">
                   <HardDrive className="size-3.5" />
                   {storageMb} MB used
                 </span>
@@ -365,9 +361,9 @@ function LibraryPage() {
               <div className="flex flex-wrap items-center gap-2">
                 {undownloadedFavorites.length > 0 && (
                   <Button
-                    variant="chip"
+                    variant="ghost"
                     size="sm"
-                    className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20 text-xs"
+                    className="h-8 px-3 rounded-full bg-white/[0.06] text-white/80 hover:text-white border border-white/10 text-xs font-medium"
                     disabled={isDownloadingFavorites}
                     onClick={handleDownloadFavorites}
                   >
@@ -377,13 +373,18 @@ function LibraryPage() {
                       : `Download ${undownloadedFavorites.length} Favorites`}
                   </Button>
                 )}
-                <Button variant="solid" size="sm" onClick={() => playTracks(downloadedTracks, 0)}>
+                <Button 
+                  variant="solid" 
+                  size="sm" 
+                  className="h-8 px-4 rounded-full bg-white text-black font-semibold hover:bg-white/90 text-xs"
+                  onClick={() => playTracks(downloadedTracks, 0)}
+                >
                   Play all offline
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-muted hover:text-red-400"
+                  className="text-xs text-[#A9A19B] hover:text-red-400"
                   onClick={() => {
                     void clearAll();
                     toast("All offline downloads cleared");
@@ -399,43 +400,27 @@ function LibraryPage() {
             ))}
           </div>
         ) : (
-          likedTracks.length > 0 ? (
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full bg-emerald-400" />
-              <motion.div 
-                className="relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4 bg-emerald-400/10 border-emerald-400/20 text-emerald-400"
-                animate={{ y: [0, 4, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <ArrowDownCircle className="size-8 drop-shadow-sm" />
-              </motion.div>
-              <h3 className="relative text-lg font-bold text-fg tracking-tight">No offline downloads yet</h3>
-              <p className="relative mt-2 text-sm text-muted max-w-sm mx-auto leading-relaxed">
-                You have {likedTracks.length} favorite songs ready to save for offline airplane mode listening.
-              </p>
-              <div className="relative mt-6 flex flex-wrap items-center justify-center gap-3">
-                <Button
-                  variant="solid"
-                  size="sm"
-                  className="rounded-full px-5 py-2.5 font-bold text-sm bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                  disabled={isDownloadingFavorites}
-                  onClick={handleDownloadFavorites}
-                >
-                  <Download className="size-4 mr-2" />
-                  {isDownloadingFavorites
-                    ? `Downloading (${downloadProgress?.current}/${downloadProgress?.total})...`
-                    : `Download All ${likedTracks.length} Favorites`}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Empty
-              icon={ArrowDownCircle}
-              title="No offline songs downloaded"
-              text="Tap the three dots on any song to download it for offline airplane mode listening."
-              action={{ label: "Discover music", to: "/explore" }}
-            />
-          )
+          <EmptyState
+            icon={ArrowDownCircle}
+            title="No offline songs downloaded"
+            description="Save songs and live stations for offline playback whenever you have no internet connection."
+            primaryAction={
+              likedTracks.length > 0
+                ? {
+                    label: isDownloadingFavorites
+                      ? `Downloading (${downloadProgress?.current}/${downloadProgress?.total})...`
+                      : `Download All ${likedTracks.length} Favorites`,
+                    onClick: handleDownloadFavorites,
+                    icon: Download,
+                  }
+                : undefined
+            }
+            secondaryAction={{
+              label: "Discover music",
+              onClick: () => navigate({ to: "/explore" }),
+              icon: Compass,
+            }}
+          />
         )
       ) : null}
 
@@ -450,84 +435,6 @@ function LibraryPage() {
         onOpenChange={setImportModalOpen}
         onImportComplete={() => handleTabChange("playlists")}
       />
-    </div>
-  );
-}
-
-function Empty({
-  icon: Icon = Compass,
-  title = "Nothing here yet",
-  text,
-  action,
-}: {
-  icon?: typeof Compass;
-  title?: string;
-  text: string;
-  action?: { label: string; to: string };
-}) {
-  // Determine animation based on the icon
-  let animationProps = {};
-  let colorClass = "text-muted";
-  let bgClass = "bg-white/5 border-white/10";
-  
-  if (Icon === Heart) {
-    animationProps = {
-      animate: { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-rose-400";
-    bgClass = "bg-rose-400/10 border-rose-400/20";
-  } else if (Icon === Ghost) {
-    animationProps = {
-      animate: { y: [0, -8, 0], x: [0, 4, -4, 0] },
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-indigo-400";
-    bgClass = "bg-indigo-400/10 border-indigo-400/20";
-  } else if (Icon === ListMusic) {
-    animationProps = {
-      animate: { rotate: [0, -10, 10, 0], scale: [1, 1.05, 1] },
-      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-emerald-400";
-    bgClass = "bg-emerald-400/10 border-emerald-400/20";
-  } else if (Icon === ArrowDownCircle) {
-    animationProps = {
-      animate: { y: [0, 4, 0] },
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-    };
-    colorClass = "text-emerald-400";
-    bgClass = "bg-emerald-400/10 border-emerald-400/20";
-  } else {
-    animationProps = {
-      animate: { y: [0, -5, 0] },
-      transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-    };
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
-      {/* Decorative background glow */}
-      <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full", colorClass.replace("text-", "bg-"))} />
-      
-      <motion.div 
-        className={cn("relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4", bgClass, colorClass)}
-        {...animationProps}
-      >
-        <Icon className="size-8 drop-shadow-sm" />
-      </motion.div>
-      <h3 className="relative text-lg font-bold text-fg tracking-tight">{title}</h3>
-      <p className="relative mt-2 text-sm text-muted max-w-xs mx-auto leading-relaxed">{text}</p>
-      {action ? (
-        <div className="relative mt-6">
-          <Link
-            to={action.to}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black hover:bg-white/90 font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all active:scale-95"
-          >
-            {action.label}
-          </Link>
-        </div>
-      ) : null}
     </div>
   );
 }

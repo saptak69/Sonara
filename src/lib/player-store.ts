@@ -558,3 +558,7 @@ export const usePlayer = create<PlayerState>()(
     },
   ),
 );
+
+if (typeof window !== "undefined") {
+  (window as unknown as { usePlayer: typeof usePlayer }).usePlayer = usePlayer;
+}

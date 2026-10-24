@@ -11,14 +11,12 @@ import {
 import type { Track } from "@/lib/types";
 import { toast } from "sonner";
 import {
-  Check,
   CheckCircle2,
   Circle,
   ClipboardPaste,
-  ExternalLink,
   Loader2,
   Music,
-  Sparkles,
+  Search,
   X,
   ListPlus,
 } from "lucide-react";
@@ -100,37 +98,33 @@ export function PlaylistImportModal({
       setPlaylistName(res.name);
       setCoverUrl(res.coverUrl);
       setParsedItems(res.tracks);
-      toast.success(`Found ${res.tracks.length} tracks in "${res.name}"`);
+      setIsScanning(false);
 
-      await startMatching(res.tracks);
-    } catch (e: any) {
-      toast.error(e?.message || "Error reading Spotify playlist");
-    } finally {
+      void runMatching(res.tracks);
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error while scanning playlist");
       setIsScanning(false);
     }
   };
 
-  const handleParseText = async () => {
+  const handleParseText = () => {
     if (!textList.trim()) {
-      toast.error("Please paste track names or lines");
+      toast.error("Please enter some tracks");
       return;
     }
-
     const items = parseTextTracklist(textList);
     if (!items.length) {
-      toast.error("Could not parse any tracks from the text");
+      toast.error("Could not parse any track names from the text");
       return;
     }
-
-    setPlaylistName(`Imported Playlist • ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
+    setPlaylistName(`Imported List • ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
     setCoverUrl(null);
     setParsedItems(items);
-    toast.success(`Parsed ${items.length} track items`);
-
-    await startMatching(items);
+    void runMatching(items);
   };
 
-  const startMatching = async (items: RawImportItem[]) => {
+  const runMatching = async (items: RawImportItem[]) => {
     setIsMatching(true);
     setMatchProgress({ done: 0, total: items.length });
 
@@ -140,29 +134,29 @@ export function PlaylistImportModal({
       });
 
       setMatchedTracks(matched);
-      setSelectedIds(new Set(matched.map((t) => t.id)));
       setUnmatchedCount(unmatched.length);
+      setSelectedIds(new Set(matched.map((t) => t.id)));
+      setIsMatching(false);
 
-      if (matched.length > 0) {
-        toast.success(`Matched ${matched.length} of ${items.length} tracks with Sonara catalog!`);
+      if (matched.length === 0) {
+        toast.error("No high-quality audio streams could be matched for these tracks");
       } else {
-        toast.error("Could not find matching streams for these tracks in catalog.");
+        toast.success(`Matched ${matched.length} of ${items.length} tracks!`);
       }
-    } catch {
-      toast.error("An error occurred during track matching.");
-    } finally {
+    } catch (err) {
+      console.error(err);
+      toast.error("Error matching tracks");
       setIsMatching(false);
     }
   };
 
   const toggleTrackSelection = (id: string) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    setSelectedIds(next);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const toggleSelectAll = () => {
@@ -176,51 +170,53 @@ export function PlaylistImportModal({
   const handleFinalImport = () => {
     const finalTracks = matchedTracks.filter((t) => selectedIds.has(t.id));
     if (!finalTracks.length) {
-      toast.error("Please select at least one track to import");
+      toast.error("Please select at least 1 track to import");
       return;
     }
 
-    const title = playlistName.trim() || "Imported Playlist";
-    const id = createPlaylist(title, finalTracks);
-    toast.success(`Imported "${title}" with ${finalTracks.length} tracks!`);
+    const playlistId = createPlaylist(playlistName.trim() || "Imported Playlist", finalTracks);
+    toast.success(`Imported "${playlistName}" (${finalTracks.length} tracks) to your Library!`);
     onOpenChange(false);
+    if (onImportComplete) {
+      onImportComplete(playlistId);
+    }
     reset();
-    onImportComplete?.(id);
   };
 
   const selectedCount = selectedIds.size;
   const matchRate = parsedItems.length > 0 ? Math.round((matchedTracks.length / parsedItems.length) * 100) : 0;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DialogContent className="max-w-xl max-h-[88vh] overflow-y-auto bg-zinc-950/95 border-white/10 text-white backdrop-blur-2xl">
-        <div className="flex items-center justify-between pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-emerald-500/15 border border-emerald-500/25 grid place-items-center text-emerald-400">
-              <Sparkles className="size-4" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-[#151211] border border-white/[0.08] text-white rounded-2xl p-6 shadow-2xl [scrollbar-width:thin]">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-20 bg-[#151211] -mx-6 -mt-6 p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-xl bg-white/[0.06] border border-white/[0.08] grid place-items-center text-[#FF5B2E]">
+              <ListPlus className="size-4" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
-                1-Tap Playlist Importer
+              <DialogTitle className="text-base font-semibold text-white">
+                Import Playlist
               </DialogTitle>
               <DialogDescription className="text-white/50 text-xs">
                 Migrate Spotify, Apple Music, and text tracklists into Sonara
               </DialogDescription>
             </div>
           </div>
-          <DialogClose className="grid size-8 place-items-center rounded-full text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+          <DialogClose className="grid size-8 place-items-center rounded-full text-white/50 hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
             <X className="size-4" />
           </DialogClose>
         </div>
 
         {parsedItems.length === 0 ? (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-4">
             {/* Tab switch */}
-            <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 text-xs font-semibold">
+            <div className="flex bg-[#1E1A18] p-1 rounded-xl border border-white/[0.06] text-xs font-medium">
               <button
                 type="button"
-                className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                  mode === "spotify" ? "bg-emerald-500 text-black font-bold shadow-md" : "text-white/60 hover:text-white"
+                className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  mode === "spotify" ? "bg-[#28231F] text-white font-semibold shadow-sm" : "text-white/60 hover:text-white"
                 }`}
                 onClick={() => setMode("spotify")}
               >
@@ -228,8 +224,8 @@ export function PlaylistImportModal({
               </button>
               <button
                 type="button"
-                className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                  mode === "text" ? "bg-accent text-white font-bold shadow-md" : "text-white/60 hover:text-white"
+                className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  mode === "text" ? "bg-[#28231F] text-white font-semibold shadow-sm" : "text-white/60 hover:text-white"
                 }`}
                 onClick={() => setMode("text")}
               >
@@ -241,11 +237,11 @@ export function PlaylistImportModal({
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-white/80">Spotify Playlist or Album URL</label>
+                    <label className="text-xs font-medium text-white/70">Spotify Playlist or Album URL</label>
                     <button
                       type="button"
                       onClick={handlePasteClipboard}
-                      className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium transition-colors"
+                      className="text-[11px] text-white/60 hover:text-white flex items-center gap-1 font-medium transition-colors cursor-pointer"
                     >
                       <ClipboardPaste className="size-3" />
                       Paste from clipboard
@@ -257,7 +253,7 @@ export function PlaylistImportModal({
                       placeholder="https://open.spotify.com/playlist/..."
                       value={spotifyUrl}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setSpotifyUrl(e.target.value)}
-                      className="flex-1 h-11 rounded-xl px-3.5 text-sm bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-sans"
+                      className="flex-1 h-11 rounded-xl px-3.5 text-sm bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 font-sans"
                       disabled={isScanning}
                       onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
                         if (e.key === "Enter") void handleScanSpotify();
@@ -265,43 +261,41 @@ export function PlaylistImportModal({
                     />
                     <Button
                       variant="solid"
-                      className="shrink-0 bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-4 h-11 rounded-xl"
+                      className="shrink-0 bg-white text-black hover:bg-white/90 font-semibold px-5 h-11 rounded-xl cursor-pointer"
                       disabled={isScanning || !spotifyUrl.trim()}
                       onClick={handleScanSpotify}
                     >
-                      {isScanning ? <Loader2 className="size-4 animate-spin mr-1.5" /> : <ExternalLink className="size-4 mr-1.5" />}
+                      {isScanning ? <Loader2 className="size-4 animate-spin mr-1.5" /> : <Search className="size-4 mr-1.5" />}
                       Scan
                     </Button>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 space-y-1 text-[11px] text-white/50">
-                  <p className="font-semibold text-white/80 flex items-center gap-1">
-                    <Check className="size-3 text-emerald-400" /> Instant migration without login:
-                  </p>
-                  <p>In Spotify, tap <strong>Share → Copy link to playlist</strong>, paste it above, and Sonara will resolve every track to high-bitrate master audio.</p>
+                <div className="border-t border-white/[0.06] pt-3 text-[11px] text-white/40 leading-relaxed space-y-1">
+                  <p className="font-medium text-white/70">Instant migration without login:</p>
+                  <p>In Spotify, tap <strong>Share → Copy link to playlist</strong>, paste it above, and Sonara will resolve every track into your Library.</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white/80">Paste Tracklist or Song Names</label>
+                  <label className="text-xs font-medium text-white/70">Paste Tracklist or Song Names</label>
                   <textarea
                     rows={6}
                     placeholder="1. Espresso - Sabrina Carpenter&#10;2. BIRDS OF A FEATHER by Billie Eilish&#10;3. Blinding Lights - The Weeknd"
                     value={textList}
                     onChange={(e) => setTextList(e.target.value)}
-                    className="w-full rounded-xl bg-white/5 border border-white/10 p-3.5 text-sm text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent resize-none font-mono text-xs"
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.08] p-3.5 text-sm text-white placeholder:text-white/30 focus-visible:outline-none focus-visible:border-white/30 resize-none font-mono text-xs"
                     disabled={isScanning}
                   />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-white/40">
-                    Supports text copied from Apple Music, YouTube Music, or text notes
+                    Supports text copied from Apple Music, YouTube Music, or notes
                   </span>
                   <Button
                     variant="solid"
-                    className="bg-accent hover:bg-accent/90 text-white font-semibold"
+                    className="bg-white text-black hover:bg-white/90 font-semibold rounded-xl h-10 px-5 text-xs cursor-pointer"
                     disabled={isScanning || !textList.trim()}
                     onClick={handleParseText}
                   >
@@ -312,14 +306,14 @@ export function PlaylistImportModal({
             )}
           </div>
         ) : (
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-3">
             {/* Header with parsed info */}
-            <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
               {coverUrl ? (
-                <img src={coverUrl} alt="" className="size-16 rounded-xl object-cover shadow-md shrink-0" />
+                <img src={coverUrl} alt="" className="size-14 rounded-lg object-cover shadow-sm shrink-0" />
               ) : (
-                <div className="size-16 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                  <Music className="size-7 text-white/40" />
+                <div className="size-14 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0">
+                  <Music className="size-6 text-white/40" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -327,13 +321,13 @@ export function PlaylistImportModal({
                   type="text"
                   value={playlistName}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setPlaylistName(e.target.value)}
-                  className="w-full bg-transparent border-0 p-0 text-base font-bold text-white focus:outline-none focus:border-b focus:border-accent rounded-none h-auto"
+                  className="w-full bg-transparent border-0 p-0 text-sm font-semibold text-white focus:outline-none focus:border-b focus:border-white/20 rounded-none h-auto"
                 />
                 <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <span className="text-xs text-white/60">
+                  <span className="text-xs text-white/50">
                     {parsedItems.length} found · {matchedTracks.length} matched
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/25">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-white/[0.06] text-white/80 px-2 py-0.5 rounded-full border border-white/10">
                     {matchRate}% match
                   </span>
                   {unmatchedCount > 0 ? (
@@ -345,17 +339,17 @@ export function PlaylistImportModal({
 
             {/* Progress bar if matching */}
             {isMatching ? (
-              <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.03] border border-white/5">
-                <div className="flex items-center justify-between text-xs text-white/70">
+              <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="flex items-center justify-between text-xs text-white/60">
                   <span className="flex items-center gap-2">
-                    <Loader2 className="size-3.5 animate-spin text-accent" />
+                    <Loader2 className="size-3.5 animate-spin text-[#FF5B2E]" />
                     Matching audio streams...
                   </span>
-                  <span className="font-mono text-white/90">{matchProgress.done} / {matchProgress.total}</span>
+                  <span className="font-mono text-white/80">{matchProgress.done} / {matchProgress.total}</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-accent transition-all duration-200"
+                    className="h-full bg-[#FF5B2E] transition-all duration-200"
                     style={{
                       width: `${matchProgress.total > 0 ? (matchProgress.done / matchProgress.total) * 100 : 0}%`,
                     }}
@@ -365,19 +359,19 @@ export function PlaylistImportModal({
             ) : null}
 
             {/* Controls above list */}
-            <div className="flex items-center justify-between text-xs text-white/60 px-1 pt-1">
-              <span>Select songs to import ({selectedCount} of {matchedTracks.length})</span>
+            <div className="flex items-center justify-between text-xs text-white/60 px-0.5">
+              <span>Select tracks ({selectedCount} of {matchedTracks.length})</span>
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                className="text-accent hover:underline font-medium text-xs"
+                className="text-white/80 hover:text-white underline font-medium text-xs cursor-pointer"
               >
                 {selectedIds.size === matchedTracks.length ? "Deselect All" : "Select All"}
               </button>
             </div>
 
             {/* Preview of matched tracks */}
-            <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 [scrollbar-width:thin]">
+            <div className="max-h-60 overflow-y-auto space-y-1 pr-1 [scrollbar-width:thin]">
               {matchedTracks.map((t, idx) => {
                 const selected = selectedIds.has(t.id);
                 return (
@@ -385,26 +379,26 @@ export function PlaylistImportModal({
                     key={t.id + idx}
                     onClick={() => toggleTrackSelection(t.id)}
                     className={cn(
-                      "flex items-center justify-between gap-3 p-2.5 rounded-xl text-xs cursor-pointer transition-all border",
+                      "flex items-center justify-between gap-3 p-2 rounded-lg text-xs cursor-pointer transition-all border",
                       selected
-                        ? "bg-white/[0.06] border-white/10 text-white"
-                        : "bg-white/[0.02] border-transparent text-white/40 hover:bg-white/[0.04]"
+                        ? "bg-white/[0.05] border-white/[0.08] text-white"
+                        : "bg-transparent border-transparent text-white/40 hover:bg-white/[0.03]"
                     )}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <span className="shrink-0">
                         {selected ? (
-                          <CheckCircle2 className="size-4 text-emerald-400" />
+                          <CheckCircle2 className="size-4 text-[#52B58A]" />
                         ) : (
-                          <Circle className="size-4 text-white/20" />
+                          <Circle className="size-4 text-white/30" />
                         )}
                       </span>
-                      <span className="text-white/40 font-mono w-5 text-right shrink-0">{idx + 1}</span>
+                      <span className="text-white/40 font-mono w-4 text-right shrink-0">{idx + 1}</span>
                       <div className="min-w-0">
-                        <p className={cn("font-semibold truncate", selected ? "text-white" : "text-white/50")}>
+                        <p className={cn("font-medium truncate", selected ? "text-white" : "text-white/50")}>
                           {t.title}
                         </p>
-                        <p className="text-white/50 truncate text-[11px]">{t.artist}</p>
+                        <p className="text-white/40 truncate text-[11px]">{t.artist}</p>
                       </div>
                     </div>
                     <span className="text-[11px] font-mono text-white/40 shrink-0">
@@ -416,11 +410,11 @@ export function PlaylistImportModal({
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/10">
+            <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white/60 hover:text-white text-xs"
+                className="text-white/50 hover:text-white text-xs cursor-pointer"
                 onClick={reset}
                 disabled={isMatching}
               >
@@ -428,12 +422,12 @@ export function PlaylistImportModal({
               </Button>
               <Button
                 variant="solid"
-                className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold shadow-lg"
+                className="bg-white text-black hover:bg-white/90 font-semibold rounded-xl text-xs h-10 px-5 shadow-sm cursor-pointer"
                 disabled={isMatching || selectedCount === 0}
                 onClick={handleFinalImport}
               >
                 <ListPlus className="size-4 mr-1.5" />
-                Import {selectedCount} tracks to Library
+                Import {selectedCount} tracks
               </Button>
             </div>
           </div>

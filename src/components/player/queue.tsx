@@ -1,4 +1,4 @@
-import { X, Infinity as InfinityIcon, ChevronUp, ChevronDown, Volume2 } from "lucide-react";
+import { X, Infinity as InfinityIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { TrackRow } from "@/components/track-row";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -10,8 +10,6 @@ export function QueueList({ className }: { className?: string }) {
   const index = usePlayer((s) => s.index);
   const autoplay = usePlayer((s) => s.autoplay);
   const toggleAutoplay = usePlayer((s) => s.toggleAutoplay);
-  const volumeNormalization = usePlayer((s) => s.volumeNormalization);
-  const toggleVolumeNormalization = usePlayer((s) => s.toggleVolumeNormalization);
   const moveUpcoming = usePlayer((s) => s.moveUpcoming);
 
   const current = queue[index];
@@ -23,43 +21,17 @@ export function QueueList({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex-1 overflow-y-auto [scrollbar-width:none] px-4 md:px-8 pb-32", className)}>
-      {/* Audio & Playback Enhancements (Spotify/Apple Music Parity) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-        {/* Autoplay (Infinity Mode) Control */}
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-accent/20 text-accent">
-              <InfinityIcon className="size-4" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-white tracking-tight">Autoplay (Infinity)</div>
-              <div className="text-xs text-white/50">Similar tracks keep playing</div>
-            </div>
-          </div>
-          <Switch
-            checked={autoplay}
-            onCheckedChange={toggleAutoplay}
-            aria-label="Toggle Autoplay Infinity Mode"
-          />
+      {/* Minimal Autoplay Control */}
+      <div className="flex items-center justify-between px-3.5 py-2 mb-5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1] transition-colors">
+        <div className="flex items-center gap-2.5">
+          <InfinityIcon className={cn("size-3.5 transition-colors", autoplay ? "text-accent" : "text-white/40")} />
+          <span className="text-xs font-medium text-white/80">Autoplay similar tracks</span>
         </div>
-
-        {/* Volume Normalization (Sound Check / EBU R128) */}
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-accent/20 text-accent">
-              <Volume2 className="size-4" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-white tracking-tight">Sound Check</div>
-              <div className="text-xs text-white/50">Normalize volume across tracks</div>
-            </div>
-          </div>
-          <Switch
-            checked={volumeNormalization}
-            onCheckedChange={toggleVolumeNormalization}
-            aria-label="Toggle Volume Normalization"
-          />
-        </div>
+        <Switch
+          checked={autoplay}
+          onCheckedChange={toggleAutoplay}
+          aria-label="Toggle Autoplay similar tracks"
+        />
       </div>
 
       <div className="space-y-10">

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePlayer } from "@/lib/player-store";
-import { downloadTrackAudio, removeDownloadedAudio, isTrackDownloaded } from "@/lib/offline-cache";
+import { useOfflineTracks } from "@/lib/offline-cache";
 import type { Track } from "@/lib/types";
 import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -24,20 +24,22 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
   const playlists = usePlayer((s) => s.playlists);
   const addToPlaylist = usePlayer((s) => s.addToPlaylist);
   const createPlaylist = usePlayer((s) => s.createPlaylist);
-  const downloaded = isTrackDownloaded(track.id);
+  const { isDownloaded, downloadTrack, removeDownload } = useOfflineTracks();
+  const downloaded = isDownloaded(track.id);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56">
+        {/* Group 1: Queue Controls */}
         <DropdownMenuItem
           onSelect={() => {
             playNext(track);
             toast("Playing next");
           }}
         >
-          <ListEnd className="size-4 text-muted" />
-          Play next
+          <ListEnd className="size-4 text-white/50" />
+          <span>Play next</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
@@ -45,29 +47,33 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             toast("Added to queue");
           }}
         >
-          <ListPlus className="size-4 text-muted" />
-          Add to queue
+          <ListPlus className="size-4 text-white/50" />
+          <span>Add to queue</span>
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        {/* Group 2: Library & Offline */}
         <DropdownMenuItem
           onSelect={() => {
             toggleLike(track);
             toast(isLiked ? "Removed from likes" : "Saved to likes");
           }}
         >
-          <Heart className={isLiked ? "size-4 fill-accent text-accent" : "size-4 text-muted"} />
-          {isLiked ? "Remove from likes" : "Save to likes"}
+          <Heart className={isLiked ? "size-4 fill-[#FF5B2E] text-[#FF5B2E]" : "size-4 text-white/50"} />
+          <span>{isLiked ? "Remove from likes" : "Save to likes"}</span>
         </DropdownMenuItem>
         {track.kind !== "radio" ? (
           <DropdownMenuItem
             onSelect={async () => {
               if (downloaded) {
-                await removeDownloadedAudio(track.id);
-                toast("Removed download from device");
+                await removeDownload(track.id);
+                toast.success(`Removed "${track.title}" from offline downloads`);
               } else {
                 toast.loading(`Downloading "${track.title}" for offline...`, { id: `dl-${track.id}` });
-                const success = await downloadTrackAudio(track);
+                const success = await downloadTrack(track);
                 if (success) {
-                  toast.success(`Downloaded "${track.title}" for offline listening`, { id: `dl-${track.id}` });
+                  toast.success(`Downloaded "${track.title}" (Ready offline)`, { id: `dl-${track.id}` });
                 } else {
                   toast.error("Failed to download audio stream", { id: `dl-${track.id}` });
                 }
@@ -76,21 +82,20 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
           >
             {downloaded ? (
               <>
-                <CheckCircle2 className="size-4 text-emerald-400" />
-                Remove download
+                <CheckCircle2 className="size-4 text-[#52B58A]" />
+                <span className="text-[#52B58A]">Remove download</span>
               </>
             ) : (
               <>
-                <Download className="size-4 text-muted" />
-                Download for offline
+                <Download className="size-4 text-white/50" />
+                <span>Download for offline</span>
               </>
             )}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
         {playlists
           .filter((p) => p.id !== "likes")
-          .slice(0, 4)
+          .slice(0, 3)
           .map((p) => (
             <DropdownMenuItem
               key={p.id}
@@ -99,8 +104,8 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
                 toast(`Saved to ${p.name}`);
               }}
             >
-              <ListMusic className="size-4 text-muted" />
-              Add to {p.name}
+              <ListMusic className="size-4 text-white/50" />
+              <span>Add to {p.name}</span>
             </DropdownMenuItem>
           ))}
         <DropdownMenuItem
@@ -110,10 +115,13 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             toast(`Created ${name}`);
           }}
         >
-          <ListMusic className="size-4 text-muted" />
-          New playlist
+          <ListMusic className="size-4 text-white/50" />
+          <span>New playlist</span>
         </DropdownMenuItem>
+
         <DropdownMenuSeparator />
+
+        {/* Group 3: Discovery & Share */}
         <DropdownMenuItem
           onSelect={async () => {
             toast.loading(`Tuning into "${track.title}" Radio...`, { id: "track-radio" });
@@ -136,8 +144,8 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             }
           }}
         >
-          <Radio className="size-4 text-muted" />
-          Start Track Radio
+          <Radio className="size-4 text-white/50" />
+          <span>Start Track Radio</span>
         </DropdownMenuItem>
         {track.artistId ? (
           <DropdownMenuItem
@@ -145,11 +153,10 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
               void navigate({ to: "/artist/$id", params: { id: track.artistId! } });
             }}
           >
-            <UserRound className="size-4 text-muted" />
-            Go to artist
+            <UserRound className="size-4 text-white/50" />
+            <span>Go to artist</span>
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
             const shareUrl = `${window.location.origin}/track/${encodeURIComponent(track.id)}`;
@@ -166,8 +173,8 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             }
           }}
         >
-          <Share2 className="size-4 text-muted" />
-          Share track
+          <Share2 className="size-4 text-white/50" />
+          <span>Share track</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

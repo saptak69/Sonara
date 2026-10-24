@@ -16,31 +16,30 @@ const triggerHaptic = () => {
 };
 
 /* ────────────────────────────────────────────────
-   Apple Music–style overlay play button
-   Shows on hover (desktop) or when actively playing
+   White Play Disc Overlay
+   Fades in and rises 4px on hover (desktop)
    ──────────────────────────────────────────────── */
 function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean }) {
   return (
     <span
       className={cn(
-        "absolute right-2.5 bottom-2.5 z-20 flex items-center justify-center size-[44px] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.2,0,0.1,1)] pointer-events-none",
-        "lg:group-hover:opacity-100",
-        active && playing && "opacity-100",
+        "absolute right-3 bottom-3 z-20 flex items-center justify-center size-10 transition-all duration-200 ease-out pointer-events-none",
+        active && playing
+          ? "opacity-100 translate-y-0 scale-100"
+          : "opacity-0 translate-y-1 scale-95 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:scale-100"
       )}
     >
       <div className={cn(
-        "grid size-full place-items-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all duration-300 border border-white/20 shadow-[0_8px_20px_rgba(0,0,0,0.6)]",
-        "translate-y-2 lg:group-hover:translate-y-0 scale-90 lg:group-hover:scale-100 active:scale-90",
-        active && playing && "translate-y-0 scale-100 bg-accent text-white border-accent/40 shadow-[0_0_16px_rgba(255,74,58,0.6)]",
+        "grid size-full place-items-center rounded-full bg-white text-black shadow-[0_4px_16px_rgba(0,0,0,0.5)] transition-transform duration-150 active:scale-95"
       )}>
         {active && playing ? (
-          <span className="flex items-center gap-[2.5px]">
-            <div className="w-[3px] bg-white rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite] h-2.5" />
-            <div className="w-[3px] bg-white rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite] h-3.5" style={{ animationDelay: '0.2s' }} />
-            <div className="w-[3px] bg-white rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite] h-2.5" style={{ animationDelay: '0.4s' }} />
+          <span className="flex items-center gap-[2px]">
+            <div className="w-[2.5px] bg-black rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite] h-2" />
+            <div className="w-[2.5px] bg-black rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite] h-3" style={{ animationDelay: '0.2s' }} />
+            <div className="w-[2.5px] bg-black rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite] h-2" style={{ animationDelay: '0.4s' }} />
           </span>
         ) : (
-          <Play className="size-5 fill-white text-white ml-0.5" />
+          <Play className="size-4 fill-black text-black ml-0.5" />
         )}
       </div>
     </span>
@@ -48,8 +47,61 @@ function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean })
 }
 
 /* ────────────────────────────────────────────────
+   Top Pick Card — square format with caption beneath
+   ──────────────────────────────────────────────── */
+export function TopPickCard({
+  track,
+  queue,
+  label = "Made for You",
+}: {
+  track: Track;
+  queue?: Track[];
+  label?: string;
+}) {
+  const playTracks = usePlayer((s) => s.playTracks);
+  const current = usePlayer((s) => s.queue[s.index]);
+  const isPlaying = usePlayer((s) => s.isPlaying);
+  const active = current?.id === track.id;
+
+  return (
+    <button
+      type="button"
+      onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
+      onPointerDown={triggerHaptic}
+      className="group relative w-[210px] sm:w-[230px] shrink-0 snap-start text-left rounded-xl transition-all duration-200 ease-out focus-visible:outline-none"
+    >
+      {/* Native Square Artwork */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#151211] border border-white/[0.06] transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]">
+        <Cover
+          src={track.artworkLg || track.artwork}
+          alt={track.title}
+          title={track.title}
+          className="size-full object-cover"
+        />
+        <PlayBadge active={active} playing={isPlaying} />
+      </div>
+
+      {/* Caption BENEATH art */}
+      <div className="mt-3 px-0.5 flex flex-col">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7A726C] mb-1">
+          {label}
+        </span>
+        <span className={cn(
+          "line-clamp-2 text-[15px] font-medium leading-snug transition-colors",
+          active ? "text-[#FF5B2E]" : "text-[#F4EFEA] lg:group-hover:text-white"
+        )}>
+          {track.title}
+        </span>
+        <span className="truncate text-[13px] text-[#A9A19B] mt-0.5 font-normal">
+          {track.artist}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+/* ────────────────────────────────────────────────
    Album / Track Card
-   Clean artwork + metadata below — Apple Music style
    ──────────────────────────────────────────────── */
 export function AlbumCard({
   track,
@@ -68,29 +120,30 @@ export function AlbumCard({
       type="button"
       onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
       onPointerDown={triggerHaptic}
-      className="group relative w-40 shrink-0 snap-start text-left sm:w-44 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0.1,1)] active:enabled:scale-[0.97] focus-visible:outline-none"
+      className="group relative w-36 sm:w-44 shrink-0 snap-start text-left rounded-xl transition-all duration-200 ease-out focus-visible:outline-none"
     >
-      {/* Artwork */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/10 transition-all duration-500 lg:group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(255,74,58,0.15)] lg:group-hover:ring-white/20">
+      {/* Square Artwork */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#151211] border border-white/[0.06] transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]">
         <Cover
           src={track.artworkLg || track.artwork}
           alt={track.title}
           title={track.title}
-          className="aspect-square w-full transition-transform duration-700 ease-out lg:group-hover:scale-105"
+          className="size-full object-cover"
         />
-        
         <PlayBadge active={active} playing={isPlaying} />
       </div>
 
-      {/* Metadata — clean and minimal like Apple Music */}
-      <div className="mt-3 px-1">
+      {/* Caption */}
+      <div className="mt-2.5 px-0.5">
         <span className={cn(
-          "block truncate text-[14px] font-semibold leading-snug transition-colors",
-          active ? "text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.3)]" : "text-white/95 lg:group-hover:text-white",
+          "block truncate text-[14px] font-medium leading-snug transition-colors",
+          active ? "text-[#FF5B2E]" : "text-[#F4EFEA] lg:group-hover:text-white"
         )}>
           {track.title}
         </span>
-        <span className="block truncate text-xs text-white/55 mt-0.5 leading-snug font-medium">{track.artist}</span>
+        <span className="block truncate text-[13px] text-[#A9A19B] mt-0.5 leading-snug font-normal">
+          {track.artist}
+        </span>
       </div>
     </button>
   );
@@ -105,26 +158,23 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
       to="/playlist/$id"
       params={{ id: playlist.id }}
       onPointerDown={triggerHaptic}
-      className="group w-40 shrink-0 snap-start sm:w-44 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] focus-visible:outline-none"
+      className="group w-36 sm:w-44 shrink-0 snap-start rounded-xl transition-all duration-200 ease-out focus-visible:outline-none"
     >
-      {/* Artwork */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/10 transition-all duration-500 lg:group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(255,74,58,0.15)] lg:group-hover:ring-white/20">
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-[#151211] border border-white/[0.06] transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]">
         <Cover
           src={playlist.artworkLg || playlist.artwork}
           alt={playlist.name}
           title={playlist.name}
-          className="aspect-square w-full transition-transform duration-700 ease-out lg:group-hover:scale-105"
+          className="size-full object-cover"
         />
-        
         <PlayBadge />
       </div>
 
-      {/* Metadata */}
-      <div className="mt-3 px-1">
-        <span className="block truncate text-[14px] font-semibold text-white/95 leading-snug lg:group-hover:text-accent transition-colors">
+      <div className="mt-2.5 px-0.5">
+        <span className="block truncate text-[14px] font-medium text-[#F4EFEA] leading-snug lg:group-hover:text-[#FF5B2E] transition-colors">
           {playlist.name}
         </span>
-        <span className="block truncate text-xs text-white/55 mt-0.5 leading-snug font-medium">
+        <span className="block truncate text-[13px] text-[#A9A19B] mt-0.5 leading-snug font-normal">
           {playlist.isAlbum ? "Album" : "Playlist"}
           {playlist.owner ? ` · ${playlist.owner}` : ""}
         </span>
@@ -134,7 +184,7 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
 }
 
 /* ────────────────────────────────────────────────
-   Artist Card — circular artwork
+   Artist Card — circular avatar
    ──────────────────────────────────────────────── */
 export function ArtistCard({ artist }: { artist: Artist }) {
   return (
@@ -142,22 +192,22 @@ export function ArtistCard({ artist }: { artist: Artist }) {
       to="/artist/$id"
       params={{ id: artist.id }}
       onPointerDown={triggerHaptic}
-      className="group w-36 shrink-0 snap-start text-center sm:w-40 rounded-2xl transition-all duration-300 active:scale-[0.97] focus-visible:outline-none"
+      className="group w-32 sm:w-36 shrink-0 snap-start text-center rounded-full transition-all duration-200 active:scale-95 focus-visible:outline-none"
     >
-      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-white/[0.04] ring-1 ring-white/10 shadow-md transition-all duration-500 lg:group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(255,74,58,0.15)] lg:group-hover:ring-accent/40">
+      <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-[#151211] border border-white/[0.08] shadow-sm transition-transform duration-300 ease-out lg:group-hover:scale-[1.03]">
         <Cover
           src={artist.artworkLg || artist.artwork}
           alt={artist.name}
           title={artist.name}
           rounded="full"
-          className="aspect-square w-full transition-transform duration-700 ease-out lg:group-hover:scale-105"
+          className="size-full object-cover"
         />
       </div>
-      <div className="mt-3">
-        <span className="block truncate text-[14px] font-semibold text-white/95 lg:group-hover:text-accent transition-colors">
+      <div className="mt-2.5 px-1">
+        <span className="block truncate text-[14px] font-medium text-[#F4EFEA] lg:group-hover:text-[#FF5B2E] transition-colors">
           {artist.name}
         </span>
-        <span className="block text-xs text-white/55 mt-0.5 font-medium">Artist</span>
+        <span className="block text-[12px] text-[#A9A19B] mt-0.5 font-normal">Artist</span>
       </div>
     </Link>
   );
@@ -178,25 +228,28 @@ export function RadioCard({ station }: { station: RadioStation }) {
       type="button"
       onClick={() => playTrack(track)}
       onPointerDown={triggerHaptic}
-      className="group w-40 shrink-0 snap-start text-left sm:w-44 rounded-2xl transition-all duration-300 active:enabled:scale-[0.97] focus-visible:outline-none"
+      className="group w-36 sm:w-44 shrink-0 snap-start text-left rounded-xl transition-all duration-200 ease-out focus-visible:outline-none"
     >
       <div className={cn(
-        "relative aspect-square w-full overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/10 transition-all duration-500 lg:group-hover:shadow-[0_16px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(255,74,58,0.15)] lg:group-hover:ring-white/20",
-        active && "ring-2 ring-accent shadow-[0_0_20px_rgba(255,74,58,0.4)]",
+        "relative aspect-square w-full overflow-hidden rounded-xl bg-[#151211] border border-white/[0.06] transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]",
+        active && "border-[#FF5B2E]/60",
       )}>
         <Cover
           src={station.artwork}
           alt={station.name}
           title={station.name}
-          className="aspect-square w-full transition-transform duration-700 ease-out lg:group-hover:scale-105"
+          className="size-full object-cover"
         />
         <PlayBadge active={active} playing={isPlaying} />
       </div>
-      <div className="mt-3 px-1">
-        <span className={cn("block truncate text-[14px] font-semibold transition-colors leading-snug", active ? "text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.3)]" : "text-white/95 lg:group-hover:text-accent")}>
+      <div className="mt-2.5 px-0.5">
+        <span className={cn(
+          "block truncate text-[14px] font-medium leading-snug transition-colors",
+          active ? "text-[#FF5B2E]" : "text-[#F4EFEA] lg:group-hover:text-white"
+        )}>
           {station.name}
         </span>
-        <span className="block truncate text-xs text-white/55 mt-0.5 leading-snug font-medium">
+        <span className="block truncate text-[13px] text-[#A9A19B] mt-0.5 leading-snug font-normal">
           {station.country || "Live"} · Radio
         </span>
       </div>
@@ -223,83 +276,27 @@ export function MoodCard({
       to="/search"
       search={{ q: query }}
       onPointerDown={triggerHaptic}
-      className="group relative flex h-28 sm:h-32 min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 shadow-lg lg:hover:shadow-2xl transition-all duration-200 active:scale-[0.97]"
+      className="group relative flex aspect-[16/10] min-w-36 flex-1 flex-col justify-end overflow-hidden rounded-2xl p-4 transition-all duration-200 border border-white/[0.06] active:scale-[0.98]"
     >
       {image ? (
         <img
           src={image}
           alt={label}
-          className="absolute inset-0 h-full w-full object-cover brightness-[0.7] saturate-[1.1] transition-transform duration-500 ease-out lg:group-hover:scale-105"
+          className="absolute inset-0 size-full object-cover brightness-[0.55] saturate-[0.8] transition-transform duration-500 ease-out lg:group-hover:scale-105"
           loading="lazy"
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
       <div className="relative z-10 flex flex-col">
-        <span className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-md lg:group-hover:text-accent transition-colors">
+        <span className="text-[17px] font-semibold text-white lg:group-hover:text-[#FF5B2E] transition-colors leading-tight">
           {label}
         </span>
         {subtitle ? (
-          <span className="text-[11px] font-medium text-white/70 drop-shadow">
+          <span className="text-[12px] font-normal text-[#A9A19B] mt-1 leading-snug">
             {subtitle}
           </span>
         ) : null}
       </div>
     </Link>
-  );
-}
-
-/* ────────────────────────────────────────────────
-   Top Pick Card — large format with text overlay
-   ──────────────────────────────────────────────── */
-export function TopPickCard({
-  track,
-  queue,
-  label = "Made for You",
-}: {
-  track: Track;
-  queue?: Track[];
-  label?: string;
-}) {
-  const playTracks = usePlayer((s) => s.playTracks);
-  const current = usePlayer((s) => s.queue[s.index]);
-  const isPlaying = usePlayer((s) => s.isPlaying);
-  const active = current?.id === track.id;
-
-  return (
-    <button
-      type="button"
-      onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
-      onPointerDown={triggerHaptic}
-      className="top-pick-card group relative w-[310px] shrink-0 snap-start text-left rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0,0.1,1)] active:enabled:scale-[0.98] lg:hover:scale-[1.02] focus-visible:outline-none aspect-[4/5] overflow-hidden shadow-lg ring-1 ring-white/10 lg:hover:ring-white/25 lg:hover:shadow-[0_20px_40px_rgba(0,0,0,0.6),0_0_30px_rgba(255,74,58,0.2)]"
-    >
-      <Cover
-        src={track.artworkLg || track.artwork}
-        alt={track.title}
-        title={track.title}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out lg:group-hover:scale-105"
-      />
-      
-      {/* Top right Logo */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 opacity-90 drop-shadow-md bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-        <svg viewBox="0 0 100 100" className="size-3.5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M50 0a50 50 0 1050 50A50 50 0 0050 0zM35.6 77.1V22.9h14.9a26.9 26.9 0 0113.6 3.4 15.6 15.6 0 017 9.4 34.6 34.6 0 012 11.7 39.5 39.5 0 01-1.7 11.8 15.2 15.2 0 01-6.5 9 29.8 29.8 0 01-14.8 3.5h-5.2v5.4H35.6zm10.7-14.7h3.8a13 13 0 0010.5-4.2 18.2 18.2 0 003.5-12.1 16.5 16.5 0 00-3.6-11.7 12 12 0 00-9.5-3.8h-4.7v31.8z"/></svg>
-        <span className="text-white font-bold tracking-tight text-xs">Sonara</span>
-      </div>
-
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-95" />
-      
-      <PlayBadge active={active} playing={isPlaying} />
-
-      <div className="absolute inset-x-0 bottom-0 p-5 z-10 flex flex-col justify-end">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-accent drop-shadow mb-1">
-          {label}
-        </span>
-        <span className="truncate text-2xl font-extrabold text-white drop-shadow-md leading-tight mb-1">
-          {track.title}
-        </span>
-        <span className="truncate text-sm text-white/70 drop-shadow font-medium">
-          {track.artist}
-        </span>
-      </div>
-    </button>
   );
 }

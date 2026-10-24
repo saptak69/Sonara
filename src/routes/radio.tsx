@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { Cover } from "@/components/cover";
 import type { RadioStation } from "@/lib/types";
-import { Radio } from "lucide-react";
 
 export const Route = createFileRoute("/radio")({ component: RadioPage });
 
@@ -21,9 +20,9 @@ function RadioHero({ station }: { station: RadioStation }) {
   const track = radioToTrack(station);
 
   return (
-    <div className="radio-hero relative isolate flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-16 p-5 md:p-12 rounded-[24px] md:rounded-[32px] overflow-hidden border border-border/50 bg-surface/50">
+    <div className="radio-hero relative isolate flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 p-6 md:p-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#151211]">
       {/* Ambient background glow */}
-      <div className="absolute inset-0 z-0 opacity-[0.15] blur-[80px] saturate-200 pointer-events-none mix-blend-screen">
+      <div className="absolute inset-0 z-0 opacity-[0.12] blur-[80px] pointer-events-none mix-blend-screen">
         <Cover
           src={station.artwork}
           alt=""
@@ -31,51 +30,40 @@ function RadioHero({ station }: { station: RadioStation }) {
         />
       </div>
 
-      {/* Artwork (Right side on desktop, compact Left on mobile) */}
-      <div className="w-full md:w-[45%] lg:w-[40%] shrink-0 relative z-10 order-1 md:order-2 flex flex-row items-center gap-5 md:block">
-        <div className="size-24 sm:size-32 md:size-full md:aspect-square md:max-w-[400px] shrink-0 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
-          <Cover
-            src={station.artwork}
-            alt={station.name}
-            className="w-full h-full object-cover md:scale-105 md:hover:scale-100 transition-transform duration-700 ease-out"
-          />
-        </div>
-        
-        {/* Mobile Header (Hidden on Desktop) */}
-        <div className="md:hidden flex flex-col min-w-0">
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white text-[10px] font-semibold uppercase tracking-widest mb-2 w-max">
-            <Radio className="size-3 text-accent" />
-            <span>Live</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter text-white leading-tight truncate w-full">
-            {station.name}
-          </h2>
-        </div>
-      </div>
-
-      {/* Content (Left side on desktop, Bottom on mobile) */}
-      <div className="w-full md:flex-1 relative z-10 order-2 md:order-1 flex flex-col items-start text-left">
-        <div className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white text-xs font-semibold uppercase tracking-widest mb-6">
-          <Radio className="size-3.5 text-accent" />
+      {/* Content (Left side) */}
+      <div className="w-full md:flex-1 relative z-10 flex flex-col items-start text-left max-w-xl">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white/80 text-xs font-medium tracking-normal mb-3">
+          <span className="size-1.5 rounded-full bg-[#FF5B2E]" />
           <span>Live Broadcast</span>
         </div>
         
-        <h2 className="hidden md:block text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white mb-4 leading-[1.1] text-balance">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white mb-2 leading-tight line-clamp-2">
           {station.name}
         </h2>
         
-        <p className="text-sm md:text-lg text-muted max-w-[45ch] mb-6 md:mb-8 leading-relaxed">
+        <p className="text-sm text-[#A9A19B] max-w-[42ch] mb-6 leading-relaxed line-clamp-2 font-normal">
           {station.country ? `Broadcasting live from ${station.country}. ` : ""}
-          Tune in to the world's best tracks, streaming 24/7 in high fidelity.
+          Tune in to the world's best live radio stations streaming 24/7.
         </p>
         
         <Button 
           onClick={() => playTrack(track)}
-          className="h-12 md:h-14 w-full md:w-auto px-8 md:px-10 rounded-full bg-white text-black font-semibold hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all text-base"
+          className="h-11 px-7 rounded-full bg-white text-black font-semibold hover:bg-white/90 active:scale-95 transition-all text-sm shadow-sm"
         >
-          <Play className="size-5 mr-2 fill-current" strokeWidth={0} />
+          <Play className="size-4 mr-2 fill-current" strokeWidth={0} />
           Listen Live
         </Button>
+      </div>
+
+      {/* Artwork (Right side) */}
+      <div className="w-full md:w-auto shrink-0 relative z-10 flex justify-center md:justify-end">
+        <div className="size-36 sm:size-44 md:size-52 lg:size-60 rounded-xl overflow-hidden shadow-xl border border-white/[0.08] bg-[#1E1A18]">
+          <Cover
+            src={station.artwork}
+            alt={station.name}
+            className="w-full h-full object-cover transition-transform duration-500 ease-out hover:scale-105"
+          />
+        </div>
       </div>
     </div>
   );
@@ -116,7 +104,7 @@ export function RadioContent() {
   if (popular.isLoading && !popular.data) return <HomeSkeleton />;
 
   return (
-    <div className="space-y-12 md:space-y-14">
+    <div className="space-y-10 md:space-y-12">
       {featured && <RadioHero station={featured} />}
 
       {rest.length ? (
@@ -127,7 +115,7 @@ export function RadioContent() {
         </Rail>
       ) : null}
 
-      <div className="space-y-12 pt-4">
+      <div className="space-y-10 pt-2">
         {TAGS.map((tag) => (
           <RadioTagRail key={tag} tag={tag} />
         ))}
@@ -138,10 +126,9 @@ export function RadioContent() {
 
 function RadioPage() {
   return (
-    <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
-      {/* Apple Music Style Large Header */}
-      <header className="hidden lg:flex items-center justify-between pb-2">
-        <h1 className="text-4xl font-bold tracking-tighter text-white">Radio</h1>
+    <div className="w-full space-y-10 md:space-y-12 px-4 md:px-10 pt-6 md:pt-8 pb-32">
+      <header className="flex items-center justify-between pb-1">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white">Radio</h1>
       </header>
 
       <div>

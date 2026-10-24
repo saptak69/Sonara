@@ -57,38 +57,38 @@ function Explore() {
   if (charts.isLoading && !charts.data) return <HomeSkeleton />;
 
   return (
-    <div className="stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
+    <div className="space-y-10 md:space-y-12 px-4 md:px-10 pt-6 md:pt-8 pb-32">
       <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white">Browse</h1>
-        <p className="text-sm text-muted">Explore distinct sounds, genres, and community releases</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white">Browse</h1>
+        <p className="text-sm text-[#A9A19B]">Explore distinct sounds, genres, and community releases</p>
       </div>
 
       <section className="space-y-4">
-        <div className="px-1">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-fg tracking-tight">Featured genres</h2>
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold text-white tracking-tight">Featured genres</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 md:gap-6">
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 md:gap-4">
           {GENRES.map((g) => (
             <Link
               key={g.slug}
               to="/genre/$slug"
               params={{ slug: g.slug }}
-              className="group relative flex h-28 sm:h-32 flex-col justify-end overflow-hidden rounded-2xl p-4 border border-white/10 hover:border-white/30 shadow-lg hover:shadow-2xl transition-all duration-300 active:scale-98"
+              className="group relative flex aspect-[16/10] flex-col justify-end overflow-hidden rounded-xl p-4 border border-white/[0.08] hover:border-white/20 shadow-md transition-all duration-200 active:scale-95"
             >
               {g.image ? (
                 <img
                   src={g.image}
                   alt={g.label}
-                  className="absolute inset-0 h-full w-full object-cover brightness-[0.75] contrast-[1.08] saturate-[1.15] transition-transform duration-500 ease-out group-hover:scale-110 group-hover:brightness-[0.85]"
+                  className="absolute inset-0 h-full w-full object-cover brightness-[0.6] contrast-[1.05] saturate-[0.85] transition-transform duration-300 ease-out group-hover:scale-105"
                   loading="lazy"
                 />
               ) : null}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/10 transition-opacity duration-300 group-hover:opacity-85" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/15 transition-opacity duration-200" />
               <div className="relative z-10 flex flex-col">
-                <span className="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-md group-hover:text-accent transition-colors">
+                <span className="text-sm sm:text-base font-semibold tracking-normal text-white group-hover:text-[#FF5B2E] transition-colors">
                   {g.label}
                 </span>
-                <span className="text-[11px] font-medium text-white/70 drop-shadow">
+                <span className="text-[11px] font-normal text-[#A9A19B] mt-0.5">
                   {g.hint}
                 </span>
               </div>

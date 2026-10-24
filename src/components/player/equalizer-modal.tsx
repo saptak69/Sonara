@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { usePlayer, EQUALIZER_PRESETS, type EqualizerPresetName } from "@/lib/player-store";
-import { Sliders, Sparkles, Volume2, X, RotateCcw, Zap, Activity } from "lucide-react";
+import { Sliders, Volume2, X, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BANDS = [
@@ -13,17 +13,6 @@ const BANDS = [
   { label: "4 kHz", role: "Presence", index: 3, xPercent: 69 },
   { label: "12 kHz", role: "Treble", index: 4, xPercent: 88 },
 ];
-
-const PRESET_ICONS: Record<EqualizerPresetName, string> = {
-  "Flat": "⚖️",
-  "Bass Boost": "🔊",
-  "Vocal": "🎙️",
-  "Rock": "🎸",
-  "EDM": "⚡",
-  "Acoustic": "🎻",
-  "Treble Boost": "✨",
-  "Late Night": "🌙",
-};
 
 export function EqualizerModal() {
   const open = usePlayer((s) => s.equalizerOpen);
@@ -46,23 +35,19 @@ export function EqualizerModal() {
 
   const presetList = Object.keys(EQUALIZER_PRESETS) as EqualizerPresetName[];
 
-  // Compute smooth cubic Bezier curve for SVG frequency visualizer
-  // Coordinate space: 400 width x 100 height. Center line (0 dB) is y=50.
   const svgWidth = 400;
-  const svgHeight = 100;
-  const centerY = 50;
+  const svgHeight = 120;
+  const centerY = 60;
 
   const points = BANDS.map((b) => {
     const gain = enabled ? (bands[b.index] ?? 0) : 0;
-    // Low frequencies also receive slight boost from bassBoost
     const extraBass = b.index === 0 && enabled ? bassBoost * 0.75 : b.index === 1 && enabled ? bassBoost * 0.35 : 0;
     const effectiveGain = Math.max(-12, Math.min(14, gain + extraBass));
     const x = (b.xPercent / 100) * svgWidth;
-    const y = centerY - (effectiveGain / 12) * 38;
+    const y = centerY - (effectiveGain / 12) * 44;
     return { x, y, gain: effectiveGain };
   });
 
-  // Construct smooth SVG path through the 5 points
   const p0 = { x: 0, y: points[0].y };
   const pEnd = { x: svgWidth, y: points[4].y };
   const allPts = [p0, ...points, pEnd];
@@ -82,223 +67,203 @@ export function EqualizerModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto bg-zinc-950/95 border-white/10 text-white backdrop-blur-2xl [scrollbar-width:thin]">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-lg bg-accent/20 border border-accent/30 grid place-items-center text-accent">
+      <DialogContent className="max-w-[480px] max-h-[90vh] overflow-y-auto bg-[#151211] border border-white/[0.08] text-white rounded-2xl p-6 shadow-2xl [scrollbar-width:thin]">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-20 bg-[#151211] -mx-6 -mt-6 p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-xl bg-white/[0.06] border border-white/[0.08] grid place-items-center text-[#FF5B2E]">
               <Sliders className="size-4" />
             </div>
             <div>
-              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <DialogTitle className="text-base font-semibold text-white flex items-center gap-2">
                 Studio Equalizer
                 {enabled && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-accent/20 text-accent px-2 py-0.5 rounded-full border border-accent/30 shadow-[0_0_8px_rgba(255,74,58,0.4)]">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#FF5B2E]/15 text-[#FF5B2E] px-2 py-0.5 rounded-full border border-[#FF5B2E]/30">
                     Active
                   </span>
                 )}
               </DialogTitle>
-              <DialogDescription className="text-white/50 text-xs mt-0.5">
-                5-Band Graphic DSP, Bass Boost & Loudness Engine
+              <DialogDescription className="text-white/50 text-xs">
+                5-Band Graphic DSP & Audio Dynamics
               </DialogDescription>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 pr-2">
-              <span className="text-xs text-white/70 font-medium">EQ On</span>
+            <div className="flex items-center gap-2 pr-1">
+              <span className="text-xs text-white/70 font-medium">
+                {enabled ? "On" : "Off"}
+              </span>
               <Switch
                 checked={enabled}
                 onCheckedChange={setEnabled}
                 aria-label="Toggle Equalizer"
               />
             </div>
-            <DialogClose className="grid size-8 place-items-center rounded-full text-white/60 hover:bg-white/10 hover:text-white transition-colors">
+            <DialogClose className="grid size-8 place-items-center rounded-full text-white/50 hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
               <X className="size-4" />
             </DialogClose>
           </div>
         </div>
 
         {/* Live SVG Frequency Response Curve */}
-        <div className="relative w-full h-[100px] mt-2 rounded-2xl bg-black/40 border border-white/10 overflow-hidden select-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 pointer-events-none" />
-
-          {/* Reference dB grids */}
-          <div className="absolute inset-x-0 top-[12px] border-b border-white/[0.06] flex justify-between px-3 text-[9px] font-mono text-white/30">
+        <div className="relative w-full h-[120px] mt-4 rounded-xl bg-black/40 border border-white/[0.06] overflow-hidden select-none">
+          <div className="absolute inset-x-0 top-[14px] border-b border-white/[0.04] flex justify-between px-3 text-[9px] font-mono text-white/30">
             <span>+12 dB</span>
             <span className="text-white/20">HIGH SHELF</span>
           </div>
-          <div className="absolute inset-x-0 top-[50px] border-b border-white/[0.1] border-dashed flex justify-between px-3 text-[9px] font-mono text-white/40">
+          <div className="absolute inset-x-0 top-[60px] border-b border-white/[0.08] border-dashed flex justify-between px-3 text-[9px] font-mono text-white/40">
             <span>0 dB</span>
-            <span className="text-white/25">FLAT LINE</span>
+            <span className="text-white/20">FLAT</span>
           </div>
-          <div className="absolute inset-x-0 bottom-[12px] border-t border-white/[0.06] flex justify-between px-3 text-[9px] font-mono text-white/30">
+          <div className="absolute inset-x-0 bottom-[14px] border-t border-white/[0.04] flex justify-between px-3 text-[9px] font-mono text-white/30">
             <span>-12 dB</span>
             <span className="text-white/20">LOW CUT</span>
           </div>
 
-          <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full preserve-3d" preserveAspectRatio="none">
+          <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
             <defs>
               <linearGradient id="eq-gradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ff4a3a" stopOpacity={enabled ? "0.35" : "0.08"} />
-                <stop offset="100%" stopColor="#ff4a3a" stopOpacity="0.0" />
+                <stop offset="0%" stopColor="#FF5B2E" stopOpacity={enabled ? "0.2" : "0.04"} />
+                <stop offset="100%" stopColor="#FF5B2E" stopOpacity="0.0" />
               </linearGradient>
             </defs>
 
-            {/* Gradient fill under curve */}
             <path d={fillD} fill="url(#eq-gradient)" className="transition-all duration-200" />
-
-            {/* Stroke line */}
             <path
               d={pathD}
               fill="none"
-              stroke={enabled ? "#ff4a3a" : "rgba(255,255,255,0.25)"}
-              strokeWidth="2.5"
+              stroke={enabled ? "#FF5B2E" : "rgba(255,255,255,0.2)"}
+              strokeWidth="2"
               strokeLinecap="round"
-              className="transition-all duration-200 drop-shadow-[0_0_8px_rgba(255,74,58,0.6)]"
+              className="transition-all duration-200"
             />
-
-            {/* Band frequency dots */}
             {points.map((p, idx) => (
               <circle
                 key={idx}
                 cx={p.x}
                 cy={p.y}
-                r="4.5"
-                fill={enabled ? "#ffffff" : "rgba(255,255,255,0.4)"}
-                stroke={enabled ? "#ff4a3a" : "rgba(255,255,255,0.2)"}
-                strokeWidth="2"
+                r="3.5"
+                fill={enabled ? "#FFFFFF" : "rgba(255,255,255,0.3)"}
+                stroke={enabled ? "#FF5B2E" : "rgba(255,255,255,0.2)"}
+                strokeWidth="1.5"
                 className="transition-all duration-200"
               />
             ))}
           </svg>
         </div>
 
-        {/* Preset Chips */}
-        <div className="space-y-2 pt-2">
-          <label className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="size-3.5 text-accent" /> Presets
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-            {presetList.map((preset) => {
-              const active = currentPreset === preset && enabled;
-              const emoji = PRESET_ICONS[preset] || "🎵";
-              return (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => applyPreset(preset)}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 border text-left",
-                    active
-                      ? "bg-accent text-white border-accent shadow-[0_0_12px_rgba(255,74,58,0.4)]"
-                      : "bg-white/[0.04] text-white/70 border-white/10 hover:bg-white/[0.08] hover:text-white",
-                  )}
-                >
-                  <span className="text-sm shrink-0">{emoji}</span>
-                  <span className="truncate">{preset}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 5-Band Equalizer Sliders */}
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
-              <Activity className="size-3.5 text-accent" /> Frequency Bands (-12dB to +12dB)
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[11px] text-white/50 hover:text-white px-2"
-              onClick={() => applyPreset("Flat")}
-            >
-              <RotateCcw className="size-3 mr-1" />
-              Reset
-            </Button>
+        {/* Controls Container — Dimmed when disabled */}
+        <div className={cn("space-y-5 pt-3 transition-opacity duration-200", !enabled && "opacity-45 pointer-events-none")}>
+          {/* Preset Chips (Text-only, no emoji) */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-white/60">Presets</label>
+            <div className="flex flex-wrap gap-1.5">
+              {presetList.map((preset) => {
+                const active = currentPreset === preset && enabled;
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer",
+                      active
+                        ? "bg-white text-black font-semibold shadow-sm"
+                        : "bg-white/[0.05] text-white/70 border border-white/[0.06] hover:bg-white/[0.09] hover:text-white",
+                    )}
+                  >
+                    {preset}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="space-y-3 p-4 rounded-2xl bg-white/[0.03] border border-white/5">
-            {BANDS.map(({ label, role, index }) => {
-              const val = bands[index] ?? 0;
-              return (
-                <div key={label} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">{label}</span>
-                      <span className="text-[11px] text-white/40">{role}</span>
+          {/* 5-Band Equalizer Sliders */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-white/60">
+                Frequency Bands (-12dB to +12dB)
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[11px] text-white/40 hover:text-white px-2"
+                onClick={() => applyPreset("Flat")}
+              >
+                <RotateCcw className="size-3 mr-1" />
+                Reset
+              </Button>
+            </div>
+
+            <div className="space-y-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              {BANDS.map(({ label, role, index }) => {
+                const val = bands[index] ?? 0;
+                return (
+                  <div key={label} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white">{label}</span>
+                        <span className="text-[11px] text-white/40">{role}</span>
+                      </div>
+                      <span className="font-mono text-xs tabular-nums text-white/60">
+                        {val > 0 ? `+${val}` : val} dB
+                      </span>
                     </div>
-                    <span
-                      className={cn(
-                        "font-mono text-xs tabular-nums font-semibold px-2 py-0.5 rounded transition-colors",
-                        val > 0
-                          ? "text-accent bg-accent/15 border border-accent/20"
-                          : val < 0
-                          ? "text-cyan-400 bg-cyan-400/15 border border-cyan-400/20"
-                          : "text-white/40 bg-white/5",
-                      )}
-                    >
-                      {val > 0 ? `+${val}` : val} dB
-                    </span>
+                    <Slider
+                      value={[val]}
+                      min={-12}
+                      max={12}
+                      step={1}
+                      onValueChange={([newVal]) => {
+                        if (typeof newVal === "number") setBand(index, newVal);
+                      }}
+                      disabled={!enabled}
+                    />
                   </div>
-                  <Slider
-                    value={[val]}
-                    min={-12}
-                    max={12}
-                    step={1}
-                    onValueChange={([newVal]) => {
-                      if (typeof newVal === "number") setBand(index, newVal);
-                    }}
-                    disabled={!enabled}
-                    className={cn(!enabled && "opacity-40")}
-                  />
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Bass Boost Slider */}
-        <div className="space-y-2 pt-1">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-white/80 flex items-center gap-1.5">
-              <Zap className="size-3.5 text-accent" /> Sub Bass Punch Boost
-            </span>
-            <span className="font-mono text-xs tabular-nums text-accent font-semibold bg-accent/15 px-2 py-0.5 rounded border border-accent/25">
-              +{bassBoost} dB
-            </span>
+          {/* Bass Boost Slider */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-white/70">Sub-Bass Punch</span>
+              <span className="font-mono text-xs tabular-nums text-[#FF5B2E]">
+                +{bassBoost} dB
+              </span>
+            </div>
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+              <Slider
+                value={[bassBoost]}
+                min={0}
+                max={10}
+                step={1}
+                onValueChange={([newVal]) => {
+                  if (typeof newVal === "number") setBassBoost(newVal);
+                }}
+                disabled={!enabled}
+              />
+            </div>
           </div>
-          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5">
-            <Slider
-              value={[bassBoost]}
-              min={0}
-              max={10}
-              step={1}
-              onValueChange={([newVal]) => {
-                if (typeof newVal === "number") setBassBoost(newVal);
-              }}
-              disabled={!enabled}
-              className={cn(!enabled && "opacity-40")}
+
+          {/* Sound Check / Volume Normalization */}
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+            <div className="space-y-0.5 pr-4">
+              <p className="text-xs font-medium text-white flex items-center gap-1.5">
+                <Volume2 className="size-3.5 text-white/60" /> Sound Check
+              </p>
+              <p className="text-[11px] text-white/40 leading-relaxed">
+                Normalizes audio volume to eliminate sudden level jumps between tracks.
+              </p>
+            </div>
+            <Switch
+              checked={volumeNorm}
+              onCheckedChange={toggleVolumeNorm}
+              aria-label="Toggle Sound Check Normalization"
             />
           </div>
-        </div>
-
-        {/* Sound Check / Volume Normalization */}
-        <div className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.03] border border-white/5 mt-1">
-          <div className="space-y-0.5 pr-4">
-            <p className="text-xs font-semibold text-white flex items-center gap-1.5">
-              <Volume2 className="size-3.5 text-white/70" /> Sound Check (Dynamic Loudness Normalization)
-            </p>
-            <p className="text-[11px] text-white/50">
-              Balances track loudness using dynamic compression to eliminate sudden volume spikes between songs.
-            </p>
-          </div>
-          <Switch
-            checked={volumeNorm}
-            onCheckedChange={toggleVolumeNorm}
-            aria-label="Toggle Sound Check Normalization"
-          />
         </div>
       </DialogContent>
     </Dialog>

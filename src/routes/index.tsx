@@ -32,15 +32,11 @@ function Home() {
   const topTracks = trending.data ?? [];
   const topPlaylists = playlists.data ?? [];
 
-
   return (
     <div className="w-full pb-20">
-      {/* ═══════════════════════════════════════════
-          Content Sections — Apple Music Style
-          ═══════════════════════════════════════════ */}
-      <div className="space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12">
+      {/* Content Sections */}
+      <div className="space-y-10 md:space-y-12 px-4 md:px-10 pt-6 md:pt-8">
         
-
         {/* Top Picks for You */}
         <Rail title="Top Picks for You">
           {topTracks.slice(0, 6).map((t, i) => {
@@ -78,22 +74,22 @@ function Home() {
                 toast.error("Discovery Station unavailable", { id: "discovery" });
               }
             }}
-            className="group text-left w-40 shrink-0 snap-start sm:w-44 rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025] focus-visible:outline-none cursor-pointer"
+            className="group text-left w-36 sm:w-44 shrink-0 snap-start rounded-xl transition-all duration-200 ease-out focus-visible:outline-none cursor-pointer"
           >
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-950 via-purple-900 to-black p-4 aspect-square flex flex-col justify-between border border-white/10 group-hover:border-accent/40 shadow-lg group-hover:shadow-accent/20 transition-all">
-              <div className="p-2.5 rounded-xl bg-accent/20 text-accent w-max">
-                <Compass className="size-6 animate-pulse" />
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#241D1A] via-[#1A1614] to-[#0E0C0B] p-4 aspect-square flex flex-col justify-between border border-white/[0.08] group-hover:border-[#FF5B2E]/40 transition-all">
+              <div className="p-2.5 rounded-lg bg-white/[0.06] text-[#FF5B2E] w-max">
+                <Compass className="size-5" />
               </div>
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-accent">Apple Music Mode</span>
-                <h3 className="text-sm font-bold text-white leading-tight">Discovery Station</h3>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A9A19B]">Smart Mix</span>
+                <h3 className="text-sm font-semibold text-[#F4EFEA] leading-tight mt-0.5">Discovery</h3>
               </div>
             </div>
             <div className="mt-2.5 px-0.5">
-              <span className="block truncate text-sm font-medium text-fg leading-snug lg:group-hover:text-accent transition-colors">
+              <span className="block truncate text-sm font-medium text-[#F4EFEA] leading-snug lg:group-hover:text-[#FF5B2E] transition-colors">
                 Discovery Station
               </span>
-              <span className="block truncate text-xs text-muted mt-0.5 leading-snug">
+              <span className="block truncate text-xs text-[#7A726C] mt-0.5 leading-snug">
                 Strictly unheard music
               </span>
             </div>
@@ -101,21 +97,21 @@ function Home() {
 
           <Link
             to="/weekly-mix"
-            className="group w-40 shrink-0 snap-start sm:w-44 rounded-xl transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025] focus-visible:outline-none"
+            className="group w-36 sm:w-44 shrink-0 snap-start rounded-xl transition-all duration-200 ease-out focus-visible:outline-none"
           >
-            <div className="relative overflow-hidden rounded-xl bg-surface transition-shadow duration-[0.25s] lg:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] lg:group-hover:shadow-black/20">
+            <div className="relative overflow-hidden rounded-xl bg-[#151211] border border-white/[0.06] transition-shadow duration-200">
               <Cover
-                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=600&auto=format&fit=crop"
                 alt="Your Weekly Mix"
                 title="Your Weekly Mix"
-                className="aspect-square w-full"
+                className="aspect-square w-full object-cover"
               />
             </div>
             <div className="mt-2.5 px-0.5">
-              <span className="block truncate text-sm font-medium text-fg leading-snug lg:group-hover:text-accent transition-colors">
+              <span className="block truncate text-sm font-medium text-[#F4EFEA] leading-snug lg:group-hover:text-[#FF5B2E] transition-colors">
                 Your Weekly Mix
               </span>
-              <span className="block truncate text-xs text-muted mt-0.5 leading-snug">
+              <span className="block truncate text-xs text-[#7A726C] mt-0.5 leading-snug">
                 Made for you
               </span>
             </div>
@@ -149,20 +145,19 @@ function Home() {
               to={t.artistId ? "/artist/$id" : "/search"}
               params={t.artistId ? { id: t.artistId } : undefined}
               search={!t.artistId ? { q: t.artist } : undefined}
-              className="w-36 md:w-44 shrink-0 group cursor-pointer flex flex-col items-center transition-all duration-[0.25s] ease-[cubic-bezier(0.2,0,0.1,1)] active:scale-[0.97] lg:hover:scale-[1.025]"
+              className="w-32 md:w-36 shrink-0 group cursor-pointer flex flex-col items-center transition-all duration-200 ease-out active:scale-95"
             >
-              <div className="w-full aspect-square rounded-full overflow-hidden shadow-md lg:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-shadow duration-[0.25s] relative">
+              <div className="w-full aspect-square rounded-full overflow-hidden border border-white/[0.08] shadow-md transition-transform duration-300 group-hover:scale-105 relative">
                 <Cover src={t.artwork} alt={t.artist} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/0 lg:group-hover:bg-black/20 transition-colors flex items-center justify-center" />
               </div>
-              <p className="text-center font-medium text-fg text-[13px] sm:text-sm truncate w-full mt-3 lg:group-hover:text-accent transition-colors">{t.artist}</p>
-              <p className="text-center text-xs text-muted mt-0.5">Artist</p>
+              <p className="text-center font-medium text-[#F4EFEA] text-[13px] truncate w-full mt-2.5 group-hover:text-[#FF5B2E] transition-colors">{t.artist}</p>
+              <p className="text-center text-xs text-[#7A726C] mt-0.5">Artist</p>
             </Link>
           ))}
         </Rail>
       </div>
 
-      <div className="mt-16 border-t border-border/10 pt-8 px-8">
+      <div className="mt-16 border-t border-white/[0.06] pt-8 px-8">
         <SiteFooter />
       </div>
     </div>
