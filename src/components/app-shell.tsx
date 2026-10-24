@@ -1,4 +1,4 @@
-import { Compass, Home, Info, LogOut, Plus, Radio, Search, User, X, Heart, ListMusic } from "lucide-react";
+import { Compass, Home, Info, LogOut, Plus, Radio, Search, User, X, Heart, ListMusic, ArrowDownCircle, Download } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { type FormEvent, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Logo } from "@/components/logo";
@@ -8,6 +8,7 @@ import { FullPlayer } from "@/components/player/full";
 import { QueuePanel } from "@/components/player/queue";
 import { LyricsDrawer } from "@/components/player/lyrics";
 import { EqualizerModal } from "@/components/player/equalizer-modal";
+import { PlaylistImportModal } from "@/components/playlist-import-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { usePlayer } from "@/lib/player-store";
@@ -31,6 +32,7 @@ const SIDEBAR_NAV = [
 const SIDEBAR_LIBRARY = [
   { to: "/library", label: "Recently Added", icon: ListMusic },
   { to: "/library", search: { tab: "favorites" }, label: "Favorites", icon: Heart },
+  { to: "/library", search: { tab: "downloads" }, label: "Offline Downloads", icon: ArrowDownCircle },
 ] as const;
 
 // Custom Icons for Mobile Nav to match Apple Music exact look
@@ -106,6 +108,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [q, setQ] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [name, setName] = useState("");
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" ? !navigator.onLine : false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [desktopSuggestionsOpen, setDesktopSuggestionsOpen] = useState(false);
   const [isSearchingDesktop, setIsSearchingDesktop] = useState(false);
@@ -119,6 +123,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     requestNotificationPermissions().then(() => {
       scheduleWeeklyMix();
     });
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     const appStateSub = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
@@ -165,6 +174,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       appStateSub.then(s => s.remove()).catch(() => {});
       backButtonSub.then(s => s.remove()).catch(() => {});
     };
@@ -315,8 +326,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="flex flex-col gap-2">
             {SIDEBAR_LIBRARY.map((item) => {
               const active = item.to === "/library" 
-                ? path.startsWith(item.to) && search.tab === "favorites" && item.label === "Favorites"
-                  || (path.startsWith(item.to) && (!search.tab || search.tab === "recent") && item.label === "Recently Added")
+                ? (path.startsWith(item.to) && search.tab === "favorites" && item.label === "Favorites")
+                  || (path.startsWith(item.to) && search.tab === "downloads" && item.label === "Offline Downloads")
+                  || (path.startsWith(item.to) && (!search.tab || search.tab === "recent" || search.tab === "recents") && item.label === "Recently Added")
                 : path.startsWith(item.to);
               const Icon = item.icon;
               return (
@@ -344,12 +356,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mt-8 border-t border-border/50 pt-6 flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between px-3 mb-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Playlists</h3>
-            <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-              <DialogTrigger asChild>
-                <button className="text-muted hover:text-fg transition-colors">
-                  <Plus className="size-4" />
-                </button>
-              </DialogTrigger>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setImportModalOpen(true)}
+                title="Import playlist from Spotify or Apple Music"
+                className="text-muted hover:text-emerald-400 transition-colors p-1 rounded-md hover:bg-white/5"
+              >
+                <Download className="size-4" />
+              </button>
+              <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+                <DialogTrigger asChild>
+                  <button className="text-muted hover:text-fg transition-colors p-1 rounded-md hover:bg-white/5" title="New playlist">
+                    <Plus className="size-4" />
+                  </button>
+                </DialogTrigger>
               <DialogContent title="New playlist">
                 <form
                   className="space-y-4"
@@ -374,6 +395,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto [scrollbar-width:none] px-1 space-y-1">
             {playlists.map((p) => (
@@ -519,6 +541,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
+        {isOffline && (
+          <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:top-[calc(4rem+env(safe-area-inset-top,0px))] z-30 flex items-center justify-center gap-2.5 bg-amber-500/15 border-b border-amber-500/20 px-4 py-2 text-xs font-medium text-amber-300 backdrop-blur-xl transition-all">
+            <span className="size-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <span className="truncate">You&apos;re offline · Playing songs from your offline downloads cache</span>
+            <Link to="/library" search={{ tab: "downloads" }} className="underline font-semibold hover:text-white shrink-0 ml-1">
+              Downloads
+            </Link>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto pb-32 lg:pb-0 landscape:max-lg:pb-28">
           {children}
         </div>
@@ -585,6 +617,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <QueuePanel />
       <LyricsDrawer />
       <EqualizerModal />
+      <PlaylistImportModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        onImportComplete={() => void navigate({ to: "/library", search: { tab: "playlists" } })}
+      />
     </div>
   );
 }

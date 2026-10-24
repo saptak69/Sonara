@@ -6,11 +6,11 @@ import { TrackRow } from "@/components/track-row";
 import { RadioContent } from "@/routes/radio";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
-import { useOfflineTracks } from "@/lib/offline-cache";
+import { useOfflineTracks, getOfflineStorageUsage, downloadTrackAudio } from "@/lib/offline-cache";
 import { PlaylistImportModal } from "@/components/playlist-import-modal";
 import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Compass, Heart, ListMusic, Plus, Trash2, Ghost, Sparkles, Download, ArrowDownCircle } from "lucide-react";
+import { Compass, Heart, ListMusic, Plus, Trash2, Ghost, Sparkles, Download, ArrowDownCircle, HardDrive } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -42,10 +42,17 @@ function LibraryPage() {
 
   const { downloadedTracks, clearAll } = useOfflineTracks();
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [storageUsage, setStorageUsage] = useState<{ usedBytes: number; quotaBytes: number; trackCount: number } | null>(null);
+  const [isDownloadingFavorites, setIsDownloadingFavorites] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ current: number; total: number } | null>(null);
 
   useEffect(() => {
     void syncFromDatabase();
   }, [syncFromDatabase]);
+
+  useEffect(() => {
+    void getOfflineStorageUsage().then(setStorageUsage);
+  }, [downloadedTracks]);
   
   const tab = initialTab || "recents";
 
@@ -77,11 +84,45 @@ function LibraryPage() {
     [playlists],
   );
 
+  const storageMb = useMemo(() => {
+    if (storageUsage && storageUsage.usedBytes > 0) {
+      return (storageUsage.usedBytes / (1024 * 1024)).toFixed(1);
+    }
+    return (downloadedTracks.length * 3.8).toFixed(1);
+  }, [storageUsage, downloadedTracks.length]);
+
+  const undownloadedFavorites = useMemo(
+    () => likedTracks.filter((t) => !downloadedTracks.some((d) => d.id === t.id)),
+    [likedTracks, downloadedTracks],
+  );
+
+  const handleDownloadFavorites = async () => {
+    if (undownloadedFavorites.length === 0 || isDownloadingFavorites) return;
+    setIsDownloadingFavorites(true);
+    let done = 0;
+    const total = undownloadedFavorites.length;
+    setDownloadProgress({ current: 0, total });
+    toast.info(`Downloading ${total} favorite tracks for offline listening...`);
+
+    for (const track of undownloadedFavorites) {
+      try {
+        await downloadTrackAudio(track);
+        done++;
+        setDownloadProgress({ current: done, total });
+      } catch (err) {
+        console.error("Failed to download track:", track.id, err);
+      }
+    }
+    setIsDownloadingFavorites(false);
+    setDownloadProgress(null);
+    toast.success(`Successfully downloaded ${done} songs for offline listening!`);
+  };
+
   return (
     <div className="w-full stagger-in space-y-12 md:space-y-14 px-4 md:px-12 pt-10 md:pt-12 pb-32">
-      <header className="hidden lg:flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
         <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Library</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="chip"
             size="sm"
@@ -269,21 +310,73 @@ function LibraryPage() {
               ))}
           </div>
         ) : (
-          <Empty
-            icon={ListMusic}
-            title="No playlists created"
-            text="Organize your sound by creating playlists from any track menu or using the button above."
-            action={{ label: "Browse Music", to: "/explore" }}
-          />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full bg-emerald-400" />
+            <motion.div 
+              className="relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4 bg-emerald-400/10 border-emerald-400/20 text-emerald-400"
+              animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.05, 1] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ListMusic className="size-8 drop-shadow-sm" />
+            </motion.div>
+            <h3 className="relative text-lg font-bold text-fg tracking-tight">No playlists created yet</h3>
+            <p className="relative mt-2 text-sm text-muted max-w-sm mx-auto leading-relaxed">
+              Create a fresh playlist or import your existing playlists from Spotify and Apple Music with one tap.
+            </p>
+            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                variant="solid"
+                size="sm"
+                className="rounded-full px-5 py-2.5 font-bold text-sm bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                onClick={() => setImportModalOpen(true)}
+              >
+                <Download className="size-4 mr-2" />
+                Import from Spotify / Apple Music
+              </Button>
+              <Button
+                variant="chip"
+                size="sm"
+                className="rounded-full px-4 py-2 text-sm"
+                onClick={() => {
+                  const name = `Playlist ${playlists.length + 1}`;
+                  createPlaylist(name);
+                  toast.success(`Created "${name}"`);
+                }}
+              >
+                <Plus className="size-4 mr-1.5" />
+                New Playlist
+              </Button>
+            </div>
+          </div>
         )
       ) : null}
 
       {tab === "downloads" ? (
         downloadedTracks.length ? (
           <div>
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-muted">{downloadedTracks.length} offline tracks ready</p>
-              <div className="flex items-center gap-2">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2.5 text-sm text-muted">
+                <span><strong className="text-fg font-semibold">{downloadedTracks.length}</strong> offline tracks ready</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-xs text-emerald-400 font-medium">
+                  <HardDrive className="size-3.5" />
+                  {storageMb} MB used
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {undownloadedFavorites.length > 0 && (
+                  <Button
+                    variant="chip"
+                    size="sm"
+                    className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20 text-xs"
+                    disabled={isDownloadingFavorites}
+                    onClick={handleDownloadFavorites}
+                  >
+                    <Download className="size-3.5 mr-1.5" />
+                    {isDownloadingFavorites
+                      ? `Downloading (${downloadProgress?.current}/${downloadProgress?.total})...`
+                      : `Download ${undownloadedFavorites.length} Favorites`}
+                  </Button>
+                )}
                 <Button variant="solid" size="sm" onClick={() => playTracks(downloadedTracks, 0)}>
                   Play all offline
                 </Button>
@@ -297,7 +390,7 @@ function LibraryPage() {
                   }}
                 >
                   <Trash2 className="size-3.5 mr-1" />
-                  Clear downloads
+                  Clear
                 </Button>
               </div>
             </div>
@@ -306,12 +399,43 @@ function LibraryPage() {
             ))}
           </div>
         ) : (
-          <Empty
-            icon={ArrowDownCircle}
-            title="No offline songs downloaded"
-            text="Tap the three dots on any song to download it for offline airplane mode listening."
-            action={{ label: "Discover music", to: "/explore" }}
-          />
+          likedTracks.length > 0 ? (
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/[0.08] px-6 py-10 md:py-16 text-center backdrop-blur-xl shadow-2xl">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 blur-3xl opacity-20 rounded-full bg-emerald-400" />
+              <motion.div 
+                className="relative mx-auto inline-grid size-16 place-items-center rounded-full border shadow-inner mb-4 bg-emerald-400/10 border-emerald-400/20 text-emerald-400"
+                animate={{ y: [0, 4, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ArrowDownCircle className="size-8 drop-shadow-sm" />
+              </motion.div>
+              <h3 className="relative text-lg font-bold text-fg tracking-tight">No offline downloads yet</h3>
+              <p className="relative mt-2 text-sm text-muted max-w-sm mx-auto leading-relaxed">
+                You have {likedTracks.length} favorite songs ready to save for offline airplane mode listening.
+              </p>
+              <div className="relative mt-6 flex flex-wrap items-center justify-center gap-3">
+                <Button
+                  variant="solid"
+                  size="sm"
+                  className="rounded-full px-5 py-2.5 font-bold text-sm bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                  disabled={isDownloadingFavorites}
+                  onClick={handleDownloadFavorites}
+                >
+                  <Download className="size-4 mr-2" />
+                  {isDownloadingFavorites
+                    ? `Downloading (${downloadProgress?.current}/${downloadProgress?.total})...`
+                    : `Download All ${likedTracks.length} Favorites`}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Empty
+              icon={ArrowDownCircle}
+              title="No offline songs downloaded"
+              text="Tap the three dots on any song to download it for offline airplane mode listening."
+              action={{ label: "Discover music", to: "/explore" }}
+            />
+          )
         )
       ) : null}
 

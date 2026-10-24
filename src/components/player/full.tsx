@@ -172,10 +172,23 @@ export function FullPlayer() {
               {track.album || "Now Playing"}
             </p>
 
-            <div className="pointer-events-auto flex lg:hidden items-center gap-1">
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button
+                aria-label="Equalizer"
+                onClick={toggleEqualizer}
+                className={cn(
+                  "p-2.5 rounded-full backdrop-blur-md transition-all active:scale-90 border border-white/10 shadow-lg",
+                  equalizerEnabled
+                    ? "bg-accent text-white shadow-[0_0_12px_rgba(255,74,58,0.5)] border-accent/40"
+                    : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+                )}
+                title={equalizerEnabled ? "Equalizer Active" : "Equalizer"}
+              >
+                <Sliders className="size-5" strokeWidth={1.75} />
+              </button>
               <button
                 aria-label="Queue"
-                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 hover:bg-white/20 transition-all active:scale-90 border border-white/10 shadow-lg"
+                className="p-2.5 rounded-full bg-white/10 backdrop-blur-md text-white/90 hover:bg-white/20 transition-all active:scale-90 border border-white/10 shadow-lg lg:hidden"
                 onClick={() => setQueueOpen(true)}
               >
                 <ListMusic className="size-5" strokeWidth={1.5} />
@@ -294,8 +307,8 @@ export function FullPlayer() {
                   </button>
                 </div>
 
-                {/* Action Row — Mobile */}
-                <div className="full-player-action-row flex lg:hidden items-center justify-center w-full gap-5 pt-1">
+                {/* Action Row — Mobile & Desktop */}
+                <div className="full-player-action-row flex items-center justify-center w-full gap-5 pt-2">
                   <button 
                     className="text-white/60 hover:text-white p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90" 
                     onClick={() => {

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Play } from "lucide-react";
+import { useState } from "react";
+import { Play, Download, CheckCircle2, Loader2 } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDurationTotal } from "@/lib/format";
 import { fetchPlaylist } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
+import { useOfflineTracks, downloadTrackAudio, removeDownloadedAudio } from "@/lib/offline-cache";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/playlist/$id")({ component: PlaylistPage });
 
 function PlaylistPage() {
   const { id } = Route.useParams();
   const playTracks = usePlayer((s) => s.playTracks);
+  const { downloadedTracks } = useOfflineTracks();
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState({ done: 0, total: 0 });
+
   const query = useQuery({
     queryKey: ["playlist", id],
     queryFn: () => fetchPlaylist(id),
@@ -45,6 +52,29 @@ function PlaylistPage() {
 
   const tracks = playlist.tracks ?? [];
   const total = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
+
+  const allDownloaded = tracks.length > 0 && tracks.every((t) => downloadedTracks.some((d) => d.id === t.id));
+
+  const handleDownloadAll = async () => {
+    if (allDownloaded) {
+      for (const t of tracks) {
+        await removeDownloadedAudio(t.id);
+      }
+      toast.success("Removed all downloads for this playlist");
+      return;
+    }
+
+    setIsDownloadingAll(true);
+    setDownloadProgress({ done: 0, total: tracks.length });
+    let count = 0;
+    for (const t of tracks) {
+      await downloadTrackAudio(t);
+      count++;
+      setDownloadProgress({ done: count, total: tracks.length });
+    }
+    setIsDownloadingAll(false);
+    toast.success(`Downloaded ${tracks.length} tracks for offline playback!`);
+  };
 
   return (
     <div className="relative min-h-dvh">
@@ -83,10 +113,10 @@ function PlaylistPage() {
               <p className="mt-3 line-clamp-2 max-w-xl text-sm text-white/50">{playlist.description}</p>
             ) : null}
             
-            <div className="detail-header-actions mt-6 flex items-center gap-3 w-full max-w-[320px] mx-auto md:mx-0">
+            <div className="detail-header-actions mt-6 flex flex-wrap items-center gap-3 w-full max-w-[380px] mx-auto md:mx-0">
               <Button 
                 variant="solid" 
-                className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
+                className="flex-1 min-w-[90px] rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
                 onClick={() => tracks.length && playTracks(tracks, 0)}
               >
                 <Play className="size-5 fill-current mr-1" />
@@ -94,7 +124,7 @@ function PlaylistPage() {
               </Button>
               <Button
                 variant="solid" 
-                className="flex-1 rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
+                className="flex-1 min-w-[90px] rounded-xl h-[48px] bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold shadow-sm transition-colors"
                 onClick={() => {
                   const shuffled = [...tracks].sort(() => 0.5 - Math.random());
                   if (shuffled.length) playTracks(shuffled, 0);
@@ -103,6 +133,32 @@ function PlaylistPage() {
               >
                 <svg className="size-5 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
                 Shuffle
+              </Button>
+              <Button
+                variant="solid"
+                className={`rounded-xl h-[48px] px-4 backdrop-blur-md font-semibold transition-all shadow-sm ${
+                  allDownloaded
+                    ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30"
+                    : "bg-white/10 hover:bg-white/20 text-white"
+                }`}
+                onClick={handleDownloadAll}
+                disabled={isDownloadingAll || !tracks.length}
+                title={allDownloaded ? "All songs downloaded" : "Download all songs for offline"}
+              >
+                {isDownloadingAll ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin mr-1.5" />
+                    <span className="text-xs">{downloadProgress.done}/{downloadProgress.total}</span>
+                  </>
+                ) : allDownloaded ? (
+                  <>
+                    <CheckCircle2 className="size-5 text-emerald-400" />
+                  </>
+                ) : (
+                  <>
+                    <Download className="size-5" />
+                  </>
+                )}
               </Button>
             </div>
           </div>
