@@ -3,6 +3,27 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { Playlist, RepeatMode, Track, UserPlaylist } from "./types";
 import { CURATED_TRACKS } from "./music-api";
 
+export type EqualizerPresetName =
+  | "Flat"
+  | "Bass Boost"
+  | "Vocal"
+  | "Rock"
+  | "EDM"
+  | "Acoustic"
+  | "Treble Boost"
+  | "Late Night";
+
+export const EQUALIZER_PRESETS: Record<EqualizerPresetName, { bands: [number, number, number, number, number]; bassBoost: number }> = {
+  "Flat": { bands: [0, 0, 0, 0, 0], bassBoost: 0 },
+  "Bass Boost": { bands: [5, 3, 0, 0, 1], bassBoost: 6 },
+  "Vocal": { bands: [-2, 0, 4, 3, 1], bassBoost: 0 },
+  "Rock": { bands: [4, 2, -1, 2, 4], bassBoost: 2 },
+  "EDM": { bands: [5, 3, -1, 2, 4], bassBoost: 5 },
+  "Acoustic": { bands: [2, 1, 2, 3, 2], bassBoost: 0 },
+  "Treble Boost": { bands: [-2, 0, 1, 4, 6], bassBoost: 0 },
+  "Late Night": { bands: [-3, -1, 0, -2, -4], bassBoost: 0 },
+};
+
 type PlayerState = {
   queue: Track[];
   history: number[];
@@ -26,6 +47,12 @@ type PlayerState = {
   recentSearches: string[];
   autoplay: boolean;
   volumeNormalization: boolean;
+
+  equalizerOpen: boolean;
+  equalizerEnabled: boolean;
+  equalizerBands: [number, number, number, number, number];
+  bassBoost: number;
+  equalizerPreset: string;
 
   hydrated: boolean;
   current: () => Track | null;
@@ -70,6 +97,13 @@ type PlayerState = {
   clearUpcoming: () => void;
   setHydrated: () => void;
   syncFromDatabase: () => Promise<void>;
+
+  setEqualizerOpen: (v: boolean) => void;
+  toggleEqualizer: () => void;
+  setEqualizerEnabled: (v: boolean) => void;
+  setEqualizerBand: (bandIndex: number, gainDb: number) => void;
+  setBassBoost: (gainDb: number) => void;
+  applyEqualizerPreset: (preset: EqualizerPresetName) => void;
 };
 
 const MAX_RECENTS = 40;
@@ -140,6 +174,12 @@ export const usePlayer = create<PlayerState>()(
       recentSearches: [],
       autoplay: true,
       volumeNormalization: false,
+
+      equalizerOpen: false,
+      equalizerEnabled: false,
+      equalizerBands: [0, 0, 0, 0, 0],
+      bassBoost: 0,
+      equalizerPreset: "Flat",
 
       hydrated: false,
       current: () => {
@@ -424,6 +464,34 @@ export const usePlayer = create<PlayerState>()(
       },
       clearRecents: () => set({ recents: [] }),
 
+      setEqualizerOpen: (v) => set({ equalizerOpen: v }),
+      toggleEqualizer: () => set((s) => ({ equalizerOpen: !s.equalizerOpen })),
+      setEqualizerEnabled: (v) => set({ equalizerEnabled: v }),
+      setEqualizerBand: (bandIndex, gainDb) => {
+        const s = get();
+        const clamped = Math.max(-12, Math.min(12, gainDb));
+        const newBands: [number, number, number, number, number] = [...s.equalizerBands];
+        if (bandIndex >= 0 && bandIndex < 5) {
+          newBands[bandIndex] = clamped;
+          set({ equalizerBands: newBands, equalizerPreset: "Custom", equalizerEnabled: true });
+        }
+      },
+      setBassBoost: (gainDb) => {
+        const clamped = Math.max(0, Math.min(10, gainDb));
+        set({ bassBoost: clamped, equalizerPreset: "Custom", equalizerEnabled: true });
+      },
+      applyEqualizerPreset: (preset) => {
+        const found = EQUALIZER_PRESETS[preset];
+        if (found) {
+          set({
+            equalizerPreset: preset,
+            equalizerBands: [...found.bands],
+            bassBoost: found.bassBoost,
+            equalizerEnabled: true,
+          });
+        }
+      },
+
       setHydrated: () => set({ hydrated: true }),
 
       syncFromDatabase: async () => {
@@ -473,6 +541,10 @@ export const usePlayer = create<PlayerState>()(
         recentSearches: s.recentSearches,
         autoplay: s.autoplay,
         volumeNormalization: s.volumeNormalization,
+        equalizerEnabled: s.equalizerEnabled,
+        equalizerBands: s.equalizerBands,
+        bassBoost: s.bassBoost,
+        equalizerPreset: s.equalizerPreset,
 
         volume: s.volume,
       }),

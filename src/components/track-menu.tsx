@@ -1,4 +1,4 @@
-import { ListMusic, ListPlus, ListEnd, Radio, UserRound, Heart, Share2 } from "lucide-react";
+import { ListMusic, ListPlus, ListEnd, Radio, UserRound, Heart, Share2, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePlayer } from "@/lib/player-store";
+import { downloadTrackAudio, removeDownloadedAudio, isTrackDownloaded } from "@/lib/offline-cache";
 import type { Track } from "@/lib/types";
 import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -23,6 +24,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
   const playlists = usePlayer((s) => s.playlists);
   const addToPlaylist = usePlayer((s) => s.addToPlaylist);
   const createPlaylist = usePlayer((s) => s.createPlaylist);
+  const downloaded = isTrackDownloaded(track.id);
 
   return (
     <DropdownMenu>
@@ -55,6 +57,36 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
           <Heart className={isLiked ? "size-4 fill-accent text-accent" : "size-4 text-muted"} />
           {isLiked ? "Remove from likes" : "Save to likes"}
         </DropdownMenuItem>
+        {track.kind !== "radio" ? (
+          <DropdownMenuItem
+            onSelect={async () => {
+              if (downloaded) {
+                await removeDownloadedAudio(track.id);
+                toast("Removed download from device");
+              } else {
+                toast.loading(`Downloading "${track.title}" for offline...`, { id: `dl-${track.id}` });
+                const success = await downloadTrackAudio(track);
+                if (success) {
+                  toast.success(`Downloaded "${track.title}" for offline listening`, { id: `dl-${track.id}` });
+                } else {
+                  toast.error("Failed to download audio stream", { id: `dl-${track.id}` });
+                }
+              }
+            }}
+          >
+            {downloaded ? (
+              <>
+                <CheckCircle2 className="size-4 text-emerald-400" />
+                Remove download
+              </>
+            ) : (
+              <>
+                <Download className="size-4 text-muted" />
+                Download for offline
+              </>
+            )}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         {playlists
           .filter((p) => p.id !== "likes")

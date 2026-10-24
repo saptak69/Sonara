@@ -1,4 +1,4 @@
-import { Heart, MoreVertical, Play, Radio, Pause } from "lucide-react";
+import { Heart, MoreVertical, Play, Radio, Pause, ArrowDownCircle } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { Equalizer } from "@/components/equalizer";
 import { TrackMenu } from "@/components/track-menu";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { formatCount, formatTime } from "@/lib/format";
 import { usePlayer } from "@/lib/player-store";
+import { isTrackDownloaded } from "@/lib/offline-cache";
 import type { Track } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
@@ -31,6 +32,7 @@ export function TrackRow({
 
   const active = current?.id === track.id;
   const isLiked = likedIds.includes(track.id);
+  const isDownloaded = isTrackDownloaded(track.id);
   const startIndex = Math.max(0, queue.findIndex((t) => t.id === track.id));
 
   const handlePlayToggle = () => {
@@ -126,6 +128,11 @@ export function TrackRow({
           {track.title}
         </p>
         <p className="truncate text-xs text-white/55 flex items-center gap-1.5 mt-0.5 leading-snug">
+          {isDownloaded && (
+            <span title="Downloaded for offline playback" className="shrink-0">
+              <ArrowDownCircle className="size-3 text-emerald-400 fill-emerald-400/20" />
+            </span>
+          )}
           {track.kind === "radio" && (
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-accent uppercase tracking-wider bg-accent/15 px-1.5 py-0.5 rounded">
               <Radio className="size-2.5 animate-pulse" /> Live

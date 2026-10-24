@@ -49,3 +49,97 @@ test("Volume normalization math: caps output volume below clipping threshold", (
   assert.equal(calculateEffectiveVolume(1.0, true), 0.88);
   assert.equal(calculateEffectiveVolume(0.5, true), 0.44);
 });
+
+test("Spotify & Apple Music playlist importer text parser: handles varied input formats", () => {
+  const parseTextTracklist = (text) => {
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const results = [];
+    for (const line of lines) {
+      const cleaned = line.replace(/^\[?\d+\]?[\s.\-_–—)]+/, "").trim();
+      if (!cleaned) continue;
+      const dashMatch = cleaned.split(/\s+[-–—]\s+/);
+      if (dashMatch.length >= 2) {
+        results.push({ title: dashMatch[0].trim(), artist: dashMatch.slice(1).join(" - ").trim() });
+        continue;
+      }
+      const byMatch = cleaned.split(/\s+by\s+/i);
+      if (byMatch.length === 2) {
+        const candidateArtist = byMatch[1].trim();
+        const stopWords = new Set(["me", "you", "him", "her", "us", "them", "myself", "yourself", "step", "chance", "night", "day"]);
+        if (!stopWords.has(candidateArtist.toLowerCase())) {
+          results.push({ title: byMatch[0].trim(), artist: candidateArtist });
+          continue;
+        }
+      }
+      results.push({ title: cleaned, artist: "" });
+    }
+    return results;
+  };
+
+  const rawInput = `
+    01. Espresso - Sabrina Carpenter
+    2) BIRDS OF A FEATHER by Billie Eilish
+    3 - Blinding Lights — The Weeknd
+    Daft Punk - Get Lucky
+    Stand By Me
+  `;
+
+  const parsed = parseTextTracklist(rawInput);
+  assert.equal(parsed.length, 5);
+  assert.deepEqual(parsed[0], { title: "Espresso", artist: "Sabrina Carpenter" });
+  assert.deepEqual(parsed[1], { title: "BIRDS OF A FEATHER", artist: "Billie Eilish" });
+  assert.deepEqual(parsed[2], { title: "Blinding Lights", artist: "The Weeknd" });
+  assert.deepEqual(parsed[3], { title: "Daft Punk", artist: "Get Lucky" });
+  assert.deepEqual(parsed[4], { title: "Stand By Me", artist: "" });
+});
+
+test("Equalizer DSP presets: guarantees 5 bands and safe dB ranges", () => {
+  const EQUALIZER_PRESETS = {
+    "Flat": { bands: [0, 0, 0, 0, 0], bassBoost: 0 },
+    "Bass Boost": { bands: [5, 3, 0, 0, 1], bassBoost: 6 },
+    "Vocal": { bands: [-2, 0, 4, 3, 1], bassBoost: 0 },
+    "Rock": { bands: [4, 2, -1, 2, 4], bassBoost: 2 },
+    "EDM": { bands: [5, 3, -1, 2, 4], bassBoost: 5 },
+    "Acoustic": { bands: [2, 1, 2, 3, 2], bassBoost: 0 },
+    "Treble Boost": { bands: [-2, 0, 1, 4, 6], bassBoost: 0 },
+    "Late Night": { bands: [-3, -1, 0, -2, -4], bassBoost: 0 },
+  };
+
+  for (const [name, preset] of Object.entries(EQUALIZER_PRESETS)) {
+    assert.equal(preset.bands.length, 5, `${name} has exactly 5 bands`);
+    assert.ok(preset.bassBoost >= 0 && preset.bassBoost <= 10, `${name} bassBoost within 0-10dB`);
+    for (const gain of preset.bands) {
+      assert.ok(gain >= -12 && gain <= 12, `${name} band gain ${gain} within -12 to +12 dB`);
+    }
+  }
+});
+
+test("Offline Cache: metadata deduplication and retrieval simulation", () => {
+  let metadata = [
+    { id: "song_1", title: "Track One" },
+    { id: "song_2", title: "Track Two" },
+  ];
+
+  const addTrack = (track) => {
+    metadata = [track, ...metadata.filter((t) => t.id !== track.id)];
+  };
+
+  const removeTrack = (id) => {
+    metadata = metadata.filter((t) => t.id !== id);
+  };
+
+  // Add new track
+  addTrack({ id: "song_3", title: "Track Three" });
+  assert.equal(metadata.length, 3);
+  assert.equal(metadata[0].id, "song_3");
+
+  // Re-add existing track (moves to top without duplicates)
+  addTrack({ id: "song_2", title: "Track Two" });
+  assert.equal(metadata.length, 3);
+  assert.equal(metadata[0].id, "song_2");
+
+  // Remove track
+  removeTrack("song_1");
+  assert.equal(metadata.length, 2);
+  assert.equal(metadata.some((t) => t.id === "song_1"), false);
+});

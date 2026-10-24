@@ -1,23 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { AlbumCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
 import { RadioContent } from "@/routes/radio";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player-store";
+import { useOfflineTracks } from "@/lib/offline-cache";
+import { PlaylistImportModal } from "@/components/playlist-import-modal";
 import type { Playlist } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Compass, Heart, ListMusic, Plus, Trash2, Ghost, Sparkles } from "lucide-react";
+import { Compass, Heart, ListMusic, Plus, Trash2, Ghost, Sparkles, Download, ArrowDownCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-type LibrarySearch = { tab?: "recents" | "favorites" | "playlists" | "radios" };
+type LibrarySearch = { tab?: "recents" | "favorites" | "playlists" | "downloads" | "radios" };
 
 export const Route = createFileRoute("/library")({ 
   validateSearch: (search: Record<string, unknown>): LibrarySearch => {
     return {
-      tab: search.tab === "favorites" || search.tab === "playlists" || search.tab === "recents" || search.tab === "radios"
+      tab: search.tab === "favorites" || search.tab === "playlists" || search.tab === "recents" || search.tab === "downloads" || search.tab === "radios"
         ? search.tab as any 
         : undefined,
     }
@@ -38,13 +40,16 @@ function LibraryPage() {
   const clearRecents = usePlayer((s) => s.clearRecents);
   const syncFromDatabase = usePlayer((s) => s.syncFromDatabase);
 
+  const { downloadedTracks, clearAll } = useOfflineTracks();
+  const [importModalOpen, setImportModalOpen] = useState(false);
+
   useEffect(() => {
     void syncFromDatabase();
   }, [syncFromDatabase]);
   
   const tab = initialTab || "recents";
 
-  const handleTabChange = (newTab: "recents" | "favorites" | "playlists" | "radios") => {
+  const handleTabChange = (newTab: "recents" | "favorites" | "playlists" | "downloads" | "radios") => {
     void navigate({ search: { tab: newTab }, replace: true });
   };
 
@@ -77,6 +82,15 @@ function LibraryPage() {
       <header className="hidden lg:flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <h1 className="text-[28px] md:text-[34px] font-bold tracking-tight text-white">Library</h1>
         <div className="flex items-center gap-2">
+          <Button
+            variant="chip"
+            size="sm"
+            className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20"
+            onClick={() => setImportModalOpen(true)}
+          >
+            <Download className="size-4 mr-1.5" />
+            Import Playlist
+          </Button>
           <Button
             variant="chip"
             size="sm"
@@ -133,6 +147,7 @@ function LibraryPage() {
             ["recents", "Recents", recents.length],
             ["favorites", "Favorites", likedTracks.length],
             ["playlists", "Playlists", userPlaylists.length],
+            ["downloads", "Downloads", downloadedTracks.length],
             ["radios", "Radios", 0],
           ] as const
         ).map(([id, label, count]) => (
@@ -263,11 +278,54 @@ function LibraryPage() {
         )
       ) : null}
 
+      {tab === "downloads" ? (
+        downloadedTracks.length ? (
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted">{downloadedTracks.length} offline tracks ready</p>
+              <div className="flex items-center gap-2">
+                <Button variant="solid" size="sm" onClick={() => playTracks(downloadedTracks, 0)}>
+                  Play all offline
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted hover:text-red-400"
+                  onClick={() => {
+                    void clearAll();
+                    toast("All offline downloads cleared");
+                  }}
+                >
+                  <Trash2 className="size-3.5 mr-1" />
+                  Clear downloads
+                </Button>
+              </div>
+            </div>
+            {downloadedTracks.map((t, i) => (
+              <TrackRow key={t.id} track={t} index={i} queue={downloadedTracks} />
+            ))}
+          </div>
+        ) : (
+          <Empty
+            icon={ArrowDownCircle}
+            title="No offline songs downloaded"
+            text="Tap the three dots on any song to download it for offline airplane mode listening."
+            action={{ label: "Discover music", to: "/explore" }}
+          />
+        )
+      ) : null}
+
       {tab === "radios" ? (
         <div className="pt-2">
           <RadioContent />
         </div>
       ) : null}
+
+      <PlaylistImportModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        onImportComplete={() => handleTabChange("playlists")}
+      />
     </div>
   );
 }
@@ -306,6 +364,13 @@ function Empty({
     animationProps = {
       animate: { rotate: [0, -10, 10, 0], scale: [1, 1.05, 1] },
       transition: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+    };
+    colorClass = "text-emerald-400";
+    bgClass = "bg-emerald-400/10 border-emerald-400/20";
+  } else if (Icon === ArrowDownCircle) {
+    animationProps = {
+      animate: { y: [0, 4, 0] },
+      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" },
     };
     colorClass = "text-emerald-400";
     bgClass = "bg-emerald-400/10 border-emerald-400/20";

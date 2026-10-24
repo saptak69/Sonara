@@ -7,6 +7,7 @@ import { PlayerBar } from "@/components/player/bar";
 import { FullPlayer } from "@/components/player/full";
 import { QueuePanel } from "@/components/player/queue";
 import { LyricsDrawer } from "@/components/player/lyrics";
+import { EqualizerModal } from "@/components/player/equalizer-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { usePlayer } from "@/lib/player-store";
@@ -583,6 +584,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <FullPlayer />
       <QueuePanel />
       <LyricsDrawer />
+      <EqualizerModal />
     </div>
   );
 }

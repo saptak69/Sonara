@@ -1,5 +1,5 @@
 import React from "react";
-import { ListMusic, Mic2, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { ListMusic, Mic2, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Volume2, VolumeX, Play, Pause, Sliders } from "lucide-react";
 import { Cover } from "@/components/cover";
 import { MarqueeText } from "@/components/marquee-text";
 import { usePlayer } from "@/lib/player-store";
@@ -36,6 +36,8 @@ export function PlayerBar() {
   const muted = usePlayer((s) => s.muted);
   const setVolume = usePlayer((s) => s.setVolume);
   const toggleMute = usePlayer((s) => s.toggleMute);
+  const toggleEqualizer = usePlayer((s) => s.toggleEqualizer);
+  const equalizerEnabled = usePlayer((s) => s.equalizerEnabled);
 
   // Scrubber interactive states
   const [hoverTime, setHoverTime] = React.useState<number | null>(null);
@@ -339,6 +341,16 @@ export function PlayerBar() {
             title="Queue"
           >
             <ListMusic className="size-[18px]" strokeWidth={2} />
+          </button>
+          <button 
+            className={cn(
+              "p-2 transition-colors active:scale-90 rounded-full hover:bg-white/[0.06]",
+              equalizerEnabled ? "text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.5)]" : "text-white/50 hover:text-white"
+            )}
+            onClick={toggleEqualizer}
+            title={equalizerEnabled ? "Equalizer (Active)" : "Equalizer"}
+          >
+            <Sliders className="size-[17px]" strokeWidth={2} />
           </button>
           
           <div className="flex items-center gap-2 group/vol w-[115px]">

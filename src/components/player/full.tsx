@@ -10,6 +10,7 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
+  Sliders,
 } from "lucide-react";
 import { PlayPauseButton } from "./play-pause-button";
 import { Cover } from "@/components/cover";
@@ -112,6 +113,8 @@ export function FullPlayer() {
   const setExpanded = usePlayer((s) => s.setExpanded);
   const setQueueOpen = usePlayer((s) => s.setQueueOpen);
   const setLyricsOpen = usePlayer((s) => s.setLyricsOpen);
+  const toggleEqualizer = usePlayer((s) => s.toggleEqualizer);
+  const equalizerEnabled = usePlayer((s) => s.equalizerEnabled);
 
   const live = track?.kind === "radio";
   const audioFormat = getTrackAudioFormat(track);
@@ -319,6 +322,16 @@ export function FullPlayer() {
                     title="Queue"
                   >
                     <ListMusic className="size-5" />
+                  </button>
+                  <button 
+                    className={cn(
+                      "p-2 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-90 rounded-full",
+                      equalizerEnabled ? "text-accent drop-shadow-[0_0_8px_rgba(255,74,58,0.6)] bg-white/10" : "text-white/60 hover:text-white"
+                    )}
+                    onClick={toggleEqualizer}
+                    title={equalizerEnabled ? "Equalizer (Active)" : "Equalizer"}
+                  >
+                    <Sliders className="size-5" />
                   </button>
                 </div>
               </div>

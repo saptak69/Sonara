@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { usePlayer, getNextIndex } from "@/lib/player-store";
 import { recordStreamServerFn } from "@/lib/artist-studio";
 import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
 import { recordPlayHistoryServerFn } from "@/lib/library-service";
 import { fetchTrack } from "@/lib/music-api";
+import { getOfflineAudioUrl } from "@/lib/offline-cache";
 import { toast } from "sonner";
 
 import type { Track as _Track } from "@/lib/types";
@@ -57,6 +58,117 @@ export function PlayerEngine() {
   const toggle = usePlayer((s) => s.toggle);
   const playTrack = usePlayer((s) => s.playTrack);
   const clearPendingSeek = usePlayer((s) => s.clearPendingSeek);
+
+  const equalizerEnabled = usePlayer((s) => s.equalizerEnabled);
+  const equalizerBands = usePlayer((s) => s.equalizerBands);
+  const bassBoost = usePlayer((s) => s.bassBoost);
+  const volumeNormalization = usePlayer((s) => s.volumeNormalization);
+
+  // Web Audio DSP Engine
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const bassBoostNodeRef = useRef<BiquadFilterNode | null>(null);
+  const bandNodesRef = useRef<BiquadFilterNode[]>([]);
+  const compressorRef = useRef<DynamicsCompressorNode | null>(null);
+  const connectedElementsRef = useRef<WeakSet<HTMLAudioElement>>(new WeakSet());
+
+  const initWebAudio = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (audioCtxRef.current) {
+      if (audioCtxRef.current.state === "suspended") {
+        void audioCtxRef.current.resume();
+      }
+      return;
+    }
+
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      audioCtxRef.current = ctx;
+
+      // 1. Bass boost (lowshelf at 80Hz)
+      const bassNode = ctx.createBiquadFilter();
+      bassNode.type = "lowshelf";
+      bassNode.frequency.value = 80;
+      bassNode.gain.value = equalizerEnabled ? bassBoost : 0;
+      bassBoostNodeRef.current = bassNode;
+
+      // 2. 5-Band Biquad Filter Equalizer
+      const freqs = [60, 250, 1000, 4000, 12000];
+      const types: BiquadFilterType[] = ["peaking", "peaking", "peaking", "peaking", "highshelf"];
+      const bNodes: BiquadFilterNode[] = [];
+
+      let prevNode: AudioNode = bassNode;
+      freqs.forEach((freq, idx) => {
+        const filter = ctx.createBiquadFilter();
+        filter.type = types[idx];
+        filter.frequency.value = freq;
+        filter.Q.value = 1.0;
+        filter.gain.value = equalizerEnabled ? (equalizerBands[idx] ?? 0) : 0;
+        prevNode.connect(filter);
+        prevNode = filter;
+        bNodes.push(filter);
+      });
+      bandNodesRef.current = bNodes;
+
+      // 3. Dynamic Sound Check Compressor
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = volumeNormalization ? -24 : 0;
+      comp.knee.value = 30;
+      comp.ratio.value = volumeNormalization ? 12 : 1;
+      comp.attack.value = 0.003;
+      comp.release.value = 0.25;
+      compressorRef.current = comp;
+      prevNode.connect(comp);
+
+      // 4. Output to speakers
+      comp.connect(ctx.destination);
+    } catch {
+      // Web Audio fallback
+    }
+  }, [equalizerEnabled, bassBoost, equalizerBands, volumeNormalization]);
+
+  const connectToWebAudio = useCallback((el: HTMLAudioElement | null) => {
+    if (!el || typeof window === "undefined") return;
+    initWebAudio();
+    const ctx = audioCtxRef.current;
+    const bass = bassBoostNodeRef.current;
+    if (!ctx || !bass || connectedElementsRef.current.has(el)) return;
+
+    try {
+      const source = ctx.createMediaElementSource(el);
+      source.connect(bass);
+      connectedElementsRef.current.add(el);
+    } catch {
+      // Element already connected or security restriction
+    }
+  }, [initWebAudio]);
+
+  // Connect mounted audio elements
+  useEffect(() => {
+    connectToWebAudio(audio1Ref.current);
+    connectToWebAudio(audio2Ref.current);
+  }, [connectToWebAudio]);
+
+  // React to equalizer slider changes
+  useEffect(() => {
+    const bass = bassBoostNodeRef.current;
+    const bNodes = bandNodesRef.current;
+    if (!bass || !bNodes.length) return;
+
+    bass.gain.value = equalizerEnabled ? bassBoost : 0;
+    bNodes.forEach((node, i) => {
+      node.gain.value = equalizerEnabled ? (equalizerBands[i] ?? 0) : 0;
+    });
+  }, [equalizerEnabled, equalizerBands, bassBoost]);
+
+  // React to volume normalization toggle
+  useEffect(() => {
+    const comp = compressorRef.current;
+    if (!comp) return;
+    comp.threshold.value = volumeNormalization ? -24 : 0;
+    comp.ratio.value = volumeNormalization ? 12 : 1;
+  }, [volumeNormalization]);
 
   // Auto-play shared song when URL contains ?track=... or ?play=...
   useEffect(() => {
@@ -270,6 +382,22 @@ export function PlayerEngine() {
                  if (err.name !== "AbortError") setPlaying(false);
              });
          }
+
+         // Check offline cache for zero-latency local playback
+         void getOfflineAudioUrl(current.id).then((cachedBlobUrl) => {
+           if (cachedBlobUrl && currentTrackIdRef.current === current.id) {
+             const active = getActive();
+             if (active && active.src !== cachedBlobUrl) {
+               const pos = active.currentTime;
+               const wasPlaying = !active.paused;
+               active.src = cachedBlobUrl;
+               try { active.currentTime = pos; } catch { /* ignore */ }
+               if (wasPlaying || isPlaying) {
+                 active.play().catch(() => {});
+               }
+             }
+           }
+         });
       }
     } else {
       // Just play/pause toggle for current track
@@ -527,6 +655,17 @@ export function PlayerEngine() {
             if (currentT && usePlayer.getState().isPlaying) {
                 const a = activeIndexRef.current === 1 ? audio1Ref.current : audio2Ref.current;
 
+                // Step 0: Try offline cache fallback if network is down or CDN failed
+                void getOfflineAudioUrl(currentT.id).then((offlineBlob) => {
+                  if (offlineBlob && a && usePlayer.getState().current()?.id === currentT.id) {
+                    a.src = offlineBlob;
+                    a.load();
+                    a.play().catch(() => {});
+                    toast.success("Playing from offline storage", { id: 'fallback' });
+                    return;
+                  }
+                });
+
                 // Step 1: If direct playback failed, try instant 160kbps fallback if 320kbps was 404, or stream proxy
                 if (a && a.src && !a.src.includes("/api/stream") && currentT.streamUrl) {
                   if (currentT.streamUrl.includes("saavncdn.com") && currentT.streamUrl.includes("_320.mp4") && !a.src.includes("_160.mp4")) {
@@ -585,8 +724,8 @@ export function PlayerEngine() {
 
   return (
     <>
-      <audio ref={audio1Ref} preload="auto" {...createEventHandlers(1)} />
-      <audio ref={audio2Ref} preload="auto" {...createEventHandlers(2)} />
+      <audio ref={audio1Ref} preload="auto" crossOrigin="anonymous" {...createEventHandlers(1)} />
+      <audio ref={audio2Ref} preload="auto" crossOrigin="anonymous" {...createEventHandlers(2)} />
     </>
   );
 }
