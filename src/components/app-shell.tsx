@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { usePlayer } from "@/lib/player-store";
 import { cn } from "@/lib/utils";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { signOut } from "@/lib/auth/client";
 import { Cover } from "@/components/cover";
@@ -123,6 +123,77 @@ export function AppShell({ children }: { children: ReactNode }) {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  // Android Native Hardware / Gesture Back Navigation
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let backPressCount = 0;
+    let backPressTimer: ReturnType<typeof setTimeout> | null = null;
+    let handle: { remove: () => Promise<void> } | null = null;
+
+    void CapacitorApp.addListener("backButton", () => {
+      // 1. Modals & Search Overlays
+      if (mobileSearchOpen) {
+        setMobileSearchOpen(false);
+        return;
+      }
+      if (openCreate) {
+        setOpenCreate(false);
+        return;
+      }
+      if (importModalOpen) {
+        setImportModalOpen(false);
+        return;
+      }
+
+      // 2. Full Player / Drawers
+      const ps = usePlayer.getState();
+      if (ps.expanded) {
+        ps.setExpanded(false);
+        return;
+      }
+      if (ps.queueOpen) {
+        ps.setQueueOpen(false);
+        return;
+      }
+      if (ps.lyricsOpen) {
+        ps.setLyricsOpen(false);
+        return;
+      }
+      if (ps.equalizerOpen) {
+        ps.setEqualizerOpen(false);
+        return;
+      }
+
+      // 3. Navigation History (if not at root)
+      if (window.location.pathname !== "/") {
+        window.history.back();
+        return;
+      }
+
+      // 4. Double back to exit at root Home
+      backPressCount++;
+      if (backPressCount === 1) {
+        toast("Press back again to exit", { duration: 1500 });
+        backPressTimer = setTimeout(() => {
+          backPressCount = 0;
+        }, 1500);
+      } else if (backPressCount >= 2) {
+        if (backPressTimer) clearTimeout(backPressTimer);
+        void CapacitorApp.exitApp();
+      }
+    }).then((h) => {
+      handle = h;
+    }).catch(() => {
+      // Browser environment where native backButton listener is not available
+    });
+
+    return () => {
+      if (handle) void handle.remove();
+      if (backPressTimer) clearTimeout(backPressTimer);
+    };
+  }, [mobileSearchOpen, openCreate, importModalOpen]);
 
   const executeSearch = (query: string) => {
     const cleanQ = query.trim();

@@ -124,6 +124,18 @@ function remember(list: Track[], track: Track): Track[] {
   return [cleanTrack, ...list.filter((t) => t.id !== cleanTrack.id).map(sanitizeTrack)].slice(0, MAX_RECENTS);
 }
 
+function triggerHaptic(style: "light" | "medium" = "light") {
+  if (typeof window !== "undefined") {
+    void import("@capacitor/haptics")
+      .then(({ Haptics, ImpactStyle }) => {
+        return Haptics.impact({
+          style: style === "medium" ? ImpactStyle.Medium : ImpactStyle.Light,
+        });
+      })
+      .catch(() => {});
+  }
+}
+
 export function getNextIndex(state: PlayerState): number | null {
   const { queue, index, repeat, shuffle, history } = state;
   if (queue.length === 0) return null;
@@ -221,11 +233,13 @@ export const usePlayer = create<PlayerState>()(
       toggle: () => {
         const s = get();
         if (!s.queue.length) return;
+        triggerHaptic("light");
         set({ isPlaying: !s.isPlaying });
       },
       setPlaying: (v) => set({ isPlaying: v }),
       next: () => {
         const s = get();
+        triggerHaptic("light");
         const n = getNextIndex(s);
         if (n == null) {
           set({ isPlaying: false });
@@ -248,6 +262,7 @@ export const usePlayer = create<PlayerState>()(
       },
       prev: () => {
         const s = get();
+        triggerHaptic("light");
         if (s.currentTime > 3 || (s.shuffle && s.history.length === 0)) {
           set({ currentTime: 0 });
           return;
@@ -296,6 +311,7 @@ export const usePlayer = create<PlayerState>()(
       setAutoplay: (v: boolean) => set({ autoplay: v }),
       toggleVolumeNormalization: () => set({ volumeNormalization: !get().volumeNormalization }),
       toggleLike: (track) => {
+        triggerHaptic("medium");
         const cleanTrack = sanitizeTrack(track);
         const liked = get().likedIds.includes(cleanTrack.id);
         set({

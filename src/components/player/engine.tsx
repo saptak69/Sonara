@@ -236,40 +236,75 @@ export function PlayerEngine() {
     return () => clearInterval(interval);
   }, [isPlaying, current?.id]);
 
-  // Media Session & Lockscreen Controls
+  // Handle Audio Becoming Noisy (when headphones or Bluetooth disconnect on Android)
   useEffect(() => {
-    if (!current?.id || !current?.title || typeof window === 'undefined') return;
-    void import('@capgo/capacitor-media-session').then(({ MediaSession }) => {
+    if (typeof window === "undefined") return;
+    const handleNoisy = () => {
+      setPlaying(false);
+    };
+    window.addEventListener("sonara:audio-becoming-noisy", handleNoisy);
+    return () => window.removeEventListener("sonara:audio-becoming-noisy", handleNoisy);
+  }, [setPlaying]);
+
+  // Unified Media Session & Lockscreen Controls (Android 13+ & Web)
+  useEffect(() => {
+    if (!current?.id || !current?.title || typeof window === "undefined") return;
+
+    const artworkSrc = current.artworkLg || current.artwork;
+    const artworkArray = artworkSrc
+      ? [{ src: artworkSrc, sizes: "512x512", type: "image/jpeg" }]
+      : [];
+
+    // 1. Native Android Capacitor MediaSession
+    void import("@capgo/capacitor-media-session").then(({ MediaSession }) => {
       MediaSession.setMetadata({
         title: current.title,
-        artist: current.artist || 'Unknown Artist',
-        album: current.album || 'Unknown Album',
-        artwork: current.artwork ? [{ src: current.artworkLg || current.artwork, sizes: '512x512', type: 'image/jpeg' }] : []
+        artist: current.artist || "Unknown Artist",
+        album: current.album || "Single",
+        artwork: artworkArray,
       }).catch(() => {});
-      
-      MediaSession.setActionHandler({ action: 'play' }, () => { setPlaying(true); });
-      MediaSession.setActionHandler({ action: 'pause' }, () => { setPlaying(false); });
-      MediaSession.setActionHandler({ action: 'nexttrack' }, () => { next(); });
-      MediaSession.setActionHandler({ action: 'previoustrack' }, () => { prev(); });
-      MediaSession.setActionHandler({ action: 'seekforward' }, () => { 
-        const a = getActive();
-        if(a) a.currentTime = Math.min(a.duration, a.currentTime + 10);
-      });
-      MediaSession.setActionHandler({ action: 'seekbackward' }, () => { 
-        const a = getActive();
-        if(a) a.currentTime = Math.max(0, a.currentTime - 10);
-      });
-    }).catch(() => {});
-  }, [current?.id, current?.title, current?.artist, current?.album, current?.artwork, current?.artworkLg, next, prev, setPlaying]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    void import('@capgo/capacitor-media-session').then(({ MediaSession }) => {
       MediaSession.setPlaybackState({
-        playbackState: isPlaying ? 'playing' : 'paused'
+        playbackState: isPlaying ? "playing" : "paused",
       }).catch(() => {});
+
+      MediaSession.setActionHandler({ action: "play" }, () => setPlaying(true));
+      MediaSession.setActionHandler({ action: "pause" }, () => setPlaying(false));
+      MediaSession.setActionHandler({ action: "nexttrack" }, () => next());
+      MediaSession.setActionHandler({ action: "previoustrack" }, () => prev());
+      MediaSession.setActionHandler({ action: "seekforward" }, () => {
+        const a = getActive();
+        if (a && Number.isFinite(a.duration)) a.currentTime = Math.min(a.duration, a.currentTime + 10);
+      });
+      MediaSession.setActionHandler({ action: "seekbackward" }, () => {
+        const a = getActive();
+        if (a) a.currentTime = Math.max(0, a.currentTime - 10);
+      });
     }).catch(() => {});
-  }, [isPlaying, current?.id]);
+
+    // 2. Standard Web & ChromeOS MediaSession with Scrubber
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: current.title,
+        artist: current.artist || "Unknown Artist",
+        album: current.album || "Single",
+        artwork: artworkArray,
+      });
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+      navigator.mediaSession.setActionHandler("play", () => setPlaying(true));
+      navigator.mediaSession.setActionHandler("pause", () => setPlaying(false));
+      navigator.mediaSession.setActionHandler("previoustrack", () => prev());
+      navigator.mediaSession.setActionHandler("nexttrack", () => next());
+      try {
+        navigator.mediaSession.setActionHandler("seekto", (details) => {
+          if (details.seekTime != null) {
+            const a = getActive();
+            if (a) a.currentTime = details.seekTime;
+          }
+        });
+      } catch {}
+    }
+  }, [current?.id, current?.title, current?.artist, current?.album, current?.artwork, current?.artworkLg, isPlaying, next, prev, setPlaying]);
 
   // Sleep Timer execution
   useEffect(() => {
@@ -528,45 +563,6 @@ export function PlayerEngine() {
     }
     clearPendingSeek();
   }, [pendingSeek, clearPendingSeek]);
-
-  // MediaSession integration
-  useEffect(() => {
-    if (!current) return;
-    // First setup the native Android Capacitor plugin (for lock screen/notifications)
-    import('@capgo/capacitor-media-session')
-      .then(({ MediaSession }) => {
-        MediaSession.setMetadata({
-          title: current.title,
-          artist: current.artist,
-          album: "Sonara",
-          artwork: current.artworkLg
-            ? [{ src: current.artworkLg, sizes: "512x512", type: "image/jpeg" }]
-            : [],
-        });
-        MediaSession.setPlaybackState({ playbackState: isPlaying ? "playing" : "paused" });
-        MediaSession.setActionHandler({ action: "play" }, () => setPlaying(true));
-        MediaSession.setActionHandler({ action: "pause" }, () => setPlaying(false));
-        MediaSession.setActionHandler({ action: "previoustrack" }, () => prev());
-        MediaSession.setActionHandler({ action: "nexttrack" }, () => next());
-      })
-      .catch((e) => console.log("Capacitor MediaSession not available", e));
-
-    // Fallback to standard web MediaSession for browsers
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: current.title,
-        artist: current.artist,
-        artwork: current.artworkLg
-          ? [{ src: current.artworkLg, sizes: "512x512", type: "image/jpeg" }]
-          : [],
-      });
-      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
-      navigator.mediaSession.setActionHandler("play", () => setPlaying(true));
-      navigator.mediaSession.setActionHandler("pause", () => setPlaying(false));
-      navigator.mediaSession.setActionHandler("previoustrack", () => prev());
-      navigator.mediaSession.setActionHandler("nexttrack", () => next());
-    }
-  }, [current, isPlaying, next, prev, setPlaying]);
 
   // Clean standard keyboard listener (Space for toggle, Escape for closing overlays)
   useEffect(() => {
