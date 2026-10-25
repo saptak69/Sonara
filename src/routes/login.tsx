@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState, useEffect } from "react";
-import { authClient, signIn } from "@/lib/auth/client";
+import { authClient, setBearerToken, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -108,16 +108,41 @@ function LoginPage() {
             (googleUser as any).idToken;
 
           if (idToken) {
+            setLoading(true);
             const callbackRes = await fetch("/api/auth/one-tap/callback", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({ idToken, callbackURL: "/studio" }),
             });
-            if (callbackRes.ok) {
+            const data = await callbackRes.json().catch(() => null);
+            if (callbackRes.ok && data?.token) {
+              setBearerToken(data.token);
+              try {
+                await (authClient as any).getSession?.({
+                  fetchOptions: {
+                    headers: { Authorization: `Bearer ${data.token}` },
+                  },
+                });
+              } catch (e) {
+                console.warn("Session refresh notice:", e);
+              }
               toast.success("Welcome to Sonara!");
-              void navigate({ to: "/studio" });
+              window.location.href = "/studio";
+              return;
+            } else {
+              const errMsg =
+                data?.message || data?.error || `Auth failed (${callbackRes.status})`;
+              console.error("One tap callback failed:", callbackRes.status, data);
+              toast.error(errMsg);
+              setLoading(false);
               return;
             }
+          } else {
+            console.warn("No ID token in Google response:", googleUser);
+            toast.error("Google sign in did not return credentials.");
+            setLoading(false);
+            return;
           }
         } catch (e: any) {
           console.warn("Native Google Auth unavailable or failed, falling back to web flow:", e);
@@ -127,7 +152,8 @@ function LoginPage() {
             msg.includes("cancel") ||
             msg.includes("cancelled") ||
             msg.includes("canceled") ||
-            msg.includes("user_cancelled")
+            msg.includes("user_cancelled") ||
+            msg.includes("16")
           ) {
             setLoading(false);
             return;
@@ -191,8 +217,11 @@ function LoginPage() {
       if (res.error) {
         toast.error(res.error.message || "Invalid email or password. Please try again.");
       } else {
+        if ((res.data as any)?.token) {
+          setBearerToken((res.data as any).token);
+        }
         toast.success("Welcome back to Sonara!");
-        void navigate({ to: "/studio" });
+        window.location.href = "/studio";
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Sign in failed";
@@ -231,8 +260,11 @@ function LoginPage() {
       if (res.error) {
         toast.error(res.error.message || "Registration failed. Please try another email.");
       } else {
+        if ((res.data as any)?.token) {
+          setBearerToken((res.data as any).token);
+        }
         toast.success(`Account created! Welcome to Sonara, ${cleanName}.`);
-        void navigate({ to: "/studio" });
+        window.location.href = "/studio";
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Account creation failed";

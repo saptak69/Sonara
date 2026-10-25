@@ -104,28 +104,30 @@ const LOCAL_DEV_ORIGINS: string[] = [
   "http://localhost:8080",
   "http://127.0.0.1:8080",
   "http://[::1]:8080",
+  "capacitor://localhost",
+  "http://localhost",
+  "https://localhost",
+  "https://sonara-murex.vercel.app",
 ];
 const baseURL = explicitBaseURL ?? {
   // Include loopback hosts so dynamic baseURL resolves for local email/password
   // (not only the preview wildcard).
-  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]"],
+  allowedHosts: [...previewAllowedHosts, "localhost", "127.0.0.1", "[::1]", "sonara-murex.vercel.app"],
   // `auto` → trust both http:// and https:// expansions of allowedHosts
   // (preview is https; local dev is http).
   protocol: "auto" as const,
-  fallback: "http://localhost:8080",
+  fallback: "https://sonara-murex.vercel.app",
 };
 
 // Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
 // Missing entries here surface as FORBIDDEN "Invalid origin".
-const trustedOrigins: string[] = explicitBaseURL
-  ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
-  : [
-      // Host wildcards (matched against Origin's host)
-      ...previewAllowedHosts,
-      // Full-origin wildcards (matched against Origin)
-      ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
-      ...LOCAL_DEV_ORIGINS,
-    ];
+const trustedOrigins: string[] = [
+  ...(explicitBaseURL ? [explicitBaseURL] : []),
+  "https://sonara-murex.vercel.app",
+  ...LOCAL_DEV_ORIGINS,
+  ...previewAllowedHosts,
+  ...previewAllowedHosts.flatMap((host) => [`https://${host}`, `http://${host}`]),
+];
 
 const databaseUrl = env("DATABASE_URL");
 
@@ -151,8 +153,12 @@ const database = databaseUrl
 export const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
 
 // Google OAuth credentials (from Vercel / environment or Sonara default)
-const DEFAULT_GOOGLE_CLIENT_ID =
+export const GOOGLE_WEB_CLIENT_ID =
   "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com";
+export const GOOGLE_ANDROID_CLIENT_ID =
+  "1024926408578-sl9v10b7qtkqoo58ankofpkrhppp3kke.apps.googleusercontent.com";
+
+const DEFAULT_GOOGLE_CLIENT_ID = GOOGLE_WEB_CLIENT_ID;
 
 const googleClientId =
   env("GOOGLE_CLIENT_ID") ||
@@ -262,7 +268,11 @@ export const auth = betterAuth({
   plugins: [
     gateIdentitySessions(),
     oneTap({
-      clientId: googleClientId,
+      clientId: [
+        googleClientId,
+        GOOGLE_WEB_CLIENT_ID,
+        GOOGLE_ANDROID_CLIENT_ID,
+      ] as any,
     }),
 
     // One genericOAuth provider per upstream (when auth is on), all federating

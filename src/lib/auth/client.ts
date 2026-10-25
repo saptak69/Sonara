@@ -57,21 +57,29 @@ export { GROK_PROVIDERS };
 // preview after a popup sign-in, so the cookie path is untouched elsewhere.
 const BEARER_KEY = "grok-auth.bearer-token";
 
-/** The stored preview bearer token, or null. */
+/** The stored bearer token, or null. Checked against localStorage and sessionStorage for persistent native sessions. */
 export function getBearerToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return window.sessionStorage.getItem(BEARER_KEY);
+    return (
+      window.localStorage.getItem(BEARER_KEY) ||
+      window.sessionStorage.getItem(BEARER_KEY)
+    );
   } catch {
     return null;
   }
 }
 
-function setBearerToken(token: string | null): void {
+export function setBearerToken(token: string | null): void {
   if (typeof window === "undefined") return;
   try {
-    if (token) window.sessionStorage.setItem(BEARER_KEY, token);
-    else window.sessionStorage.removeItem(BEARER_KEY);
+    if (token) {
+      window.localStorage.setItem(BEARER_KEY, token);
+      window.sessionStorage.setItem(BEARER_KEY, token);
+    } else {
+      window.localStorage.removeItem(BEARER_KEY);
+      window.sessionStorage.removeItem(BEARER_KEY);
+    }
   } catch {
     /* storage unavailable — ignore */
   }
