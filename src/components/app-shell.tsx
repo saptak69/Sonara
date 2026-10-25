@@ -75,14 +75,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [name, setName] = useState("");
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" ? !navigator.onLine : false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [desktopSuggestionsOpen, setDesktopSuggestionsOpen] = useState(false);
   const [isSearchingDesktop, setIsSearchingDesktop] = useState(false);
-  const [mobileSuggestionsOpen, setMobileSuggestionsOpen] = useState(false);
-  const [isSearchingMobile, setIsSearchingMobile] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard shortcut Cmd/Ctrl + K to focus search
   useEffect(() => {
@@ -92,14 +88,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         if (window.innerWidth >= 1024) {
           desktopSearchInputRef.current?.focus();
         } else {
-          setMobileSearchOpen(true);
-          setTimeout(() => mobileSearchInputRef.current?.focus(), 50);
+          navigate({ to: "/search", search: { q: "" } });
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [navigate]);
 
   // Track main area scroll for header surface styling
   useEffect(() => {
@@ -133,11 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     let handle: { remove: () => Promise<void> } | null = null;
 
     void CapacitorApp.addListener("backButton", () => {
-      // 1. Modals & Search Overlays
-      if (mobileSearchOpen) {
-        setMobileSearchOpen(false);
-        return;
-      }
+      // 1. Modals & Dialogs
       if (openCreate) {
         setOpenCreate(false);
         return;
@@ -193,7 +184,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       if (handle) void handle.remove();
       if (backPressTimer) clearTimeout(backPressTimer);
     };
-  }, [mobileSearchOpen, openCreate, importModalOpen]);
+  }, [openCreate, importModalOpen]);
 
   const executeSearch = (query: string) => {
     const cleanQ = query.trim();
@@ -204,8 +195,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       search: { q: cleanQ },
     });
     setDesktopSuggestionsOpen(false);
-    setMobileSuggestionsOpen(false);
-    setMobileSearchOpen(false);
   };
 
   const onSearch = (e: FormEvent) => {
@@ -432,66 +421,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
         >
           <div className="flex items-center justify-between gap-4 w-full max-w-[1280px]">
-            {/* Mobile Search Overlay Input */}
-            {mobileSearchOpen ? (
-              <div className="flex items-center gap-2 w-full animate-in fade-in duration-150 lg:hidden">
-                <form onSubmit={onSearch} className="relative z-50 flex-1">
-                  <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#7A726C]" />
-                  <input
-                    ref={mobileSearchInputRef}
-                    autoFocus
-                    value={q}
-                    onChange={(e) => {
-                      setQ(e.target.value);
-                      setMobileSuggestionsOpen(true);
-                    }}
-                    onFocus={() => setMobileSuggestionsOpen(true)}
-                    placeholder="Search songs, artists, albums..."
-                    className="h-10 w-full rounded-full bg-[#151211] pr-9 pl-10 text-sm text-[#F4EFEA] placeholder:text-[#7A726C] outline-none border border-[rgba(255,238,225,0.08)] focus:border-[#FF5B2E]/60 focus:ring-1 focus:ring-[#FF5B2E]/60"
-                  />
-                  {q && (
-                    <button type="button" onClick={() => { setQ(""); setMobileSuggestionsOpen(false); }} className="absolute top-1/2 right-3 -translate-y-1/2 text-[#7A726C] hover:text-[#F4EFEA] p-1">
-                      <X className="size-4" />
-                    </button>
-                  )}
-                  <SearchSuggestions query={q} isOpen={mobileSuggestionsOpen} onClose={() => setMobileSuggestionsOpen(false)} onSelectQuery={executeSearch} onLoadingChange={setIsSearchingMobile} />
-                </form>
-                <button type="button" onClick={() => { setMobileSearchOpen(false); setMobileSuggestionsOpen(false); }} className="text-sm font-medium text-[#A9A19B] hover:text-[#F4EFEA] px-2 py-1">
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              /* Mobile Compact Top Bar: Logo left, Actions right (NO duplicate title!) */
-              <div className="flex items-center justify-between w-full lg:hidden">
-                <Logo compact={true} className="size-8 active:scale-95 transition-transform" />
-                
-                <div className="flex items-center gap-2">
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setMobileSearchOpen(true);
-                      setTimeout(() => mobileSearchInputRef.current?.focus(), 50);
-                    }}
-                    className="p-2 text-[#A9A19B] hover:text-[#F4EFEA] transition-colors"
-                    title="Search"
-                  >
-                    <Search className="size-5" strokeWidth={1.75} />
-                  </button>
-                  <Link to="/about" className="p-2 text-[#A9A19B] hover:text-[#F4EFEA] transition-colors" title="About">
-                    <Info className="size-5" strokeWidth={1.75} />
+            {/* Mobile Top Bar: Logo left, Actions right (Search is accessed via bottom navigation) */}
+            <div className="flex items-center justify-between w-full lg:hidden">
+              <Logo compact={true} className="size-8 active:scale-95 transition-transform" />
+              
+              <div className="flex items-center gap-2">
+                <Link to="/about" className="p-2 text-[#A9A19B] hover:text-[#F4EFEA] transition-colors" title="About">
+                  <Info className="size-5" strokeWidth={1.75} />
+                </Link>
+                {user && !user.isDevFallback ? (
+                  <Link to="/studio" className="size-8 rounded-full overflow-hidden border border-white/20 active:scale-95" title={user.displayName || "User"}>
+                    <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-full" />
                   </Link>
-                  {user && !user.isDevFallback ? (
-                    <Link to="/studio" className="size-8 rounded-full overflow-hidden border border-white/20 active:scale-95" title={user.displayName || "User"}>
-                      <Cover src={user.profileImageUrl} alt="User" rounded="full" className="size-full" />
-                    </Link>
-                  ) : (
-                    <Link to="/login" className="flex items-center justify-center size-8 rounded-full bg-[#FF5B2E] text-black active:scale-95" title="Sign In">
-                      <User className="size-4" strokeWidth={2.2} />
-                    </Link>
-                  )}
-                </div>
+                ) : (
+                  <Link to="/login" className="flex items-center justify-center size-8 rounded-full bg-[#FF5B2E] text-black active:scale-95" title="Sign In">
+                    <User className="size-4" strokeWidth={2.2} />
+                  </Link>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Desktop Top Bar: Search Left-aligned, Actions Right */}
             <div className="hidden lg:flex items-center justify-between w-full">
