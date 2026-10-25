@@ -58,7 +58,22 @@ function LoginPage() {
     }
   }, [isPending, userId, isDevFallback, navigate]);
 
-  // Handle Continue with Google (Real Google OAuth with seamless fallback)
+  // Automatically initialize Google One Tap on web for instant 1-click sign in
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() && typeof window !== "undefined") {
+      try {
+        void (authClient as any).oneTap?.({
+          callbackURL: "/studio",
+          context: "signin",
+          autoSelect: true,
+        });
+      } catch (err) {
+        console.warn("Google One Tap auto-init:", err);
+      }
+    }
+  }, []);
+
+  // Handle Continue with Google (Real Google OAuth with 1-click One Tap + seamless fallback)
   const handleGoogleClick = async () => {
     setLoading(true);
     try {
@@ -82,13 +97,12 @@ function LoginPage() {
             (googleUser as any).idToken;
 
           if (idToken) {
-            const res = await (authClient.signIn as any).social?.({
-              provider: "google",
-              idToken: { token: idToken },
+            const callbackRes = await fetch("/api/auth/one-tap/callback", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken, callbackURL: "/studio" }),
             });
-            if (res?.error) {
-              console.warn("Native ID token sign in error, falling back to web flow:", res.error);
-            } else {
+            if (callbackRes.ok) {
               toast.success("Welcome to Sonara!");
               void navigate({ to: "/studio" });
               return;
@@ -107,33 +121,36 @@ function LoginPage() {
             setLoading(false);
             return;
           }
-          // Do not show a blocking error toast! Inform user and seamlessly proceed to web OAuth
           toast.info("Connecting with Google...", { duration: 2500 });
         }
       }
 
-      // Web / Browser OAuth flow (Vercel & Android WebView)
-      const res = await (authClient.signIn as any).social?.({
-        provider: "google",
-        callbackURL: `${window.location.origin}/studio`,
-      });
-
-      if (res?.error) {
-        // Fallback to grok broker if direct provider isn't ready
+      // In browser: trigger Google One Tap popup prompt first
+      if (!Capacitor.isNativePlatform() && typeof window !== "undefined" && (authClient as any).oneTap) {
         try {
-          await signIn("grok-google", {
+          await (authClient as any).oneTap({
             callbackURL: `${window.location.origin}/studio`,
+            context: "signin",
           });
-          return;
-        } catch {
-          toast.error(res.error.message || "Failed to start Google sign in", {
-            description:
-              "To connect real Google accounts, set GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET in your environment, or sign in directly with your email below.",
-            duration: 6000,
-          });
+        } catch (e) {
+          console.warn("Google One Tap prompt notice:", e);
         }
-      } else if (res?.data?.url) {
-        window.location.href = res.data.url;
+      }
+
+      // Web / Browser OAuth flow with prompt: 'select_account' (no password prompt required)
+      try {
+        await signIn("grok-google", {
+          callbackURL: `${window.location.origin}/studio`,
+        });
+        return;
+      } catch {
+        const res = await (authClient.signIn as any).social?.({
+          provider: "google",
+          callbackURL: `${window.location.origin}/studio`,
+        });
+        if (res?.data?.url) {
+          window.location.href = res.data.url;
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Google OAuth failed";

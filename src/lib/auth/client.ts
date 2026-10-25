@@ -1,7 +1,10 @@
-import { genericOAuthClient } from "better-auth/client/plugins";
+import { genericOAuthClient, oneTapClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import { runPreSignInSignOut, runSignOut } from "../../../scripts/sign-out-plan.mjs";
 import { GROK_PROVIDERS } from "./providers";
+
+export const GOOGLE_CLIENT_ID =
+  "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com";
 
 /**
  * Better Auth client for this React SPA (browser-side).
@@ -18,7 +21,14 @@ import { GROK_PROVIDERS } from "./providers";
  * the visitor stays signed in.
  */
 export const authClient = createAuthClient({
-  plugins: [genericOAuthClient()],
+  plugins: [
+    genericOAuthClient(),
+    oneTapClient({
+      clientId: GOOGLE_CLIENT_ID,
+      autoSelect: true,
+      context: "signin",
+    }),
+  ],
   fetchOptions: {
     onRequest(ctx) {
       const token = getBearerToken();

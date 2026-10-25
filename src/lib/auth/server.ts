@@ -30,7 +30,7 @@
  * a verified id via `@/lib/auth/middleware`.
  */
 import { betterAuth } from "better-auth";
-import { bearer, genericOAuth } from "better-auth/plugins";
+import { bearer, genericOAuth, oneTap } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { randomBytes } from "node:crypto";
@@ -150,28 +150,33 @@ const database = databaseUrl
 /** Session token cookie name — also read by the live-preview popup completion page. */
 export const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
 
-// Google Direct OAuth credentials (from Vercel / environment)
+// Google OAuth credentials (from Vercel / environment or Sonara default)
+const DEFAULT_GOOGLE_CLIENT_ID =
+  "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com";
+
 const googleClientId =
   env("GOOGLE_CLIENT_ID") ||
   env("GOOGLE_OAUTH_CLIENT_ID") ||
   env("AUTH_GOOGLE_ID") ||
-  env("VITE_GOOGLE_CLIENT_ID");
+  env("VITE_GOOGLE_CLIENT_ID") ||
+  DEFAULT_GOOGLE_CLIENT_ID;
 
 const googleClientSecret =
   env("GOOGLE_CLIENT_SECRET") ||
   env("GOOGLE_OAUTH_CLIENT_SECRET") ||
   env("AUTH_GOOGLE_SECRET");
 
-// We only need the Client ID to verify ID tokens from Android Capacitor
+// Only bypass broker if full client secret is explicitly available in env
+const hasFullDirectGoogleAuth = Boolean(googleClientId && googleClientSecret);
 const hasDirectGoogleAuth = Boolean(googleClientId);
 
 // Built separately so the `betterAuth({...})` call stays easy to edit without
 // breaking brackets (models often trip on the conditional plugin spread).
-// When direct Google OAuth is configured, exclude grok-google so it never redirects to xAI broker.
+// Use prompt: "select_account" so existing Google sessions sign in with 1 click without re-asking password.
 const grokOAuthPlugin = authConfigured
   ? genericOAuth({
       config: GROK_PROVIDERS.filter(
-        (p) => !hasDirectGoogleAuth || p.providerId !== "grok-google"
+        (p) => !hasFullDirectGoogleAuth || p.providerId !== "grok-google"
       ).map(({ providerId, idp }) => ({
         providerId,
         clientId: grokClientId as string,
@@ -182,7 +187,7 @@ const grokOAuthPlugin = authConfigured
         tokenUrl: grokTokenUrl,
         userInfoUrl: grokUserInfoUrl,
         scopes: ["openid", "profile", "email"],
-        authorizationUrlParams: { idp, prompt: "login" },
+        authorizationUrlParams: { idp, prompt: "select_account" },
       })),
     })
   : null;
@@ -256,6 +261,9 @@ export const auth = betterAuth({
 
   plugins: [
     gateIdentitySessions(),
+    oneTap({
+      clientId: googleClientId,
+    }),
 
     // One genericOAuth provider per upstream (when auth is on), all federating
     // to the broker with the SAME client and differing only by the `idp` hint.
