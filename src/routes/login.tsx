@@ -72,7 +72,9 @@ function LoginPage() {
           });
           const googleUser = await SocialLogin.login({
             provider: "google",
-            options: {},
+            options: {
+              scopes: ["email", "profile"],
+            },
           });
           const idToken =
             (googleUser as any).result?.idToken ||

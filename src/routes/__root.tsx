@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/app-shell";
 import { AuroraBackground } from "@/components/ui/aurora-background";
 import { PushNotificationsSetup } from "@/components/push-notifications";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { QueryProvider } from "@/lib/query-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -49,6 +50,7 @@ export const Route = createRootRoute({
       </head>
       <body className="bg-bg text-fg" style={{ backgroundColor: "#000000", color: "#ffffff" }}>
 
+        <ServiceWorkerRegister />
         <PushNotificationsSetup />
         <AuthProvider>
           <QueryProvider>
