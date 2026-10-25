@@ -58,9 +58,20 @@ function LoginPage() {
     }
   }, [isPending, userId, isDevFallback, navigate]);
 
-  // Automatically initialize Google One Tap on web for instant 1-click sign in
+  // Automatically initialize Google One Tap on web & SocialLogin on Android for instant 1-click sign in
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() && typeof window !== "undefined") {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        void SocialLogin.initialize({
+          google: {
+            webClientId: "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com",
+            mode: "online",
+          },
+        });
+      } catch (err) {
+        console.warn("Native SocialLogin auto-init:", err);
+      }
+    } else if (typeof window !== "undefined") {
       try {
         void (authClient as any).oneTap?.({
           callbackURL: "/studio",
@@ -73,7 +84,7 @@ function LoginPage() {
     }
   }, []);
 
-  // Handle Continue with Google (Real Google OAuth with 1-click One Tap + seamless fallback)
+  // Handle Continue with Google (Native 1-Tap on Android, One Tap on Web)
   const handleGoogleClick = async () => {
     setLoading(true);
     try {
@@ -88,7 +99,7 @@ function LoginPage() {
           const googleUser = await SocialLogin.login({
             provider: "google",
             options: {
-              scopes: ["email", "profile"],
+              style: "bottom", // Triggers Android 1-Tap Credential Manager bottom sheet
             },
           });
           const idToken =
