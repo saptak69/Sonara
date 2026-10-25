@@ -10,7 +10,9 @@ const config: CapacitorConfig = {
     cleartext: true,
     allowNavigation: [
       "accounts.google.com",
-      "*.google.com"
+      "*.google.com",
+      "*.googleusercontent.com",
+      "*.gstatic.com"
     ]
   },
   overrideUserAgent: "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",

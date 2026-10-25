@@ -143,3 +143,30 @@ test("Offline Cache: metadata deduplication and retrieval simulation", () => {
   assert.equal(metadata.length, 2);
   assert.equal(metadata.some((t) => t.id === "song_1"), false);
 });
+
+test("Offline Download Strategy: multi-tier candidate generation with bitrates & proxy fallback", () => {
+  const getCandidateUrls = (directUrl, origin = "https://sonara-murex.vercel.app") => {
+    const candidates = [directUrl];
+    if (directUrl.includes("saavncdn.com") && directUrl.includes("_320.mp4")) {
+      candidates.push(directUrl.replace("_320.mp4", "_160.mp4"));
+      candidates.push(directUrl.replace("_320.mp4", "_96.mp4"));
+    }
+    const proxyUrl = `${origin}/api/stream?url=${encodeURIComponent(directUrl)}`;
+    candidates.push(proxyUrl);
+    return candidates;
+  };
+
+  const saavn320 = "https://aac.saavncdn.com/123/song_320.mp4";
+  const saavnCandidates = getCandidateUrls(saavn320);
+  assert.equal(saavnCandidates.length, 4);
+  assert.equal(saavnCandidates[0], "https://aac.saavncdn.com/123/song_320.mp4");
+  assert.equal(saavnCandidates[1], "https://aac.saavncdn.com/123/song_160.mp4");
+  assert.equal(saavnCandidates[2], "https://aac.saavncdn.com/123/song_96.mp4");
+  assert.ok(saavnCandidates[3].includes("/api/stream?url="));
+
+  const standardUrl = "https://example.com/audio.mp3";
+  const standardCandidates = getCandidateUrls(standardUrl);
+  assert.equal(standardCandidates.length, 2);
+  assert.equal(standardCandidates[0], standardUrl);
+  assert.ok(standardCandidates[1].includes("/api/stream?url="));
+});

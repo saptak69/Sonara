@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useState, useEffect } from "react";
-import { authClient } from "@/lib/auth/client";
+import { authClient, signIn } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,7 @@ function LoginPage() {
     }
   }, [isPending, userId, isDevFallback, navigate]);
 
-  // Handle Continue with Google (Real Google OAuth)
+  // Handle Continue with Google (Real Google OAuth with seamless fallback)
   const handleGoogleClick = async () => {
     setLoading(true);
     try {
@@ -74,42 +74,62 @@ function LoginPage() {
             provider: "google",
             options: {},
           });
-          const idToken = (googleUser as any).result?.idToken || (googleUser as any).result?.authentication?.idToken || (googleUser as any).idToken;
-          
+          const idToken =
+            (googleUser as any).result?.idToken ||
+            (googleUser as any).result?.authentication?.idToken ||
+            (googleUser as any).idToken;
+
           if (idToken) {
             const res = await (authClient.signIn as any).social?.({
               provider: "google",
               idToken: { token: idToken },
             });
             if (res?.error) {
-              toast.error(res.error.message || "Failed native Google sign in");
+              console.warn("Native ID token sign in error, falling back to web flow:", res.error);
             } else {
               toast.success("Welcome to Sonara!");
               void navigate({ to: "/studio" });
+              return;
             }
-            return;
           }
         } catch (e: any) {
-           console.error("Native Google Auth Error", e);
-           if (e.message && e.message.includes("cancel")) return;
-           toast.error(`Native Google Auth failed: ${e.message || "Unknown error"}`);
-           return;
-        } finally {
-           setLoading(false);
+          console.warn("Native Google Auth unavailable or failed, falling back to web flow:", e);
+          const msg = (e?.message || "").toLowerCase();
+          // If the user explicitly cancelled/dismissed the account picker, respect that choice
+          if (
+            msg.includes("cancel") ||
+            msg.includes("cancelled") ||
+            msg.includes("canceled") ||
+            msg.includes("user_cancelled")
+          ) {
+            setLoading(false);
+            return;
+          }
+          // Do not show a blocking error toast! Inform user and seamlessly proceed to web OAuth
+          toast.info("Connecting with Google...", { duration: 2500 });
         }
       }
 
+      // Web / Browser OAuth flow (Vercel & Android WebView)
       const res = await (authClient.signIn as any).social?.({
         provider: "google",
         callbackURL: `${window.location.origin}/studio`,
       });
 
       if (res?.error) {
-        toast.error(res.error.message || "Failed to start Google sign in", {
-          description:
-            "To connect real Google accounts, set GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET in your environment, or sign in directly with your email below.",
-          duration: 6000,
-        });
+        // Fallback to grok broker if direct provider isn't ready
+        try {
+          await signIn("grok-google", {
+            callbackURL: `${window.location.origin}/studio`,
+          });
+          return;
+        } catch {
+          toast.error(res.error.message || "Failed to start Google sign in", {
+            description:
+              "To connect real Google accounts, set GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET in your environment, or sign in directly with your email below.",
+            duration: 6000,
+          });
+        }
       } else if (res?.data?.url) {
         window.location.href = res.data.url;
       }

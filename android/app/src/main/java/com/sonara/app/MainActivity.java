@@ -26,6 +26,11 @@ public class MainActivity extends BridgeActivity {
             // Enable storage for IndexedDB, CacheStorage & PGlite
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
+
+            // Ensure CookieManager preserves OAuth cookies across cross-origin redirects
+            android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
+            cookieManager.setAcceptCookie(true);
+            cookieManager.setAcceptThirdPartyCookies(webView, true);
         }
 
         // Handle Audio Becoming Noisy (pause playback when headphones or bluetooth disconnect)

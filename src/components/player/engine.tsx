@@ -4,7 +4,7 @@ import { recordStreamServerFn } from "@/lib/artist-studio";
 import { resolveFullTrackStreamServerFn } from "@/lib/saavn-api";
 import { recordPlayHistoryServerFn } from "@/lib/library-service";
 import { fetchTrack } from "@/lib/music-api";
-import { getOfflineAudioUrl } from "@/lib/offline-cache";
+import { getOfflineAudioUrl, isTrackDownloaded } from "@/lib/offline-cache";
 import { toast } from "sonner";
 
 import type { Track as _Track } from "@/lib/types";
@@ -407,32 +407,60 @@ export function PlayerEngine() {
              });
          }
       } else {
-         // Did not preload (e.g., user clicked a specific track from search)
+         // Did not preload (e.g., user clicked a specific track from search or library)
          activeAudio.pause();
          try { activeAudio.currentTime = 0; } catch { /* ignore error */ }
-         activeAudio.src = resolvePlayableUrl(current);
-         activeAudio.load();
-         if (isPlaying) {
-             activeAudio.play().catch((err) => {
-                 if (err.name !== "AbortError") setPlaying(false);
-             });
-         }
 
-         // Check offline cache for zero-latency local playback
-         void getOfflineAudioUrl(current.id).then((cachedBlobUrl) => {
-           if (cachedBlobUrl && currentTrackIdRef.current === current.id) {
-             const active = getActive();
-             if (active && active.src !== cachedBlobUrl) {
-               const pos = active.currentTime;
-               const wasPlaying = !active.paused;
+         if (isTrackDownloaded(current.id)) {
+           // 100% Offline playback: load cached audio blob directly
+           void getOfflineAudioUrl(current.id).then((cachedBlobUrl) => {
+             if (cachedBlobUrl && currentTrackIdRef.current === current.id) {
+               const active = getActive();
+               if (!active) return;
                active.src = cachedBlobUrl;
-               try { active.currentTime = pos; } catch { /* ignore */ }
-               if (wasPlaying || isPlaying) {
+               active.load();
+               if (usePlayer.getState().isPlaying) {
                  active.play().catch(() => {});
                }
+             } else {
+               // Fallback to online url if blob extraction failed
+               const active = getActive();
+               if (active) {
+                 active.src = resolvePlayableUrl(current);
+                 active.load();
+                 if (usePlayer.getState().isPlaying) {
+                   active.play().catch((err) => {
+                     if (err.name !== "AbortError") setPlaying(false);
+                   });
+                 }
+               }
              }
+           });
+         } else {
+           activeAudio.src = resolvePlayableUrl(current);
+           activeAudio.load();
+           if (isPlaying) {
+               activeAudio.play().catch((err) => {
+                   if (err.name !== "AbortError") setPlaying(false);
+               });
            }
-         });
+
+           // Check offline cache in case it was stored without updated metadata
+           void getOfflineAudioUrl(current.id).then((cachedBlobUrl) => {
+             if (cachedBlobUrl && currentTrackIdRef.current === current.id) {
+               const active = getActive();
+               if (active && active.src !== cachedBlobUrl) {
+                 const pos = active.currentTime;
+                 const wasPlaying = !active.paused;
+                 active.src = cachedBlobUrl;
+                 try { active.currentTime = pos; } catch { /* ignore */ }
+                 if (wasPlaying || isPlaying) {
+                   active.play().catch(() => {});
+                 }
+               }
+             }
+           });
+         }
       }
     } else {
       // Just play/pause toggle for current track
@@ -458,9 +486,19 @@ export function PlayerEngine() {
           if (nextT && nextT.id !== preloadedTrackRef.current && nextT.id !== currentT.id) {
               const inactive = getInactive();
               if (inactive) {
-                  inactive.src = resolvePlayableUrl(nextT);
-                  inactive.load();
-                  preloadedTrackRef.current = nextT.id;
+                  if (isTrackDownloaded(nextT.id)) {
+                    void getOfflineAudioUrl(nextT.id).then((blob) => {
+                      if (blob) {
+                        inactive.src = blob;
+                        inactive.load();
+                        preloadedTrackRef.current = nextT.id;
+                      }
+                    });
+                  } else {
+                    inactive.src = resolvePlayableUrl(nextT);
+                    inactive.load();
+                    preloadedTrackRef.current = nextT.id;
+                  }
               }
           }
       });

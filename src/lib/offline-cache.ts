@@ -55,35 +55,120 @@ export function getDownloadedTracks(): Track[] {
 
 /**
  * Downloads audio stream to browser Cache API and saves track metadata.
+ * Uses a resilient multi-tier download strategy:
+ * 1. Resolves full streamUrl if track only has a 30s preview or missing streamUrl
+ * 2. Tries direct CDN candidates (320, 160, 96 kbps)
+ * 3. Falls back to streaming proxy (/api/stream) if direct fetch encounters CORS or CDN 404
+ * 4. Caches both audio blob and artwork thumbnail in Cache API
  */
 export async function downloadTrackAudio(
   track: Track,
   onProgress?: (pct: number) => void,
 ): Promise<boolean> {
-  if (!isOfflineSupported() || !track?.streamUrl) return false;
+  if (!isOfflineSupported() || !track?.id) return false;
 
   try {
-    const cache = await caches.open(CACHE_NAME);
-    const cacheKey = getCacheKey(track.id);
+    let resolvedTrack: Track = { ...track };
 
-    // Determine target URL for audio
-    let fetchUrl = track.streamUrl;
-    if (!fetchUrl.includes("saavncdn.com") && !fetchUrl.includes("/api/stream") && !fetchUrl.startsWith("http")) {
+    // 1. If streamUrl is missing or is a short 30-second preview, dynamically resolve the full master stream
+    const isPreview =
+      !resolvedTrack.streamUrl ||
+      resolvedTrack.streamUrl.includes("dzcdn.net") ||
+      (resolvedTrack.duration != null && resolvedTrack.duration <= 35);
+
+    if (isPreview && resolvedTrack.title) {
+      try {
+        const { resolveFullTrackStreamServerFn } = await import("./saavn-api");
+        const full = await resolveFullTrackStreamServerFn({
+          data: { title: resolvedTrack.title, artist: resolvedTrack.artist },
+        });
+        if (full?.streamUrl) {
+          resolvedTrack = {
+            ...resolvedTrack,
+            streamUrl: full.streamUrl,
+            duration: full.duration || resolvedTrack.duration,
+          };
+        }
+      } catch (err) {
+        console.warn("Could not resolve full track stream for download:", err);
+      }
+    }
+
+    if (!resolvedTrack.streamUrl) {
+      // Fallback: try fetchTrack if track has an id
+      try {
+        const { fetchTrack } = await import("./music-api");
+        const fetched = await fetchTrack(resolvedTrack.id);
+        if (fetched?.streamUrl) {
+          resolvedTrack = { ...resolvedTrack, ...fetched };
+        }
+      } catch (err) {
+        console.warn("fetchTrack failed for download:", err);
+      }
+    }
+
+    if (!resolvedTrack.streamUrl) {
+      console.error(`Cannot download track "${resolvedTrack.title}": no valid streamUrl`);
       return false;
     }
 
-    if (!fetchUrl.includes("saavncdn.com") && !fetchUrl.includes("/api/stream")) {
-      fetchUrl = `/api/stream?url=${encodeURIComponent(fetchUrl)}`;
-    }
-
     onProgress?.(10);
-    const res = await fetch(fetchUrl);
-    if (!res.ok && res.status !== 206) {
-      throw new Error(`Download failed with status ${res.status}`);
+
+    const cache = await caches.open(CACHE_NAME);
+    const cacheKey = getCacheKey(resolvedTrack.id);
+
+    // Multi-tier resilient fetch strategy
+    const candidateUrls: string[] = [];
+    const directUrl = resolvedTrack.streamUrl;
+    candidateUrls.push(directUrl);
+
+    if (directUrl.includes("saavncdn.com")) {
+      if (directUrl.includes("_320.mp4")) {
+        candidateUrls.push(directUrl.replace("_320.mp4", "_160.mp4"));
+        candidateUrls.push(directUrl.replace("_320.mp4", "_96.mp4"));
+      }
     }
 
-    onProgress?.(60);
+    // Proxy URL (works across all origins, handles range and content-length)
+    const proxyBase =
+      typeof window !== "undefined" && window.location.origin.startsWith("http")
+        ? window.location.origin
+        : "https://sonara-murex.vercel.app";
+    const proxyUrl = `${proxyBase}/api/stream?url=${encodeURIComponent(directUrl)}`;
+    candidateUrls.push(proxyUrl);
+
+    let res: Response | null = null;
+
+    for (const url of candidateUrls) {
+      try {
+        const response = await fetch(url, {
+          headers: { Accept: "*/*" },
+          mode: "cors",
+        });
+
+        if (response.ok || response.status === 206) {
+          res = response;
+          break;
+        }
+      } catch {
+        // Network or CORS failure on candidate, continue to next
+      }
+    }
+
+    if (!res) {
+      throw new Error(`All download candidates failed for track "${resolvedTrack.title}"`);
+    }
+
+    onProgress?.(50);
+
     const blob = await res.blob();
+    if (!blob || blob.size < 500) {
+      throw new Error(`Downloaded audio file is empty or corrupted (${blob?.size ?? 0} bytes)`);
+    }
+
+    onProgress?.(80);
+
+    // Put into Cache API
     const storedResponse = new Response(blob, {
       status: 200,
       headers: {
@@ -94,11 +179,26 @@ export async function downloadTrackAudio(
     });
 
     await cache.put(cacheKey, storedResponse);
-    onProgress?.(90);
+
+    // Cache artwork thumbnail for offline display
+    const artUrl = resolvedTrack.artworkLg || resolvedTrack.artwork;
+    if (artUrl) {
+      try {
+        const artRes = await fetch(artUrl, { mode: "no-cors" });
+        if (artRes) {
+          const artCacheKey = `/offline/artwork/${encodeURIComponent(resolvedTrack.id)}`;
+          await cache.put(artCacheKey, artRes);
+        }
+      } catch {
+        // Artwork caching is best-effort
+      }
+    }
+
+    onProgress?.(95);
 
     // Update metadata list
-    const existing = getStoredMetadata().filter((t) => t.id !== track.id);
-    saveStoredMetadata([track, ...existing]);
+    const existing = getStoredMetadata().filter((t) => t.id !== resolvedTrack.id);
+    saveStoredMetadata([resolvedTrack, ...existing]);
     onProgress?.(100);
 
     return true;
@@ -136,6 +236,24 @@ export async function getOfflineAudioUrl(trackId: string): Promise<string | null
   try {
     const cache = await caches.open(CACHE_NAME);
     const matched = await cache.match(getCacheKey(trackId));
+    if (!matched) return null;
+
+    const blob = await matched.blob();
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Retrieves a cached Blob URL for track artwork when offline.
+ */
+export async function getOfflineArtworkUrl(trackId: string): Promise<string | null> {
+  if (!isOfflineSupported()) return null;
+
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const matched = await cache.match(`/offline/artwork/${encodeURIComponent(trackId)}`);
     if (!matched) return null;
 
     const blob = await matched.blob();

@@ -58,16 +58,21 @@ export const Route = createFileRoute("/api/stream")({
             signal: abortController.signal,
           });
 
-          // Resilient audio quality fallback: If JioSaavn 320kbps returns 404, fallback to 160kbps
-          if (upstream.status === 404 && targetUrl.includes("saavncdn.com") && targetUrl.includes("_320.mp4")) {
-            const fallback160 = targetUrl.replace("_320.mp4", "_160.mp4");
-            const retry = await fetch(fallback160, {
-              headers: upstreamHeaders,
-              redirect: "follow",
-              signal: abortController.signal,
-            });
-            if (retry.ok || retry.status === 206) {
-              upstream = retry;
+          // Resilient audio quality fallback: If JioSaavn CDN returns 404 for 320kbps, cascade down to available bitrates
+          if (upstream.status === 404 && targetUrl.includes("saavncdn.com")) {
+            const fallbackBitrates = ["_160.mp4", "_96.mp4", "_48.mp4", "_12.mp4"];
+            for (const br of fallbackBitrates) {
+              const fallbackUrl: string = targetUrl.replace(/_(?:320|160|96|48|12)\.(mp4|m4a)/, br);
+              if (fallbackUrl === targetUrl) continue;
+              const retry = await fetch(fallbackUrl, {
+                headers: upstreamHeaders,
+                redirect: "follow",
+                signal: abortController.signal,
+              });
+              if (retry.ok || retry.status === 206) {
+                upstream = retry;
+                break;
+              }
             }
           }
 
