@@ -110,9 +110,10 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     private void applyTelevisionScale(WebView webView, WebSettings settings) {
         settings.setUseWideViewPort(false);
         settings.setSupportZoom(false);
-        int widthPx = getResources().getDisplayMetrics().widthPixels;
-        int scalePercent = Math.max(100, Math.round(widthPx / 1050f * 100f));
-        webView.setInitialScale(scalePercent);
+        android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
+        // Never go below the screen's normal scale (density), only above it on big screens.
+        float scale = Math.max(metrics.density, metrics.widthPixels / 1050f);
+        webView.setInitialScale(Math.round(scale * 100f));
     }
 
     private boolean isTelevision() {
