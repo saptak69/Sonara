@@ -24,3 +24,6 @@ android/keystore.properties
 android/*.keystore
 android/*.jks
 !android/app/debug.keystore
+release/
+*.apk
+*.aab
