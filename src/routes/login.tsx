@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/logo";
 import {
   SignInCancelled,
+  isNativeApp,
   promptGoogleOneTap,
   signInWithEmail,
   signInWithGoogle,
@@ -66,7 +67,12 @@ function LoginPage() {
     setFormError(null);
     try {
       await signInWithGoogle(redirect);
-      // On Android the session is ready now; on the web we're being redirected.
+      // On Android the session is ready now: stop the spinner and leave the page.
+      // (On the web the browser is already being redirected to Google.)
+      if (isNativeApp()) {
+        setBusy(null);
+        void navigate({ href: redirect, replace: true });
+      }
     } catch (err) {
       if (!(err instanceof SignInCancelled)) {
         setFormError(err instanceof Error ? err.message : "Google sign-in failed.");

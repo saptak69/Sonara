@@ -137,7 +137,10 @@ async function nativeGoogleSignIn() {
 
   const token = res.headers.get("set-auth-token") ?? body?.token;
   if (token) setSessionToken(token);
+  // The token exchange above bypasses authClient, so tell its session store to reload;
+  // otherwise screens such as /login keep believing nobody is signed in.
   await authClient.getSession({ query: { disableCookieCache: true } });
+  authClient.$store.notify("$sessionSignal");
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<void> {
