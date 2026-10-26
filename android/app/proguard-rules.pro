@@ -38,5 +38,5 @@
 -keep class com.google.android.gms.auth.** { *; }
 -keep class com.google.android.gms.common.** { *; }
 -keep class com.google.android.gms.tasks.** { *; }
--keep class com.google.firebase.** { *; }
 -dontwarn androidx.credentials.**
+-dontwarn com.google.firebase.ktx.**
