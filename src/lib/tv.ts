@@ -37,7 +37,7 @@ const FOCUSABLE = [
 export function isTvDevice(): boolean {
   if (typeof window === "undefined") return false;
   const ua = navigator.userAgent;
-  if (/Android TV|GoogleTV|Google TV|\bAFT[A-Z]|BRAVIA|SmartTV|SMART-TV|Tizen|Web0S|CrKey|\bTV\b/i.test(ua)) {
+  if (/SonaraTV|Android TV|GoogleTV|Google TV|\bAFT[A-Z]|BRAVIA|SmartTV|SMART-TV|Tizen|Web0S|CrKey|\bTV\b/i.test(ua)) {
     return true;
   }
   // TV browsers report no fine pointer and no hover at all.
@@ -248,17 +248,56 @@ export function installRemoteNavigation(): () => void {
     if (target) focusElement(target);
   };
 
+  // Enter on a custom role="button" control (not a real <button>) should press it.
+  const onActivate = (event: KeyboardEvent) => {
+    if (event.key !== "Enter" || event.defaultPrevented) return;
+    const el = document.activeElement as HTMLElement | null;
+    if (!el || el.matches("button, a[href], input, textarea, select, summary")) return;
+    if (el.matches("[role=button], [role=option], [role=menuitem], [role=tab]")) {
+      event.preventDefault();
+      el.click();
+    }
+  };
+
+  // When the focused element disappears (page change, dialog closed), put focus back
+  // on something sensible so the next arrow press doesn't start from nowhere.
+  let refocusTimer: number | undefined;
+  const onFocusOut = (event: FocusEvent) => {
+    if (!document.documentElement.classList.contains("tv")) return;
+    const left = event.target as HTMLElement | null;
+    window.clearTimeout(refocusTimer);
+    refocusTimer = window.setTimeout(() => {
+      const gone = !left || !left.isConnected;
+      const lost = !document.activeElement || document.activeElement === document.body;
+      if (gone && lost) focusFirst(activeScope());
+    }, 150);
+  };
+
   const onPointer = (event: PointerEvent) => {
     // A real mouse or finger means the remote isn't in use (unless this is a TV).
     if (!onTv && event.pointerType !== "") setRemoteMode(false);
   };
 
   window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keydown", onActivate);
+  window.addEventListener("focusout", onFocusOut);
   window.addEventListener("pointerdown", onPointer, { passive: true });
+
+  // On a TV there is no pointer, so start with something focused.
+  let startTimer: number | undefined;
+  if (onTv) {
+    startTimer = window.setTimeout(() => {
+      if (!document.activeElement || document.activeElement === document.body) focusFirst(activeScope());
+    }, 800);
+  }
 
   return () => {
     installed = false;
+    window.clearTimeout(startTimer);
+    window.clearTimeout(refocusTimer);
     window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keydown", onActivate);
+    window.removeEventListener("focusout", onFocusOut);
     window.removeEventListener("pointerdown", onPointer);
   };
 }
