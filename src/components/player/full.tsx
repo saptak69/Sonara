@@ -1,3 +1,4 @@
+import { TrackMenuButton } from "@/components/track-menu";
 import { useEffect, useState } from "react";
 import {
   ChevronDown,
@@ -6,7 +7,6 @@ import {
   Mic2,
   Repeat,
   Repeat1,
-  Share2,
   Shuffle,
   SkipBack,
   SkipForward,
@@ -172,18 +172,10 @@ export function FullPlayer() {
               {track.album || "Now Playing"}
             </p>
 
-            <button
-              aria-label="Share"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({ title: track.title, text: `Listen to ${track.title} by ${track.artist} on Sonara`, url: window.location.href });
-                }
-              }}
-              className="pointer-events-auto p-2.5 rounded-full bg-white/[0.08] text-white/90 hover:bg-white/15 hover:text-white transition-all active:scale-95 border border-white/10 shadow-sm cursor-pointer"
-              title="Share"
-            >
-              <Share2 className="size-4" strokeWidth={1.75} />
-            </button>
+            <TrackMenuButton
+              track={track}
+              className="pointer-events-auto size-11 border border-white/10 bg-white/[0.08] text-white/90 shadow-sm hover:bg-white/15 hover:text-white"
+            />
           </div>
 
           {/* ─── Main Layout ─── */}

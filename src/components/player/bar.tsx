@@ -1,3 +1,4 @@
+import { TrackMenuButton } from "@/components/track-menu";
 import { memo, useCallback, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import {
   ListMusic,
@@ -72,6 +73,7 @@ export function MiniPlayer() {
           </span>
         </button>
 
+        <TrackMenuButton track={track} className="size-10 text-fg/80" />
         <button
           type="button"
           onClick={toggle}
@@ -192,6 +194,7 @@ export function DesktopPlayerBar() {
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           )}
+          <TrackMenuButton track={track} className="size-9" />
           <button
             type="button"
             className={iconButton}

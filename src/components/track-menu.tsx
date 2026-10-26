@@ -1,4 +1,4 @@
-import { ListMusic, ListPlus, ListEnd, ListX, Radio, UserRound, Heart, Share2, Download, CheckCircle2 } from "lucide-react";
+import { ListMusic, ListPlus, ListEnd, ListX, MoreVertical, Radio, UserRound, Heart, Share2, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import { useOfflineTracks } from "@/lib/offline-cache";
 import type { Track } from "@/lib/types";
 import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export function TrackMenu({
   track,
@@ -201,5 +202,35 @@ export function TrackMenu({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** The standard "more" button: opens the song menu (queue, like, playlists, download, share...). */
+export function TrackMenuButton({
+  track,
+  rest,
+  playlistId,
+  className,
+}: {
+  track: Track;
+  rest?: Track[];
+  playlistId?: string;
+  className?: string;
+}) {
+  return (
+    <TrackMenu track={track} rest={rest} playlistId={playlistId}>
+      <button
+        type="button"
+        aria-label={`More options for ${track.title}`}
+        title="More options"
+        onClick={(e) => e.stopPropagation()}
+        className={cn(
+          "grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-hover hover:text-fg active:scale-90",
+          className,
+        )}
+      >
+        <MoreVertical className="size-[18px]" />
+      </button>
+    </TrackMenu>
   );
 }
