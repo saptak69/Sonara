@@ -867,27 +867,9 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   if (id.startsWith("saavn_pl_")) {
     return getSaavnPlaylistServerFn({ data: { id } });
   }
-  if (typeof window !== "undefined") {
-    try {
-      const { usePlayer } = await import("./player-store");
-      const userPl = usePlayer.getState().playlists.find((p) => p.id === id);
-      if (userPl) {
-        return {
-          id: userPl.id,
-          name: userPl.name,
-          trackCount: userPl.tracks.length,
-          isAlbum: false,
-          artwork: userPl.tracks[0]?.artwork,
-          artworkLg: userPl.tracks[0]?.artworkLg,
-          tracks: userPl.tracks,
-          owner: "You",
-        };
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return null;
+  // Someone else's playlist (shared link) — the server only returns it if it's public.
+  const { getPlaylistById } = await import("./library-service");
+  return getPlaylistById({ data: { id } }).catch(() => null);
 }
 
 export async function fetchArtistAlbums(id: string, limit = 20): Promise<Playlist[]> {

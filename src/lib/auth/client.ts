@@ -1,254 +1,191 @@
-import { genericOAuthClient, oneTapClient } from "better-auth/client/plugins";
+import { oneTapClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-import { runPreSignInSignOut, runSignOut } from "../../../scripts/sign-out-plan.mjs";
-import { GROK_PROVIDERS } from "./providers";
-
-export const GOOGLE_CLIENT_ID =
-  "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com";
+import { Capacitor } from "@capacitor/core";
+import { GOOGLE_WEB_CLIENT_ID } from "./config";
 
 /**
- * Better Auth client for this React SPA (browser-side).
- *
- * Talks to this app's OWN Better Auth at same-origin `/api/auth/*`. In the live
- * preview the app is an embedded iframe with PARTITIONED cookies, so after a
- * popup sign-in it can't read the session cookie — it authenticates with a
- * bearer token instead (captured from the popup, see `signIn`). The `onRequest`
- * hook attaches that token when present; when deployed (cookie auth) no token
- * is stored, so nothing changes.
- *
- * To sign out call `signOut()` below, NOT `authClient.signOut()`: the raw call
- * leaves the bearer token in place, and `onRequest` keeps re-attaching it, so
- * the visitor stays signed in.
+ * Browser-side auth. Components should use the helpers below (signInWithGoogle,
+ * signInWithEmail, signUpWithEmail, signOut) rather than calling authClient
+ * directly, so the Android token handling stays in one place.
  */
-export const authClient = createAuthClient({
-  plugins: [
-    genericOAuthClient(),
-    oneTapClient({
-      clientId: GOOGLE_CLIENT_ID,
-      autoSelect: true,
-      context: "signin",
-    }),
-  ],
-  fetchOptions: {
-    onRequest(ctx) {
-      const token = getBearerToken();
-      if (token) ctx.headers.set("Authorization", `Bearer ${token}`);
-      return ctx;
-    },
-  },
-});
 
-/**
- * True when sign-in UI should be shown — i.e. whenever `VITE_AUTH_ENABLED` is
- * not `"false"`. The shipped template sets it to `"false"`
- * (`.grok/app-env.json`), which selects the dev user (see `use-current-user`);
- * with the key removed, sign-in is real in preview (baked preview client) and
- * when deployed (injected per-app client).
- */
-export const authEnabled = import.meta.env.VITE_AUTH_ENABLED !== "false";
+// ── Session token (Android app) ───────────────────────────────────────────────
+// The key name predates this file; keeping it means existing app users stay
+// signed in after the update.
+const TOKEN_KEY = "grok-auth.bearer-token";
 
-/** The upstream providers to render sign-in buttons for. */
-export { GROK_PROVIDERS };
+export function isNativeApp(): boolean {
+  return typeof window !== "undefined" && Capacitor.isNativePlatform();
+}
 
-// ── Live-preview bearer token ────────────────────────────────────────────────
-// The embedded preview iframe has partitioned cookies, so we keep the session's
-// bearer token in sessionStorage and attach it to every Better Auth request (and
-// to server functions, via `@/lib/auth/middleware`). Empty everywhere except the
-// preview after a popup sign-in, so the cookie path is untouched elsewhere.
-const BEARER_KEY = "grok-auth.bearer-token";
-
-/** The stored bearer token, or null. Checked against localStorage and sessionStorage for persistent native sessions. */
-export function getBearerToken(): string | null {
+export function getSessionToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    return (
-      window.localStorage.getItem(BEARER_KEY) ||
-      window.sessionStorage.getItem(BEARER_KEY)
-    );
+    return localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
 }
 
-export function setBearerToken(token: string | null): void {
-  if (typeof window === "undefined") return;
+function setSessionToken(token: string | null) {
   try {
-    if (token) {
-      window.localStorage.setItem(BEARER_KEY, token);
-      window.sessionStorage.setItem(BEARER_KEY, token);
-    } else {
-      window.localStorage.removeItem(BEARER_KEY);
-      window.sessionStorage.removeItem(BEARER_KEY);
-    }
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+    // Older builds also kept a copy here.
+    sessionStorage.removeItem(TOKEN_KEY);
   } catch {
-    /* storage unavailable — ignore */
+    /* storage blocked — the cookie still works */
   }
 }
 
-/**
- * The sandbox live preview runs this app inside an iframe on a `*.grok-sandbox.com`
- * host, where a full-page redirect to the broker can't work — so sign-in uses a
- * popup there and a normal redirect everywhere else.
- */
-function inLivePreview(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.location.hostname.endsWith(".grok-sandbox.com")
-  );
+export const authClient = createAuthClient({
+  plugins: [oneTapClient({ clientId: GOOGLE_WEB_CLIENT_ID, autoSelect: true, context: "signin" })],
+  fetchOptions: {
+    onRequest(ctx) {
+      const token = getSessionToken();
+      if (token) ctx.headers.set("Authorization", `Bearer ${token}`);
+      return ctx;
+    },
+    onSuccess(ctx) {
+      // The bearer plugin hands back a fresh token after every sign-in.
+      const token = ctx.response.headers.get("set-auth-token");
+      if (token && isNativeApp()) setSessionToken(token);
+    },
+  },
+});
+
+// ── Errors ────────────────────────────────────────────────────────────────────
+
+export class SignInCancelled extends Error {
+  constructor() {
+    super("Sign-in cancelled");
+    this.name = "SignInCancelled";
+  }
 }
 
-/** Message the popup posts back to the opener once sign-in completes. */
-type PopupMessage = { source: "grok-auth-popup"; token: string | null; error?: string };
+const FRIENDLY_ERRORS: Record<string, string> = {
+  INVALID_EMAIL_OR_PASSWORD: "That email and password don't match. Try again or reset it.",
+  USER_ALREADY_EXISTS: "There's already an account with this email. Sign in instead.",
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "There's already an account with this email. Sign in instead.",
+  PASSWORD_TOO_SHORT: "Use at least 8 characters for your password.",
+  INVALID_EMAIL: "That doesn't look like a valid email address.",
+  TOO_MANY_REQUESTS: "Too many attempts. Wait a minute and try again.",
+};
+
+function friendly(error: { code?: string; message?: string; status?: number } | null | undefined, fallback: string) {
+  if (!error) return fallback;
+  if (error.status === 429) return FRIENDLY_ERRORS.TOO_MANY_REQUESTS;
+  return (error.code && FRIENDLY_ERRORS[error.code]) || error.message || fallback;
+}
+
+// ── Sign-in methods ───────────────────────────────────────────────────────────
 
 /**
- * Start sign-in with one upstream provider (`providerId` from `GROK_PROVIDERS`),
- * federating through the Grok auth broker.
- *
- * - **Live preview** (`*.grok-sandbox.com` iframe): opens a POPUP to
- *   `/auth/popup`, served by the template Vite plugin (see `vite.config.ts` +
- *   `popup.server.ts`) — 302s to the broker/upstream login (no app chrome) and,
- *   on return, posts the session bearer token back. We store it and refresh the
- *   session; no top-level navigation of the iframe to the broker.
- * - **Deployed** (and local non-iframe): a normal full-page redirect into the broker.
- *
- * Either way it clears any existing local session FIRST so switching providers
- * actually switches identity.
+ * Google sign-in. On Android this opens the system account picker and trades
+ * the resulting ID token for a session; on the web it redirects to Google.
+ * Resolves once signed in (Android) or once the redirect has started (web).
  */
-export async function signIn(
-  providerId: string,
-  opts: { callbackURL?: string; errorCallbackURL?: string } = {},
-): Promise<void> {
-  const callbackURL = opts.callbackURL ?? "/";
-  const errorCallbackURL = opts.errorCallbackURL ?? "/";
-
-  // Open the popup SYNCHRONOUSLY on the user gesture — before any await
-  // (including signOut). Awaiting first drops user-gesture privilege in some
-  // browsers when the opener is a cross-origin live-preview iframe.
-  const popup = inLivePreview() ? openSignInPopup(providerId) : null;
-
-  // Clear any prior session so switching providers actually switches identity.
-  // Bounded because the popup is already open — a request that never settles
-  // would leave it hanging — but bounded PER ENVIRONMENT: only the server can
-  // end a deployed session, so cutting it short at the preview's 1.5s would
-  // start OAuth with the old session still live.
-  await runPreSignInSignOut({
-    livePreview: inLivePreview(),
-    hasBearer: Boolean(getBearerToken()),
-    requestSignOut: () => authClient.signOut(),
-    clearToken: () => setBearerToken(null),
-  });
-
-  if (inLivePreview()) {
-    if (!popup) throw new Error("Pop-up blocked — allow pop-ups for sign-in");
-    const token = await waitForPopupToken(popup);
-    if (!token) throw new Error("Sign-in was cancelled or failed");
-    setBearerToken(token);
-    // Refresh the client session store with the bearer attached (onRequest).
-    // Avoid a full iframe reload when we're already on the destination — that
-    // reload was the slow "still loading after the popup closed" feeling.
-    try {
-      await authClient.getSession();
-    } catch {
-      /* session store will recover on next useSession fetch */
-    }
-    if (typeof window !== "undefined") {
-      const dest = new URL(callbackURL, window.location.origin);
-      const here = window.location;
-      if (dest.origin !== here.origin || dest.pathname !== here.pathname || dest.search !== here.search) {
-        window.location.href = callbackURL;
-      }
-    }
+export async function signInWithGoogle(returnTo = "/"): Promise<void> {
+  if (isNativeApp()) {
+    await nativeGoogleSignIn();
     return;
   }
 
-  const { data, error } = await authClient.signIn.oauth2({
-    providerId,
-    callbackURL,
-    errorCallbackURL,
+  const { data, error } = await authClient.signIn.social({
+    provider: "google",
+    callbackURL: returnTo,
+    errorCallbackURL: `/login?error=google&redirect=${encodeURIComponent(returnTo)}`,
   });
-  if (error) throw new Error(error.message ?? "Sign-in failed");
+  if (error) throw new Error(friendly(error, "Couldn't reach Google. Try again."));
   if (data?.url) window.location.href = data.url;
 }
 
-/**
- * Open `/auth/popup` in a new window. Must run synchronously inside the click
- * handler (no await before this). The path is served by the template Vite
- * plugin (`authPopupPlugin` in vite.config.ts) — NOT by a React route.
- *
- * Opens the real URL directly (not about:blank → assign). From a cross-origin
- * iframe the about:blank dance often fails on the first click and the window
- * ends up showing the app shell.
- */
-function openSignInPopup(providerId: string): Window | null {
-  const origin = window.location.origin;
-  const url = `${origin}/auth/popup?providerId=${encodeURIComponent(providerId)}`;
-  // Unique name per attempt so a prior attempt stuck on the SPA is not reused.
-  const name = `grok-signin-${Date.now()}`;
-  return window.open(url, name, "popup,width=500,height=650");
+async function nativeGoogleSignIn() {
+  const { SocialLogin } = await import("@capgo/capacitor-social-login");
+  await SocialLogin.initialize({ google: { webClientId: GOOGLE_WEB_CLIENT_ID, mode: "online" } });
+
+  let idToken: string | undefined;
+  try {
+    const response = await SocialLogin.login({ provider: "google", options: { style: "bottom" } });
+    const result = response.result as { idToken?: string | null } | undefined;
+    idToken = result?.idToken ?? undefined;
+  } catch (err) {
+    const message = err instanceof Error ? err.message.toLowerCase() : String(err);
+    // 12501 / 16 are Google Play Services' "user closed the picker" codes.
+    if (/cancel|12501|\b16\b/.test(message)) throw new SignInCancelled();
+    throw new Error("Google sign-in isn't available on this device. Use email instead.");
+  }
+  if (!idToken) throw new Error("Google didn't return an account. Try again.");
+
+  const res = await fetch("/api/auth/one-tap/callback", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+  const body = (await res.json().catch(() => null)) as { token?: string; message?: string } | null;
+  if (!res.ok) throw new Error(body?.message ?? "Google sign-in failed. Try again.");
+
+  const token = res.headers.get("set-auth-token") ?? body?.token;
+  if (token) setSessionToken(token);
+  await authClient.getSession({ query: { disableCookieCache: true } });
 }
 
-/**
- * Wait for the popup's completion page to postMessage the session bearer (or
- * for the user to dismiss the popup).
- */
-function waitForPopupToken(popup: Window): Promise<string | null> {
-  return new Promise((resolve) => {
-    const origin = window.location.origin;
-    let settled = false;
-    let closeTimer: number | undefined;
-    const settle = (token: string | null) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      resolve(token);
-    };
-    const onMessage = (event: MessageEvent) => {
-      if (event.origin !== origin) return;
-      const data = event.data as PopupMessage | undefined;
-      if (!data || data.source !== "grok-auth-popup") return;
-      settle(data.token ?? null);
-    };
-    // Fallback when the user dismisses the popup. Grace period lets the
-    // completion page's postMessage win over a racing `popup.closed`.
-    const pollTimer = window.setInterval(() => {
-      if (!popup.closed) return;
-      window.clearInterval(pollTimer);
-      closeTimer = window.setTimeout(() => settle(null), 400);
-    }, 300);
-    function cleanup() {
-      window.clearInterval(pollTimer);
-      if (closeTimer !== undefined) window.clearTimeout(closeTimer);
-      window.removeEventListener("message", onMessage);
-    }
-    window.addEventListener("message", onMessage);
+export async function signInWithEmail(email: string, password: string): Promise<void> {
+  const { data, error } = await authClient.signIn.email({ email: email.trim(), password });
+  if (error) throw new Error(friendly(error, "Couldn't sign you in. Try again."));
+  if (isNativeApp() && data?.token) setSessionToken(data.token);
+}
+
+export async function signUpWithEmail(name: string, email: string, password: string): Promise<void> {
+  const { data, error } = await authClient.signUp.email({
+    name: name.trim(),
+    email: email.trim(),
+    password,
+  });
+  if (error) throw new Error(friendly(error, "Couldn't create your account. Try again."));
+  if (isNativeApp() && data?.token) setSessionToken(data.token);
+}
+
+/** Show Google One Tap on the web when the visitor is already signed in to Google. */
+export function promptGoogleOneTap(returnTo = "/") {
+  if (isNativeApp() || typeof window === "undefined") return;
+  void authClient.oneTap({ callbackURL: returnTo }).catch(() => {
+    /* One Tap is a nicety; the regular button still works */
   });
 }
 
+export async function updateProfile(changes: { name?: string; image?: string | null }) {
+  const { error } = await authClient.updateUser(changes);
+  if (error) throw new Error(friendly(error, "Couldn't save your profile."));
+}
+
+// ── Sign-out ──────────────────────────────────────────────────────────────────
+
+const signOutListeners = new Set<() => void>();
+
+/** Run something when the user signs out (e.g. wipe their cached library). */
+export function onSignOut(listener: () => void): () => void {
+  signOutListeners.add(listener);
+  return () => signOutListeners.delete(listener);
+}
+
 /**
- * Sign out of THIS app's local session, clear the preview token, then redirect.
- *
- * Use this, never `authClient.signOut()` — see the note on `authClient`.
- * Sequencing lives in `scripts/sign-out-plan.mjs` so it can be unit-tested.
- *
- * **Rejects when deployed if the server never confirms.** There the session is
- * an HttpOnly cookie only the server can clear, so redirecting anyway would
- * report a sign-out that did not happen. `<UserButton />` handles that for you;
- * a hand-rolled control must catch it and let the visitor retry. In the live
- * preview the local clear is sufficient, so it always resolves.
+ * End the session on the server, then forget everything local. Throws if the
+ * server can't be reached so the UI can offer a retry instead of pretending.
  */
 export async function signOut(redirectTo = "/"): Promise<void> {
-  await runSignOut({
-    livePreview: inLivePreview(),
-    hasBearer: Boolean(getBearerToken()),
-    // Better Auth resolves with `{ error }` instead of rejecting, so surface a
-    // failed response as a rejection for the sequence to act on.
-    requestSignOut: async () => {
-      const { error } = await authClient.signOut();
-      if (error) throw new Error(error.message ?? "Sign-out failed");
-    },
-    clearToken: () => setBearerToken(null),
-    redirect: () => {
-      window.location.href = redirectTo;
-    },
-  });
+  const { error } = await authClient.signOut();
+  if (error && error.status !== 401) {
+    throw new Error(friendly(error, "Couldn't sign out. Check your connection and try again."));
+  }
+  setSessionToken(null);
+  for (const listener of signOutListeners) listener();
+
+  if (isNativeApp()) {
+    void import("@capgo/capacitor-social-login")
+      .then(({ SocialLogin }) => SocialLogin.logout({ provider: "google" }))
+      .catch(() => {});
+  }
+  window.location.href = redirectTo;
 }

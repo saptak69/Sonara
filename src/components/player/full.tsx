@@ -112,6 +112,15 @@ export function FullPlayer() {
   const toggleEqualizer = usePlayer((s) => s.toggleEqualizer);
   const equalizerEnabled = usePlayer((s) => s.equalizerEnabled);
 
+  // With a remote, land on the play button when the player opens.
+  useEffect(() => {
+    if (!expanded || !document.documentElement.classList.contains("tv")) return;
+    const id = window.setTimeout(() => {
+      document.querySelector<HTMLElement>(".full-player-play-btn")?.focus({ preventScroll: true });
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [expanded]);
+
   const live = track?.kind === "radio";
   const audioFormat = getTrackAudioFormat(track);
   const dominantColor = useArtworkColor(track?.artworkLg || track?.artwork || undefined);
@@ -119,16 +128,20 @@ export function FullPlayer() {
   return (
     <div
       data-open={expanded}
+      data-tv-scope={expanded ? "true" : undefined}
+      role="region"
+      aria-label="Now playing"
       className={cn(
-        "full-player fixed inset-0 z-50 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] bg-[#0B0A0A]",
+        "full-player fixed inset-0 z-50 flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] bg-bg",
         "data-[open=false]:translate-y-full"
       )}
       aria-hidden={!expanded}
+      inert={!expanded}
     >
       {track ? (
         <>
           {/* ─── Dynamic Artwork Background (Subtle 25-30% Ambient Wash) ─── */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10 bg-[#0B0A0A]">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10 bg-bg">
             <div
               className="absolute inset-0 opacity-20 transition-colors duration-1000 ease-out"
               style={{ backgroundColor: dominantColor }}
@@ -141,7 +154,7 @@ export function FullPlayer() {
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0B0A0A]/40 via-transparent to-[#0B0A0A]/90 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-bg/40 via-transparent to-bg/90 pointer-events-none" />
           </div>
 
           {/* ─── Header ─── */}
@@ -183,7 +196,7 @@ export function FullPlayer() {
             <div className="full-player-left-col flex flex-col w-full transition-all duration-300 lg:justify-center items-center lg:items-stretch lg:w-[44%] lg:max-w-[390px] xl:max-w-[420px] flex-shrink-0">
               
               {/* Artwork */}
-              <div className="full-player-artwork-box w-[min(72vw,280px)] sm:w-[min(78vw,320px)] lg:w-[min(38vh,300px)] xl:w-[min(42vh,340px)] aspect-square mx-auto rounded-2xl shadow-2xl border border-white/[0.08] overflow-hidden relative transition-all duration-300 flex-shrink-0 mb-4 sm:mb-6 lg:mb-6 group/art bg-[#151211]">
+              <div className="full-player-artwork-box w-[min(72vw,280px)] sm:w-[min(78vw,320px)] lg:w-[min(38vh,300px)] xl:w-[min(42vh,340px)] aspect-square mx-auto rounded-2xl shadow-2xl border border-border overflow-hidden relative transition-all duration-300 flex-shrink-0 mb-4 sm:mb-6 lg:mb-6 group/art bg-surface">
                 <Cover
                   src={track.artworkLg || track.artwork}
                   alt={track.title}
@@ -196,16 +209,16 @@ export function FullPlayer() {
                 <div className="flex items-start justify-between gap-3 mb-2 lg:mb-3 overflow-hidden">
                   <div className="min-w-0 flex-1 overflow-hidden">
                     <MarqueeText text={track.title} className="full-player-title font-semibold text-white text-[20px] sm:text-2xl lg:text-[24px] leading-tight tracking-tight" />
-                    <MarqueeText text={track.artist} className="full-player-artist text-[#A9A19B] font-normal text-sm lg:text-base mt-1" />
+                    <MarqueeText text={track.artist} className="full-player-artist text-muted font-normal text-sm lg:text-base mt-1" />
                     
                     {/* Truthful Audio Quality Pill */}
                     <div className="flex items-center gap-2 mt-2">
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[11px] font-medium text-white/70">
-                        <span className="size-1.5 rounded-full bg-[#52B58A]" />
+                        <span className="size-1.5 rounded-full bg-ok" />
                         <span>{audioFormat.label} · {audioFormat.format}</span>
                       </div>
                       {live && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#FF5B2E]/15 text-[#FF5B2E] border border-[#FF5B2E]/30 text-[10px] font-semibold uppercase">
+                        <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 text-[10px] font-semibold uppercase">
                           Live Radio
                         </span>
                       )}
@@ -214,10 +227,10 @@ export function FullPlayer() {
                   <motion.button
                     aria-label={liked ? "Unlike" : "Like"}
                     whileTap={{ scale: 0.85 }}
-                    className="p-2.5 rounded-full text-white/70 hover:text-white transition-colors shrink-0 bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] shadow-sm mt-1 cursor-pointer"
+                    className="p-2.5 rounded-full text-white/70 hover:text-white transition-colors shrink-0 bg-white/[0.06] hover:bg-white/[0.12] border border-border shadow-sm mt-1 cursor-pointer"
                     onClick={() => toggleLike(track)}
                   >
-                    <Heart className={cn("size-5 transition-all duration-200", liked && "fill-[#FF5B2E] text-[#FF5B2E]")} strokeWidth={1.75} />
+                    <Heart className={cn("size-5 transition-all duration-200", liked && "fill-accent text-accent")} strokeWidth={1.75} />
                   </motion.button>
                 </div>
 
@@ -232,7 +245,7 @@ export function FullPlayer() {
                     onValueChange={([val]) => seekTo(val)}
                     className="w-full"
                   />
-                  <div className="mt-1.5 flex justify-between text-[11px] text-white/40 font-medium tabular-nums font-mono">
+                  <div className="mt-1.5 flex justify-between text-[11px] text-subtle font-medium tabular-nums font-mono">
                     <span>{live ? "LIVE" : formatTime(currentTime)}</span>
                     <span>{live ? "∞" : `-${formatTime(Number.isFinite(duration) ? Math.max(0, duration - currentTime) : 0)}`}</span>
                   </div>
@@ -242,8 +255,8 @@ export function FullPlayer() {
                 <div className="full-player-controls flex items-center justify-between w-full max-w-[320px] mx-auto mb-2 lg:mb-3 py-1">
                   <button
                     className={cn(
-                      "text-white/40 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 rounded-full cursor-pointer",
-                      shuffle && "text-[#FF5B2E] hover:text-[#FF5B2E]"
+                      "text-subtle hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 rounded-full cursor-pointer",
+                      shuffle && "text-accent hover:text-accent"
                     )}
                     onClick={toggleShuffle}
                     title={shuffle ? "Shuffle On" : "Shuffle Off"}
@@ -272,8 +285,8 @@ export function FullPlayer() {
                   </button>
                   <button
                     className={cn(
-                      "text-white/40 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 rounded-full cursor-pointer",
-                      repeat !== "off" && "text-[#FF5B2E] hover:text-[#FF5B2E]"
+                      "text-subtle hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 rounded-full cursor-pointer",
+                      repeat !== "off" && "text-accent hover:text-accent"
                     )}
                     onClick={cycleRepeat}
                     title={`Repeat: ${repeat}`}
@@ -305,7 +318,7 @@ export function FullPlayer() {
                     className={cn(
                       "flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all min-h-[38px] active:scale-95 border cursor-pointer",
                       equalizerEnabled
-                        ? "bg-[#FF5B2E] text-white border-[#FF5B2E] shadow-sm"
+                        ? "bg-accent text-white border-accent shadow-sm"
                         : "text-white/70 hover:text-white border-white/10 bg-white/[0.06]"
                     )}
                     onClick={toggleEqualizer}
@@ -339,7 +352,7 @@ export function FullPlayer() {
                     className={cn(
                       "flex items-center gap-2 px-5 py-2 rounded-full text-xs font-medium transition-all active:scale-95 border shadow-sm cursor-pointer",
                       equalizerEnabled
-                        ? "bg-[#FF5B2E] text-white border-[#FF5B2E]"
+                        ? "bg-accent text-white border-accent"
                         : "text-white/70 hover:text-white border-white/10 bg-white/[0.06] hover:bg-white/10"
                     )}
                     onClick={toggleEqualizer}
@@ -359,7 +372,7 @@ export function FullPlayer() {
             )}>
               {/* Desktop Tabs */}
               <div className="hidden lg:flex items-center justify-center mb-6 mt-2">
-                <div className="flex bg-white/[0.06] p-1 rounded-full text-sm font-medium border border-white/[0.08]">
+                <div className="flex bg-white/[0.06] p-1 rounded-full text-sm font-medium border border-border">
                   <button
                     className="group relative isolate px-7 py-1.5 rounded-full transition-colors cursor-pointer"
                     onClick={() => { setQueueOpen(true); setLyricsOpen(false); }}

@@ -15,7 +15,7 @@ export function DropdownMenuContent({
         sideOffset={8}
         collisionPadding={12}
         className={cn(
-          "z-[100] min-w-56 overflow-hidden rounded-xl bg-[#1E1A18] border border-white/[0.08] p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.7)] font-sans text-[13px] text-white tracking-normal",
+          "z-[100] min-w-56 overflow-hidden rounded-xl border border-border-strong bg-surface-2 p-1.5 font-sans text-[13px] text-fg shadow-pop",
           "origin-(--radix-dropdown-menu-content-transform-origin)",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
@@ -35,8 +35,8 @@ export function DropdownMenuItem({
   return (
     <Dropdown.Item
       className={cn(
-        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-normal text-white/90 outline-none transition-colors select-none",
-        "data-[highlighted]:bg-white/[0.08] data-[highlighted]:text-white data-[disabled]:opacity-40",
+        "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] text-fg/90 outline-none transition-colors select-none",
+        "data-[highlighted]:bg-hover data-[highlighted]:text-fg data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
         className,
       )}
       {...props}
@@ -45,5 +45,5 @@ export function DropdownMenuItem({
 }
 
 export function DropdownMenuSeparator() {
-  return <Dropdown.Separator className="my-1 h-px bg-white/[0.08]" />;
+  return <Dropdown.Separator className="my-1 h-px bg-border" />;
 }

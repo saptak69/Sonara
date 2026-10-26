@@ -15,7 +15,9 @@ const config: CapacitorConfig = {
       "*.gstatic.com"
     ]
   },
-  overrideUserAgent: "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
+  // Keep the device's real user agent (so the web app can tell a TV from a phone)
+  // and tag it so the server can recognise the app.
+  appendUserAgent: "SonaraApp/1.1",
   plugins: {
     StatusBar: {
       overlaysWebView: true,
@@ -24,14 +26,14 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 1500,
       launchAutoHide: true,
-      backgroundColor: "#0B0A0A",
+      backgroundColor: "#0A0908",
       showSpinner: false,
     },
     GoogleAuth: {
       scopes: ["profile", "email"],
       serverClientId: "1024926408578-qh9tug8msu59po57tdo3oj8dkfnugsqh.apps.googleusercontent.com",
       forceCodeForRefreshToken: true,
-    }
+    },
   }
 };
 

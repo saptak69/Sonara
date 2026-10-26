@@ -60,7 +60,7 @@ function Explore() {
     <div className="space-y-10 md:space-y-12 px-4 md:px-10 pt-6 md:pt-8 pb-32">
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white">Browse</h1>
-        <p className="text-sm text-[#A9A19B]">Explore distinct sounds, genres, and community releases</p>
+        <p className="text-sm text-muted">Explore distinct sounds, genres, and community releases</p>
       </div>
 
       <section className="space-y-4">
@@ -85,10 +85,10 @@ function Explore() {
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/15 transition-opacity duration-200" />
               <div className="relative z-10 flex flex-col">
-                <span className="text-sm sm:text-base font-semibold tracking-normal text-white group-hover:text-[#FF5B2E] transition-colors">
+                <span className="text-sm sm:text-base font-semibold tracking-normal text-white group-hover:text-accent transition-colors">
                   {g.label}
                 </span>
-                <span className="text-[11px] font-normal text-[#A9A19B] mt-0.5">
+                <span className="text-[11px] font-normal text-muted mt-0.5">
                   {g.hint}
                 </span>
               </div>

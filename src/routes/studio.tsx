@@ -33,7 +33,12 @@ import {
   LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
-import { signOut } from "@/lib/auth/client";
+import { getSessionToken, signOut } from "@/lib/auth/client";
+
+function authHeaders(): HeadersInit {
+  const token = getSessionToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export const Route = createFileRoute("/studio")({
   component: ArtistStudioPage,
@@ -146,6 +151,8 @@ function ArtistStudioPage() {
       const res = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
+        headers: authHeaders(),
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -190,6 +197,8 @@ function ArtistStudioPage() {
       const res = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
+        headers: authHeaders(),
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -315,7 +324,7 @@ function ArtistStudioPage() {
             Upload your original songs, reach listeners worldwide, and view your streaming analytics.
           </p>
           <Button
-            onClick={() => void navigate({ to: "/login" })}
+            onClick={() => void navigate({ to: "/login", search: { redirect: "/studio" } })}
             className="w-full h-11 rounded-xl bg-accent hover:bg-accent/90 text-white font-medium"
           >
             Sign In or Create Account
@@ -346,7 +355,7 @@ function ArtistStudioPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-center gap-4">
             <Cover
-              src={profile?.avatarUrl || user?.profileImageUrl}
+              src={profile?.avatarUrl || user?.avatarUrl}
               alt={profile?.displayName || "Artist"}
               title={profile?.displayName || "Artist"}
               rounded="full"
@@ -396,9 +405,10 @@ function ArtistStudioPage() {
               
               <Button
                 variant="ghost"
-                onClick={async () => {
-                  await signOut();
-                  void navigate({ to: "/" });
+                onClick={() => {
+                  signOut().catch((err: unknown) =>
+                    toast.error(err instanceof Error ? err.message : "Couldn't sign out."),
+                  );
                 }}
                 className="flex-1 sm:flex-none rounded-xl gap-2 text-xs border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400"
               >

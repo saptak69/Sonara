@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Track } from "./types.ts";
 
 // -----------------------------------------------------------------------------
-// 1. SCORING & TASTE-VECTOR ENGINE (Apple Music Weighting)
+// 1. Scoring: how well a candidate matches the listener's taste
 // -----------------------------------------------------------------------------
 
 export interface UserInteractionSignals {
@@ -27,7 +27,7 @@ const HALF_LIFE_MS = 14 * 24 * 60 * 60 * 1000; // 14-day half-life
 const LN2 = Math.LN2;
 
 /**
- * Computes Apple Music style affinity score for candidate tracks.
+ * Affinity score for a candidate track, from the listener's recent history.
  * Runs deterministically in < 0.1ms without external network calls.
  */
 export function computeAffinityScore(

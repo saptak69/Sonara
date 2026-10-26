@@ -5,7 +5,9 @@ import { Cover } from "@/components/cover";
 import { TrackRow } from "@/components/track-row";
 import { RadioContent } from "@/routes/radio";
 import { Button } from "@/components/ui/button";
-import { usePlayer } from "@/lib/player-store";
+import { LIKED_PLAYLIST_ID, usePlayer } from "@/lib/player-store";
+import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { syncLibrary } from "@/lib/library-sync";
 import { useOfflineTracks, getOfflineStorageUsage, downloadTrackAudio } from "@/lib/offline-cache";
 import { PlaylistImportModal } from "@/components/playlist-import-modal";
 import { EmptyState } from "@/components/empty-state";
@@ -39,7 +41,7 @@ function LibraryPage() {
   const createPlaylist = usePlayer((s) => s.createPlaylist);
   const deletePlaylist = usePlayer((s) => s.deletePlaylist);
   const clearRecents = usePlayer((s) => s.clearRecents);
-  const syncFromDatabase = usePlayer((s) => s.syncFromDatabase);
+  const { user } = useCurrentUserState();
 
   const { downloadedTracks, clearAll } = useOfflineTracks();
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -47,9 +49,11 @@ function LibraryPage() {
   const [isDownloadingFavorites, setIsDownloadingFavorites] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<{ current: number; total: number } | null>(null);
 
+  // Opening the library is a good moment to pick up edits made on other devices.
+  const userId = user?.id;
   useEffect(() => {
-    void syncFromDatabase();
-  }, [syncFromDatabase]);
+    if (userId) syncLibrary(userId).catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     void getOfflineStorageUsage().then(setStorageUsage);
@@ -62,17 +66,16 @@ function LibraryPage() {
   };
 
   const likedTracks = useMemo(() => {
-    const fromPlaylists = playlists.find((p) => p.id === "likes")?.tracks ?? [];
-    const fromRecents = recents.filter((t) => likedIds.includes(t.id));
-    const map = new Map(fromPlaylists.map((t) => [t.id, t]));
-    for (const t of fromRecents) map.set(t.id, t);
-    return likedIds.map((id) => map.get(id)).filter((t): t is NonNullable<typeof t> => Boolean(t));
+    const fromPlaylists = playlists.find((p) => p.id === LIKED_PLAYLIST_ID)?.tracks ?? [];
+    const byId = new Map(fromPlaylists.map((t) => [t.id, t]));
+    for (const t of recents) if (likedIds.includes(t.id) && !byId.has(t.id)) byId.set(t.id, t);
+    return likedIds.map((id) => byId.get(id)).filter((t): t is NonNullable<typeof t> => Boolean(t));
   }, [likedIds, playlists, recents]);
 
   const userPlaylists: Playlist[] = useMemo(
     () =>
       playlists
-        .filter((p) => p.id !== "likes")
+        .filter((p) => p.id !== LIKED_PLAYLIST_ID)
         .map((p) => ({
           id: p.id,
           name: p.name,
@@ -199,11 +202,11 @@ function LibraryPage() {
         recents.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-[#A9A19B]">{recents.length} recently played tracks</p>
+              <p className="text-sm text-muted">{recents.length} recently played tracks</p>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-[#A9A19B] hover:text-red-400"
+                className="text-xs text-muted hover:text-red-400"
                 onClick={() => {
                   clearRecents();
                   toast("Listening history cleared");
@@ -233,7 +236,7 @@ function LibraryPage() {
         likedTracks.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-[#A9A19B]">{likedTracks.length} favorite tracks</p>
+              <p className="text-sm text-muted">{likedTracks.length} favorite tracks</p>
               <Button 
                 variant="solid" 
                 size="sm" 
@@ -261,7 +264,7 @@ function LibraryPage() {
         userPlaylists.length ? (
           <div>
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm text-[#A9A19B]">{userPlaylists.length} custom playlists</p>
+              <p className="text-sm text-muted">{userPlaylists.length} custom playlists</p>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -289,7 +292,7 @@ function LibraryPage() {
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {playlists
-                .filter((p) => p.id !== "likes")
+                .filter((p) => p.id !== LIKED_PLAYLIST_ID)
                 .map((p) => (
                   <div key={p.id} className="group relative flex flex-col justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all">
                     <button
@@ -304,7 +307,7 @@ function LibraryPage() {
                         className="aspect-square w-full rounded-lg shadow-sm"
                       />
                       <p className="mt-2.5 truncate text-sm font-semibold text-white">{p.name}</p>
-                      <p className="text-xs text-[#A9A19B]">{p.tracks.length} tracks</p>
+                      <p className="text-xs text-muted">{p.tracks.length} tracks</p>
                     </button>
                     <div className="mt-3 pt-2 border-t border-white/[0.06] flex items-center justify-between">
                       <span className="text-[11px] text-white/40">Personal</span>
@@ -351,9 +354,9 @@ function LibraryPage() {
         downloadedTracks.length ? (
           <div>
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2.5 text-sm text-[#A9A19B]">
+              <div className="flex flex-wrap items-center gap-2.5 text-sm text-muted">
                 <span><strong className="text-white font-semibold">{downloadedTracks.length}</strong> offline tracks ready</span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-xs text-[#52B58A] font-medium">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] border border-white/10 px-2.5 py-0.5 text-xs text-ok font-medium">
                   <HardDrive className="size-3.5" />
                   {storageMb} MB used
                 </span>
@@ -384,7 +387,7 @@ function LibraryPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-[#A9A19B] hover:text-red-400"
+                  className="text-xs text-muted hover:text-red-400"
                   onClick={() => {
                     void clearAll();
                     toast("All offline downloads cleared");

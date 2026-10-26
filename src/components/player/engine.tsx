@@ -505,7 +505,7 @@ export function PlayerEngine() {
       return unsub;
   }, []);
 
-  // Seamlessly auto-upgrade preview streams (30s previews) to full-length 320kbps master streams
+  // Swap 30-second preview clips for the full-length 320 kbps stream when one exists.
   useEffect(() => {
     if (!current?.id || !current?.title) return;
     const isPreview = current.streamUrl?.includes("dzcdn.net") || current.streamUrl?.includes("pixabay.com") || (current.duration && current.duration <= 35);
@@ -602,12 +602,13 @@ export function PlayerEngine() {
     clearPendingSeek();
   }, [pendingSeek, clearPendingSeek]);
 
-  // Clean standard keyboard listener (Space for toggle, Escape for closing overlays)
+  // Space toggles playback; Escape closes the player overlays.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const tag = target?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) {
+      if (target?.isContentEditable) return;
+      // Leave Space/Escape to whatever control has focus (buttons, inputs, menus).
+      if (target?.closest("input, textarea, select, button, a, [role=button], [role=slider], [role=menuitem], [role=dialog]")) {
         return;
       }
 

@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { fetchPublic } from "../../lib/safe-url.server.ts";
 
 /**
- * Resilient Audio Stream Proxy supporting HTTP 206 Partial Content range requests.
- * Allows browsers to seek and scrub seamlessly across any audio source without
- * encountering CDN range-rejections or CORS blocking.
- *
- * Hardened against client socket aborts, ECONNRESET, and stream premature closes
- * so seeking and track-skipping NEVER crash the Node.js server.
+ * Audio proxy for sources that block cross-origin playback or don't support
+ * range requests. Supports HTTP 206 so seeking works, only reaches public
+ * hosts, and only passes audio through (it is not a general web proxy).
  */
+
+const AUDIO_TYPES = /^(audio\/|video\/mp4|application\/(ogg|octet-stream)|binary\/octet-stream)/i;
 export const Route = createFileRoute("/api/stream")({
   server: {
     handlers: {
@@ -28,6 +28,9 @@ export const Route = createFileRoute("/api/stream")({
 
         if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
           return new Response("Invalid protocol", { status: 400 });
+        }
+        if (targetUrl.length > 4000) {
+          return new Response("URL too long", { status: 414 });
         }
 
         const rangeHeader = request.headers.get("range");
@@ -52,9 +55,8 @@ export const Route = createFileRoute("/api/stream")({
         }
 
         try {
-          let upstream = await fetch(targetUrl, {
+          let upstream = await fetchPublic(targetUrl, {
             headers: upstreamHeaders,
-            redirect: "follow",
             signal: abortController.signal,
           });
 
@@ -64,9 +66,8 @@ export const Route = createFileRoute("/api/stream")({
             for (const br of fallbackBitrates) {
               const fallbackUrl: string = targetUrl.replace(/_(?:320|160|96|48|12)\.(mp4|m4a)/, br);
               if (fallbackUrl === targetUrl) continue;
-              const retry = await fetch(fallbackUrl, {
+              const retry = await fetchPublic(fallbackUrl, {
                 headers: upstreamHeaders,
-                redirect: "follow",
                 signal: abortController.signal,
               });
               if (retry.ok || retry.status === 206) {
@@ -80,6 +81,12 @@ export const Route = createFileRoute("/api/stream")({
             return new Response(`Upstream error: ${upstream.statusText}`, {
               status: upstream.status,
             });
+          }
+
+          const upstreamType = upstream.headers.get("content-type") ?? "";
+          if (upstreamType && !AUDIO_TYPES.test(upstreamType)) {
+            void upstream.body?.cancel();
+            return new Response("Not an audio stream", { status: 415 });
           }
 
           const responseHeaders = new Headers();
@@ -191,12 +198,14 @@ export const Route = createFileRoute("/api/stream")({
             status: 200,
             headers: responseHeaders,
           });
-        } catch (err: any) {
-          if (err.name === "AbortError" || request.signal.aborted) {
+        } catch (err) {
+          if ((err instanceof Error && err.name === "AbortError") || request.signal.aborted) {
             return new Response(null, { status: 499 });
           }
-          return new Response(`Stream fetch failed: ${err?.message || err}`, {
-            status: 502,
+          const message = err instanceof Error ? err.message : String(err);
+          const blocked = /not allowed/i.test(message);
+          return new Response(blocked ? "Source not allowed" : "Couldn't reach the audio source", {
+            status: blocked ? 403 : 502,
           });
         }
       },

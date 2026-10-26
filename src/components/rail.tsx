@@ -1,106 +1,121 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { type ReactNode, useRef, useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, ChevronRight as Arrow } from "lucide-react";
+import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-type RailTo = "/explore" | "/radio" | "/library";
+type RailLink = "/explore" | "/radio" | "/library";
 
-export function SectionHeader({
-  title,
-  to,
-}: {
-  title: string;
-  to?: RailTo;
-}) {
-  if (!title) return null;
+export function SectionHeader({ title, subtitle, to }: { title: string; subtitle?: string; to?: RailLink }) {
   const heading = (
-    <h2 className="text-xl sm:text-[22px] font-semibold text-[#F4EFEA] tracking-normal flex items-center gap-1.5 group select-none">
-      <span className={cn(to && "group-hover:text-[#FF5B2E] transition-colors")}>{title}</span>
-      {to && (
-        <svg className="size-4 text-[#7A726C] group-hover:text-[#FF5B2E] transition-colors mt-[1px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-      )}
-    </h2>
+    <div className="min-w-0">
+      <h2 className="flex items-center gap-1 text-xl font-semibold tracking-tight text-fg sm:text-[22px]">
+        <span className="truncate">{title}</span>
+        {to && <Arrow className="size-5 shrink-0 text-subtle transition-colors group-hover:text-accent" />}
+      </h2>
+      {subtitle && <p className="mt-0.5 truncate text-sm text-muted">{subtitle}</p>}
+    </div>
   );
   if (!to) return heading;
   return (
-    <Link to={to} className="transition-colors w-fit">
+    <Link to={to} className="group min-w-0 rounded-lg">
       {heading}
     </Link>
   );
 }
 
+/**
+ * A titled, horizontally scrolling shelf of cards.
+ * Shows placeholders while `loading`, and renders nothing when it has no cards.
+ */
 export function Rail({
   title,
+  subtitle,
   to,
+  loading = false,
+  placeholder = "square",
   children,
 }: {
   title: string;
-  to?: RailTo;
-  children: ReactNode;
+  subtitle?: string;
+  to?: RailLink;
+  loading?: boolean;
+  placeholder?: "square" | "large" | "round";
+  children?: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [edges, setEdges] = useState({ start: true, end: false });
+  const count = Children.toArray(children).length;
 
-  const checkScroll = () => {
-    if (!ref.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = ref.current;
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  useEffect(() => {
-    checkScroll();
+  const measure = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
+    setEdges({
+      start: el.scrollLeft < 8,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 8,
+    });
   }, []);
 
-  const scroll = (dir: number) => {
-    ref.current?.scrollBy({ left: dir * 420, behavior: "smooth" });
+  useEffect(() => {
+    measure();
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener("scroll", measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      observer.disconnect();
+    };
+  }, [measure, count]);
+
+  if (!loading && count === 0) return null;
+
+  const scrollBy = (direction: 1 | -1) => {
+    const el = ref.current;
+    if (el) el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: "smooth" });
   };
+
+  const arrowClass =
+    "grid size-8 place-items-center rounded-full border border-border text-muted transition hover:bg-hover hover:text-fg disabled:pointer-events-none disabled:opacity-30";
 
   return (
     <section className="space-y-4">
-      {/* Header and Controls sharing the exact content left edge */}
-      <div className="flex items-center justify-between gap-3 px-0">
-        <SectionHeader title={title} to={to} />
-        
-        {/* 32px Ghost Circular Button Pair */}
-        <div className="hidden items-center gap-1.5 md:flex select-none">
-          <button
-            type="button"
-            disabled={!canScrollLeft}
-            aria-label="Previous"
-            onClick={() => scroll(-1)}
-            className="size-8 rounded-full flex items-center justify-center border border-white/[0.08] text-[#A9A19B] hover:text-white hover:bg-white/[0.06] disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95"
-          >
-            <ChevronLeft className="size-4" strokeWidth={2} />
+      <div className="flex items-end justify-between gap-3">
+        <SectionHeader title={title} subtitle={subtitle} to={to} />
+        <div className="hover-only hidden shrink-0 items-center gap-1.5 desk:flex">
+          <button type="button" className={arrowClass} disabled={edges.start} onClick={() => scrollBy(-1)} aria-label={`Scroll ${title} back`} data-tv-skip>
+            <ChevronLeft className="size-4" />
           </button>
-          <button
-            type="button"
-            disabled={!canScrollRight}
-            aria-label="Next"
-            onClick={() => scroll(1)}
-            className="size-8 rounded-full flex items-center justify-center border border-white/[0.08] text-[#A9A19B] hover:text-white hover:bg-white/[0.06] disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95"
-          >
-            <ChevronRight className="size-4" strokeWidth={2} />
+          <button type="button" className={arrowClass} disabled={edges.end} onClick={() => scrollBy(1)} aria-label={`Scroll ${title} forward`} data-tv-skip>
+            <ChevronRight className="size-4" />
           </button>
         </div>
       </div>
 
-      {/* Rail with Right-edge Fade Mask */}
-      <div 
-        ref={ref} 
-        className="flex gap-4 overflow-x-auto [scrollbar-width:none] snap-x snap-mandatory scroll-smooth pb-1 -mr-4 pr-4 sm:mr-0 sm:pr-0 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent_100%)]"
+      <div
+        ref={ref}
+        className={cn(
+          "shelf",
+          !edges.end && "[mask-image:linear-gradient(to_right,black_calc(100%-56px),transparent)]",
+        )}
       >
-        {children}
+        {loading && count === 0 ? <Placeholders shape={placeholder} /> : children}
       </div>
     </section>
+  );
+}
+
+function Placeholders({ shape }: { shape: "square" | "large" | "round" }) {
+  const width = shape === "large" ? "w-[210px] sm:w-[230px]" : shape === "round" ? "w-32 sm:w-36" : "w-36 sm:w-44";
+  return (
+    <>
+      {Array.from({ length: 7 }).map((_, i) => (
+        <div key={i} className={cn("shrink-0", width)} aria-hidden>
+          <div className={cn("skeleton aspect-square w-full", shape === "round" ? "rounded-full" : "rounded-xl")} />
+          <div className="skeleton mt-3 h-3 w-3/4 rounded" />
+          <div className="skeleton mt-2 h-3 w-1/2 rounded" />
+        </div>
+      ))}
+    </>
   );
 }

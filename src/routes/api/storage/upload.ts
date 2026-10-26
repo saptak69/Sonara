@@ -29,6 +29,16 @@ export const Route = createFileRoute("/api/storage/upload")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Only signed-in artists can upload (cookie on the web, bearer token in the app).
+        const { auth } = await import("@/lib/auth/server");
+        const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
+        if (!session?.user) {
+          return new Response(JSON.stringify({ error: "Sign in to upload music." }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         try {
           const formData = await request.formData();
           const file = formData.get("file") as File | null;
@@ -75,7 +85,7 @@ export const Route = createFileRoute("/api/storage/upload")({
             }
           }
 
-          const ext = file.name.split(".").pop()?.toLowerCase() || (category === "audio" ? "mp3" : "jpg");
+          const ext = (file.name.split(".").pop()?.toLowerCase() || "").replace(/[^a-z0-9]/g, "") || (category === "audio" ? "mp3" : "jpg");
           const id = randomUUID();
           const filename = `${id}.${ext}`;
           const subDir = category === "audio" ? "audio" : "artwork";

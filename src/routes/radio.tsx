@@ -20,7 +20,7 @@ function RadioHero({ station }: { station: RadioStation }) {
   const track = radioToTrack(station);
 
   return (
-    <div className="radio-hero relative isolate flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 p-6 md:p-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#151211]">
+    <div className="radio-hero relative isolate flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 p-6 md:p-8 rounded-2xl overflow-hidden border border-white/[0.08] bg-surface">
       {/* Ambient background glow */}
       <div className="absolute inset-0 z-0 opacity-[0.12] blur-[80px] pointer-events-none mix-blend-screen">
         <Cover
@@ -33,7 +33,7 @@ function RadioHero({ station }: { station: RadioStation }) {
       {/* Content (Left side) */}
       <div className="w-full md:flex-1 relative z-10 flex flex-col items-start text-left max-w-xl">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white/80 text-xs font-medium tracking-normal mb-3">
-          <span className="size-1.5 rounded-full bg-[#FF5B2E]" />
+          <span className="size-1.5 rounded-full bg-accent" />
           <span>Live Broadcast</span>
         </div>
         
@@ -41,7 +41,7 @@ function RadioHero({ station }: { station: RadioStation }) {
           {station.name}
         </h2>
         
-        <p className="text-sm text-[#A9A19B] max-w-[42ch] mb-6 leading-relaxed line-clamp-2 font-normal">
+        <p className="text-sm text-muted max-w-[42ch] mb-6 leading-relaxed line-clamp-2 font-normal">
           {station.country ? `Broadcasting live from ${station.country}. ` : ""}
           Tune in to the world's best live radio stations streaming 24/7.
         </p>
@@ -57,7 +57,7 @@ function RadioHero({ station }: { station: RadioStation }) {
 
       {/* Artwork (Right side) */}
       <div className="w-full md:w-auto shrink-0 relative z-10 flex justify-center md:justify-end">
-        <div className="size-36 sm:size-44 md:size-52 lg:size-60 rounded-xl overflow-hidden shadow-xl border border-white/[0.08] bg-[#1E1A18]">
+        <div className="size-36 sm:size-44 md:size-52 lg:size-60 rounded-xl overflow-hidden shadow-xl border border-white/[0.08] bg-surface-2">
           <Cover
             src={station.artwork}
             alt={station.name}

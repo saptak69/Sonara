@@ -188,11 +188,11 @@ export function PlaylistImportModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-[#151211] border border-white/[0.08] text-white rounded-2xl p-6 shadow-2xl [scrollbar-width:thin]">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-surface border border-white/[0.08] text-white rounded-2xl p-6 shadow-2xl [scrollbar-width:thin]">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-20 bg-[#151211] -mx-6 -mt-6 p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-surface -mx-6 -mt-6 p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-white/[0.06] border border-white/[0.08] grid place-items-center text-[#FF5B2E]">
+            <div className="size-9 rounded-xl bg-white/[0.06] border border-white/[0.08] grid place-items-center text-accent">
               <ListPlus className="size-4" />
             </div>
             <div>
@@ -212,11 +212,11 @@ export function PlaylistImportModal({
         {parsedItems.length === 0 ? (
           <div className="space-y-4 pt-4">
             {/* Tab switch */}
-            <div className="flex bg-[#1E1A18] p-1 rounded-xl border border-white/[0.06] text-xs font-medium">
+            <div className="flex bg-surface-2 p-1 rounded-xl border border-white/[0.06] text-xs font-medium">
               <button
                 type="button"
                 className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  mode === "spotify" ? "bg-[#28231F] text-white font-semibold shadow-sm" : "text-white/60 hover:text-white"
+                  mode === "spotify" ? "bg-surface-3 text-white font-semibold shadow-sm" : "text-white/60 hover:text-white"
                 }`}
                 onClick={() => setMode("spotify")}
               >
@@ -225,7 +225,7 @@ export function PlaylistImportModal({
               <button
                 type="button"
                 className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  mode === "text" ? "bg-[#28231F] text-white font-semibold shadow-sm" : "text-white/60 hover:text-white"
+                  mode === "text" ? "bg-surface-3 text-white font-semibold shadow-sm" : "text-white/60 hover:text-white"
                 }`}
                 onClick={() => setMode("text")}
               >
@@ -342,14 +342,14 @@ export function PlaylistImportModal({
               <div className="space-y-2 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06]">
                 <div className="flex items-center justify-between text-xs text-white/60">
                   <span className="flex items-center gap-2">
-                    <Loader2 className="size-3.5 animate-spin text-[#FF5B2E]" />
+                    <Loader2 className="size-3.5 animate-spin text-accent" />
                     Matching audio streams...
                   </span>
                   <span className="font-mono text-white/80">{matchProgress.done} / {matchProgress.total}</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#FF5B2E] transition-all duration-200"
+                    className="h-full bg-accent transition-all duration-200"
                     style={{
                       width: `${matchProgress.total > 0 ? (matchProgress.done / matchProgress.total) * 100 : 0}%`,
                     }}
@@ -388,7 +388,7 @@ export function PlaylistImportModal({
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="shrink-0">
                         {selected ? (
-                          <CheckCircle2 className="size-4 text-[#52B58A]" />
+                          <CheckCircle2 className="size-4 text-ok" />
                         ) : (
                           <Circle className="size-4 text-white/30" />
                         )}

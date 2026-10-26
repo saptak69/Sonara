@@ -12,3 +12,11 @@ android/app/google-services.json
 !lib/
 !src/lib/
 !src/lib/**
+
+# JVM crash dumps and local tooling output
+hs_err_pid*.log
+replay_pid*.log
+*.lo
+.grok/
+.gemini/
+.claude/

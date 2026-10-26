@@ -88,7 +88,7 @@ function TopResultCard({
         className="group relative flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] p-4 sm:p-5 transition-all duration-200 border border-white/[0.08] hover:border-white/20"
       >
         <div className="flex items-center gap-4 min-w-0">
-          <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-full shadow-md border border-white/10 bg-[#1E1A18]">
+          <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-full shadow-md border border-white/10 bg-surface-2">
             <Cover
               src={artist.artworkLg || artist.artwork}
               alt={artist.name}
@@ -101,7 +101,7 @@ function TopResultCard({
             <span className="inline-block mb-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-white/80">
               Artist
             </span>
-            <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight truncate group-hover:text-[#FF5B2E] transition-colors">
+            <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight truncate group-hover:text-accent transition-colors">
               {artist.name}
             </h3>
           </div>
@@ -123,7 +123,7 @@ function TopResultCard({
         className="group relative flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] p-4 sm:p-5 transition-all duration-200 border border-white/[0.08] hover:border-white/20"
       >
         <div className="flex items-center gap-4 min-w-0">
-          <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl shadow-md border border-white/10 bg-[#1E1A18]">
+          <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl shadow-md border border-white/10 bg-surface-2">
             <Cover
               src={album.artworkLg || album.artwork}
               alt={album.name}
@@ -135,10 +135,10 @@ function TopResultCard({
             <span className="inline-block mb-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-white/80">
               Album
             </span>
-            <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight truncate group-hover:text-[#FF5B2E] transition-colors">
+            <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight truncate group-hover:text-accent transition-colors">
               {album.name}
             </h3>
-            <p className="text-xs text-[#A9A19B] mt-0.5 truncate">
+            <p className="text-xs text-muted mt-0.5 truncate">
               {album.owner ? `By ${album.owner}` : "Album"}
             </p>
           </div>
@@ -176,7 +176,7 @@ function TopResultCard({
       className="group relative flex items-center justify-between gap-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] p-4 sm:p-5 transition-all duration-200 border border-white/[0.08] hover:border-white/20 cursor-pointer"
     >
       <div className="flex items-center gap-4 min-w-0">
-        <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl shadow-md border border-white/10 bg-[#1E1A18]">
+        <div className="relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-xl shadow-md border border-white/10 bg-surface-2">
           <Cover
             src={track.artworkLg || track.artwork}
             alt={track.title}
@@ -188,10 +188,10 @@ function TopResultCard({
           <span className="inline-block mb-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-white/80">
             Song
           </span>
-          <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight truncate group-hover:text-[#FF5B2E] transition-colors">
+          <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight truncate group-hover:text-accent transition-colors">
             {track.title}
           </h3>
-          <p className="text-xs text-[#A9A19B] mt-0.5 truncate">{track.artist}</p>
+          <p className="text-xs text-muted mt-0.5 truncate">{track.artist}</p>
         </div>
       </div>
 
@@ -333,7 +333,7 @@ function SearchPage() {
               onFocus={() => setSuggestionsOpen(true)}
               onMouseDown={(e) => e.stopPropagation()}
               placeholder="Search for songs, artists, albums..."
-              className="h-11 w-full rounded-full bg-[#1E1A18] pr-10 pl-11 text-sm text-white placeholder:text-white/40 outline-none border border-white/10 focus:border-[#FF5B2E]/50 focus:ring-1 focus:ring-[#FF5B2E]/50"
+              className="h-11 w-full rounded-full bg-surface-2 pr-10 pl-11 text-sm text-white placeholder:text-white/40 outline-none border border-white/10 focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
             />
             {localQ && (
               <button
@@ -405,7 +405,7 @@ function SearchPage() {
               <SearchIcon className="size-7 text-white/50" />
             </div>
             <h2 className="text-lg font-semibold text-white tracking-normal">What are you looking for?</h2>
-            <p className="mt-1 text-sm text-[#A9A19B] max-w-sm">Search for artists, songs, podcasts, and more.</p>
+            <p className="mt-1 text-sm text-muted max-w-sm">Search for artists, songs, podcasts, and more.</p>
           </div>
         )}
 
@@ -421,7 +421,7 @@ function SearchPage() {
                 className="group inline-flex items-center gap-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/20 px-3.5 py-2 text-sm transition-all duration-150 active:scale-95 shadow-sm"
                 onClick={() => rememberSearch(item.label)}
               >
-                <span className="font-medium text-white group-hover:text-[#FF5B2E] transition-colors">{item.label}</span>
+                <span className="font-medium text-white group-hover:text-accent transition-colors">{item.label}</span>
                 <span className="text-[11px] text-white/40 bg-white/[0.06] px-2 py-0.5 rounded-md">{item.tag}</span>
               </Link>
             ))}
@@ -464,7 +464,7 @@ function SearchPage() {
             onFocus={() => setSuggestionsOpen(true)}
             onMouseDown={(e) => e.stopPropagation()}
             placeholder="Search for songs, artists..."
-            className="h-11 w-full rounded-full bg-[#1E1A18] pr-10 pl-11 text-sm text-white placeholder:text-white/40 outline-none border border-white/10 focus:border-[#FF5B2E]/50 focus:ring-1 focus:ring-[#FF5B2E]/50"
+            className="h-11 w-full rounded-full bg-surface-2 pr-10 pl-11 text-sm text-white placeholder:text-white/40 outline-none border border-white/10 focus:border-accent/50 focus:ring-1 focus:ring-accent/50"
           />
           {localQ && (
             <button
@@ -535,7 +535,7 @@ function SearchPage() {
       {!hasAnyResults && !tracks.isLoading ? (
         <div className="py-20 text-center">
           <p className="text-lg font-semibold text-white">No results found for “{q}”</p>
-          <p className="mt-1 text-sm text-[#A9A19B]">
+          <p className="mt-1 text-sm text-muted">
             Please make sure your words are spelled correctly, or try fewer or different keywords.
           </p>
         </div>
@@ -564,7 +564,7 @@ function SearchPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-xs text-[#A9A19B] hover:text-white"
+                            className="text-xs text-muted hover:text-white"
                             onClick={() => setShowAllSongs((prev) => !prev)}
                           >
                             {showAllSongs ? "Show less" : `Show all ${(tracks.data ?? []).length}`}
@@ -624,7 +624,7 @@ function SearchPage() {
             <section className="space-y-3">
               <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Songs</h2>
-                <span className="text-xs text-[#A9A19B]">{tracks.data?.length ?? 0} results</span>
+                <span className="text-xs text-muted">{tracks.data?.length ?? 0} results</span>
               </div>
               <div className="space-y-1">
                 {(tracks.data ?? []).map((t, i) => (
@@ -639,7 +639,7 @@ function SearchPage() {
             <section className="space-y-4">
               <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Albums</h2>
-                <span className="text-xs text-[#A9A19B]">{albums.data?.length ?? 0} releases</span>
+                <span className="text-xs text-muted">{albums.data?.length ?? 0} releases</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                 {(albums.data ?? []).map((album) => (
@@ -654,7 +654,7 @@ function SearchPage() {
             <section className="space-y-4">
               <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Artists</h2>
-                <span className="text-xs text-[#A9A19B]">{artists.data?.length ?? 0} artists</span>
+                <span className="text-xs text-muted">{artists.data?.length ?? 0} artists</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                 {(artists.data ?? []).map((a) => (
@@ -669,7 +669,7 @@ function SearchPage() {
             <section className="space-y-4">
               <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Playlists</h2>
-                <span className="text-xs text-[#A9A19B]">{playlists.data?.length ?? 0} playlists</span>
+                <span className="text-xs text-muted">{playlists.data?.length ?? 0} playlists</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                 {(playlists.data ?? []).map((p) => (
@@ -684,7 +684,7 @@ function SearchPage() {
             <section className="space-y-4">
               <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
                 <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">Live Broadcast Radio</h2>
-                <span className="text-xs text-[#A9A19B]">{radio.data?.length ?? 0} stations</span>
+                <span className="text-xs text-muted">{radio.data?.length ?? 0} stations</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
                 {(radio.data ?? []).map((s) => (

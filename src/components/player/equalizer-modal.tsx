@@ -67,18 +67,18 @@ export function EqualizerModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-[480px] max-h-[90vh] overflow-y-auto bg-[#151211] border border-white/[0.08] text-white rounded-2xl p-6 shadow-2xl [scrollbar-width:thin]">
+      <DialogContent className="max-w-[480px] max-h-[90vh] overflow-y-auto bg-surface border border-white/[0.08] text-white rounded-2xl p-6 shadow-2xl [scrollbar-width:thin]">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-20 bg-[#151211] -mx-6 -mt-6 p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-surface -mx-6 -mt-6 p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-white/[0.06] border border-white/[0.08] grid place-items-center text-[#FF5B2E]">
+            <div className="size-9 rounded-xl bg-white/[0.06] border border-white/[0.08] grid place-items-center text-accent">
               <Sliders className="size-4" />
             </div>
             <div>
               <DialogTitle className="text-base font-semibold text-white flex items-center gap-2">
                 Studio Equalizer
                 {enabled && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#FF5B2E]/15 text-[#FF5B2E] px-2 py-0.5 rounded-full border border-[#FF5B2E]/30">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-full border border-accent/30">
                     Active
                   </span>
                 )}
@@ -230,7 +230,7 @@ export function EqualizerModal() {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-white/70">Sub-Bass Punch</span>
-              <span className="font-mono text-xs tabular-nums text-[#FF5B2E]">
+              <span className="font-mono text-xs tabular-nums text-accent">
                 +{bassBoost} dB
               </span>
             </div>

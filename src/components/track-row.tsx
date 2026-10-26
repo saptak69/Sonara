@@ -15,11 +15,13 @@ export function TrackRow({
   index,
   queue,
   showPlays,
+  playlistId,
 }: {
   track: Track;
   index?: number;
   queue: Track[];
   showPlays?: boolean;
+  playlistId?: string;
 }) {
   const current = usePlayer((s) => s.queue[s.index]);
   const isPlaying = usePlayer((s) => s.isPlaying);
@@ -48,16 +50,14 @@ export function TrackRow({
   return (
     <div
       className={cn(
-        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] min-[900px]:grid-cols-[auto_minmax(0,1fr)_minmax(0,220px)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 transition-all duration-150 select-none",
-        active
-          ? "bg-white/[0.06]"
-          : "hover:bg-white/[0.04]",
+        "group relative grid grid-cols-[auto_minmax(0,1fr)_auto] min-[900px]:grid-cols-[auto_minmax(0,1fr)_minmax(0,220px)_auto] items-center gap-3.5 rounded-xl px-3 py-2.5 transition-colors duration-150 select-none focus-within:bg-hover",
+        active ? "bg-hover" : "hover:bg-hover",
       )}
     >
       {/* Clean 2px Left Accent Indicator */}
       {active && (
         <span
-          className="absolute left-0 top-2.5 bottom-2.5 w-[2px] rounded-r bg-[#FF5B2E]"
+          className="absolute left-0 top-2.5 bottom-2.5 w-[2px] rounded-r bg-accent"
           aria-hidden="true"
         />
       )}
@@ -65,11 +65,11 @@ export function TrackRow({
       <div className="flex items-center gap-3 shrink-0">
         {typeof index === "number" ? (
           <span 
-            className="hidden sm:inline-flex items-center justify-center w-6 text-right font-mono text-xs tabular-nums text-white/40 shrink-0 cursor-pointer"
+            className="hidden sm:inline-flex items-center justify-center w-6 text-right font-mono text-xs tabular-nums text-subtle shrink-0 cursor-pointer"
             onClick={handlePlayToggle}
           >
             {active && isPlaying ? (
-              <span className="text-[#FF5B2E] flex items-center justify-center">
+              <span className="text-accent flex items-center justify-center">
                 <Equalizer />
               </span>
             ) : (
@@ -86,7 +86,7 @@ export function TrackRow({
             <button
               type="button"
               aria-label={active && isPlaying ? `Pause ${track.title}` : `Play ${track.title}`}
-              className="relative size-11 sm:size-12 shrink-0 rounded-lg overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF5B2E] border border-white/[0.08] shadow-sm transition-transform active:scale-95"
+              className="relative size-11 sm:size-12 shrink-0 rounded-lg overflow-hidden focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent border border-white/[0.08] shadow-sm transition-transform active:scale-95"
               onClick={handlePlayToggle}
             >
               <Cover
@@ -122,19 +122,19 @@ export function TrackRow({
         <p
           className={cn(
             "truncate text-[14px] font-medium transition-colors leading-snug",
-            active ? "text-[#FF5B2E]" : "text-[#F4EFEA] group-hover:text-white",
+            active ? "text-accent" : "text-fg group-hover:text-fg",
           )}
         >
           {track.title}
         </p>
-        <p className="truncate text-xs text-[#A9A19B] flex items-center gap-1.5 mt-0.5 leading-snug">
+        <p className="truncate text-xs text-muted flex items-center gap-1.5 mt-0.5 leading-snug">
           {downloaded && (
             <span title="Downloaded for offline playback" className="shrink-0">
-              <CheckCircle2 className="size-3 text-[#52B58A] fill-[#52B58A]/20" />
+              <CheckCircle2 className="size-3 text-ok fill-ok/20" />
             </span>
           )}
           {track.kind === "radio" && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#FF5B2E] uppercase tracking-wider bg-[#FF5B2E]/10 px-1.5 py-0.5 rounded">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-accent uppercase tracking-wider bg-accent/10 px-1.5 py-0.5 rounded">
               <Radio className="size-2.5" /> Live
             </span>
           )}
@@ -142,7 +142,7 @@ export function TrackRow({
             <Link
               to="/artist/$id"
               params={{ id: track.artistId }}
-              className="hover:text-white hover:underline transition-colors"
+              className="hover:text-fg hover:underline transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {track.artist}
@@ -151,7 +151,7 @@ export function TrackRow({
             <span>{track.artist}</span>
           )}
           {showPlays && track.playCount ? (
-            <span className="text-white/40 text-[11px]">
+            <span className="text-subtle text-[11px]">
               · {formatCount(track.playCount)} plays
             </span>
           ) : null}
@@ -160,7 +160,7 @@ export function TrackRow({
 
       {/* Desktop-only Album Column */}
       <div className="hidden min-[900px]:block min-w-0 pr-4">
-        <p className="truncate text-xs text-white/40 hover:text-white/70 transition-colors">
+        <p className="truncate text-xs text-subtle hover:text-fg/70 transition-colors">
           {track.album || "Single"}
         </p>
       </div>
@@ -177,29 +177,29 @@ export function TrackRow({
           className={cn(
             "p-1.5 rounded-full transition-all shrink-0 active:scale-90 cursor-pointer",
             isLiked
-              ? "text-[#FF5B2E] opacity-100"
-              : "text-white/40 opacity-70 sm:opacity-0 group-hover:opacity-100 hover:text-white hover:bg-white/10"
+              ? "text-accent opacity-100"
+              : "text-subtle opacity-70 group-hover:opacity-100 hover:bg-hover hover:text-fg focus-visible:opacity-100 sm:opacity-0 tv:opacity-100"
           )}
           title={isLiked ? "Remove from Favorites" : "Add to Favorites"}
         >
-          <Heart className={cn("size-4", isLiked && "fill-[#FF5B2E]")} strokeWidth={1.75} />
+          <Heart className={cn("size-4", isLiked && "fill-accent")} strokeWidth={1.75} />
         </button>
 
-        <span className="hidden w-12 text-right font-mono text-xs tabular-nums text-white/40 sm:block">
+        <span className="hidden w-12 text-right font-mono text-xs tabular-nums text-subtle sm:block">
           {track.kind === "radio" ? (
-            <span className="text-[10px] font-semibold tracking-wider text-[#FF5B2E]">LIVE</span>
+            <span className="text-[10px] font-semibold tracking-wider text-accent">LIVE</span>
           ) : (
             formatTime(track.duration)
           )}
         </span>
 
         {/* Three dots context menu */}
-        <TrackMenu track={track} rest={queue}>
+        <TrackMenu track={track} rest={queue} playlistId={playlistId}>
           <button
             type="button"
             aria-label={`Options for ${track.title}`}
             onClick={(e) => e.stopPropagation()}
-            className="p-1.5 rounded-full transition-all opacity-80 sm:opacity-70 group-hover:opacity-100 hover:bg-white/10 text-white/70 hover:text-white shrink-0 active:scale-90 cursor-pointer"
+            className="p-1.5 rounded-full transition-all opacity-80 sm:opacity-70 group-hover:opacity-100 hover:bg-white/10 text-white/70 hover:text-fg shrink-0 active:scale-90 cursor-pointer"
             title="More options"
           >
             <MoreVertical className="size-4" />

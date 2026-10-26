@@ -1,4 +1,4 @@
-import { ListMusic, ListPlus, ListEnd, Radio, UserRound, Heart, Share2, Download, CheckCircle2 } from "lucide-react";
+import { ListMusic, ListPlus, ListEnd, ListX, Radio, UserRound, Heart, Share2, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -7,13 +7,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePlayer } from "@/lib/player-store";
+import { LIKED_PLAYLIST_ID, usePlayer } from "@/lib/player-store";
 import { useOfflineTracks } from "@/lib/offline-cache";
 import type { Track } from "@/lib/types";
 import { useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-export function TrackMenu({ track, rest, children }: { track: Track; rest?: Track[]; children: ReactNode }) {
+export function TrackMenu({
+  track,
+  rest,
+  playlistId,
+  children,
+}: {
+  track: Track;
+  rest?: Track[];
+  /** Set when shown inside one of the user's playlists, to offer "Remove". */
+  playlistId?: string;
+  children: ReactNode;
+}) {
   const navigate = useNavigate();
   const playNext = usePlayer((s) => s.playNext);
   const addToQueue = usePlayer((s) => s.addToQueue);
@@ -24,6 +35,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
   const playlists = usePlayer((s) => s.playlists);
   const addToPlaylist = usePlayer((s) => s.addToPlaylist);
   const createPlaylist = usePlayer((s) => s.createPlaylist);
+  const removeFromPlaylist = usePlayer((s) => s.removeFromPlaylist);
   const { isDownloaded, downloadTrack, removeDownload } = useOfflineTracks();
   const downloaded = isDownloaded(track.id);
 
@@ -38,7 +50,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             toast("Playing next");
           }}
         >
-          <ListEnd className="size-4 text-white/50" />
+          <ListEnd className="size-4 text-muted" />
           <span>Play next</span>
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -47,7 +59,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             toast("Added to queue");
           }}
         >
-          <ListPlus className="size-4 text-white/50" />
+          <ListPlus className="size-4 text-muted" />
           <span>Add to queue</span>
         </DropdownMenuItem>
 
@@ -60,7 +72,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             toast(isLiked ? "Removed from likes" : "Saved to likes");
           }}
         >
-          <Heart className={isLiked ? "size-4 fill-[#FF5B2E] text-[#FF5B2E]" : "size-4 text-white/50"} />
+          <Heart className={isLiked ? "size-4 fill-accent text-accent" : "size-4 text-muted"} />
           <span>{isLiked ? "Remove from likes" : "Save to likes"}</span>
         </DropdownMenuItem>
         {track.kind !== "radio" ? (
@@ -82,20 +94,31 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
           >
             {downloaded ? (
               <>
-                <CheckCircle2 className="size-4 text-[#52B58A]" />
-                <span className="text-[#52B58A]">Remove download</span>
+                <CheckCircle2 className="size-4 text-ok" />
+                <span className="text-ok">Remove download</span>
               </>
             ) : (
               <>
-                <Download className="size-4 text-white/50" />
+                <Download className="size-4 text-muted" />
                 <span>Download for offline</span>
               </>
             )}
           </DropdownMenuItem>
         ) : null}
+        {playlistId && playlistId !== LIKED_PLAYLIST_ID ? (
+          <DropdownMenuItem
+            onSelect={() => {
+              removeFromPlaylist(playlistId, track.id);
+              toast("Removed from playlist");
+            }}
+          >
+            <ListX className="size-4 text-muted" />
+            <span>Remove from this playlist</span>
+          </DropdownMenuItem>
+        ) : null}
         {playlists
-          .filter((p) => p.id !== "likes")
-          .slice(0, 3)
+          .filter((p) => p.id !== LIKED_PLAYLIST_ID && p.id !== playlistId && !p.tracks.some((t) => t.id === track.id))
+          .slice(0, 5)
           .map((p) => (
             <DropdownMenuItem
               key={p.id}
@@ -104,7 +127,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
                 toast(`Saved to ${p.name}`);
               }}
             >
-              <ListMusic className="size-4 text-white/50" />
+              <ListMusic className="size-4 text-muted" />
               <span>Add to {p.name}</span>
             </DropdownMenuItem>
           ))}
@@ -115,7 +138,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             toast(`Created ${name}`);
           }}
         >
-          <ListMusic className="size-4 text-white/50" />
+          <ListMusic className="size-4 text-muted" />
           <span>New playlist</span>
         </DropdownMenuItem>
 
@@ -144,7 +167,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             }
           }}
         >
-          <Radio className="size-4 text-white/50" />
+          <Radio className="size-4 text-muted" />
           <span>Start Track Radio</span>
         </DropdownMenuItem>
         {track.artistId ? (
@@ -153,7 +176,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
               void navigate({ to: "/artist/$id", params: { id: track.artistId! } });
             }}
           >
-            <UserRound className="size-4 text-white/50" />
+            <UserRound className="size-4 text-muted" />
             <span>Go to artist</span>
           </DropdownMenuItem>
         ) : null}
@@ -173,7 +196,7 @@ export function TrackMenu({ track, rest, children }: { track: Track; rest?: Trac
             }
           }}
         >
-          <Share2 className="size-4 text-white/50" />
+          <Share2 className="size-4 text-muted" />
           <span>Share track</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

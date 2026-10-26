@@ -9,7 +9,7 @@ interface MarqueeTextProps {
 }
 
 /**
- * Apple Music Grade Continuous Marquee Text Engine
+ * Scrolling text for titles that are too long to fit.
  * - Tracks container width via ResizeObserver to handle player expand/drawer/flex changes.
  * - Normalized duration according to character count.
  * - Subtle left/right gradient mask-image fade so text gracefully rolls into view.

@@ -1,7 +1,38 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { Playlist, RepeatMode, Track, UserPlaylist } from "./types";
+import type { RepeatMode, Track, UserPlaylist } from "./types";
 import { CURATED_TRACKS } from "./music-api";
+import { tapFeedback } from "./haptics";
+
+/** A library edit waiting to be sent to the server (kept across reloads while offline). */
+export type LibraryChange =
+  | { type: "createPlaylist"; id: string; name: string; tracks: Track[] }
+  | { type: "renamePlaylist"; id: string; name: string }
+  | { type: "deletePlaylist"; id: string }
+  | { type: "addTrack"; playlistId: string; track: Track }
+  | { type: "removeTrack"; playlistId: string; trackId: string }
+  | { type: "setLiked"; track: Track; liked: boolean }
+  | { type: "saveSettings" };
+
+/** Playback preferences that follow a signed-in user between devices. */
+export type SyncedSettings = {
+  autoplay: boolean;
+  volumeNormalization: boolean;
+  equalizerEnabled: boolean;
+  equalizerBands: [number, number, number, number, number];
+  bassBoost: number;
+  equalizerPreset: string;
+  playbackRate: number;
+};
+
+export type LibraryData = {
+  playlists: UserPlaylist[];
+  likedTracks: Track[];
+  recentlyPlayed: Track[];
+  settings: Partial<SyncedSettings> | null;
+};
+
+export const LIKED_PLAYLIST_ID = "likes";
 
 export type EqualizerPresetName =
   | "Flat"
@@ -55,6 +86,12 @@ type PlayerState = {
   equalizerPreset: string;
 
   hydrated: boolean;
+  /** Whose library is cached locally: a user id, or null for a guest. */
+  libraryOwner: string | null;
+  pendingChanges: LibraryChange[];
+  /** Position to resume from after the app is reopened. */
+  resumeAt: number;
+
   current: () => Track | null;
   isLiked: (id: string) => boolean;
   playTracks: (tracks: Track[], startIndex?: number) => void;
@@ -88,15 +125,23 @@ type PlayerState = {
   setSleepTimer: (minutes: number | null) => void;
   setPlaybackRate: (rate: number) => void;
   createPlaylist: (name: string, tracks?: Track[]) => string;
+  renamePlaylist: (id: string, name: string) => void;
   addToPlaylist: (id: string, track: Track) => void;
   removeFromPlaylist: (id: string, trackId: string) => void;
   deletePlaylist: (id: string) => void;
+  likedTracks: () => Track[];
   rememberSearch: (q: string) => void;
   removeRecentSearch: (q: string) => void;
   clearRecents: () => void;
   clearUpcoming: () => void;
   setHydrated: () => void;
-  syncFromDatabase: () => Promise<void>;
+
+  /** Replace the local library with the server's copy for this user. */
+  loadLibrary: (ownerId: string, data: LibraryData) => void;
+  /** Forget the signed-in user's library (on sign-out or account switch). */
+  clearLibrary: () => void;
+  settingsSnapshot: () => SyncedSettings;
+  dropPendingChanges: (count: number) => void;
 
   setEqualizerOpen: (v: boolean) => void;
   toggleEqualizer: () => void;
@@ -125,15 +170,7 @@ function remember(list: Track[], track: Track): Track[] {
 }
 
 function triggerHaptic(style: "light" | "medium" = "light") {
-  if (typeof window !== "undefined") {
-    void import("@capacitor/haptics")
-      .then(({ Haptics, ImpactStyle }) => {
-        return Haptics.impact({
-          style: style === "medium" ? ImpactStyle.Medium : ImpactStyle.Light,
-        });
-      })
-      .catch(() => {});
-  }
+  tapFeedback(style);
 }
 
 export function getNextIndex(state: PlayerState): number | null {
@@ -161,9 +198,71 @@ export function getNextIndex(state: PlayerState): number | null {
   return null;
 }
 
+function newPlaylistId(): string {
+  const random =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+  return `pl_${random}`;
+}
+
+/**
+ * localStorage, but writes are batched. The store changes several times a second
+ * during playback (currentTime), and serialising the whole library on every tick
+ * made scrolling stutter on low-end phones and TVs.
+ */
+function throttledLocalStorage() {
+  const pending = new Map<string, string>();
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const flush = () => {
+    timer = null;
+    for (const [key, value] of pending) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        /* quota exceeded or storage disabled */
+      }
+    }
+    pending.clear();
+  };
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush();
+    });
+  }
+
+  return {
+    getItem: (key: string) => pending.get(key) ?? localStorage.getItem(key),
+    setItem: (key: string, value: string) => {
+      pending.set(key, value);
+      timer ??= setTimeout(flush, 1000);
+    },
+    removeItem: (key: string) => {
+      pending.delete(key);
+      localStorage.removeItem(key);
+    },
+  };
+}
+
+const MAX_SAVED_QUEUE = 100;
+
 export const usePlayer = create<PlayerState>()(
   persist(
-    (set, get) => ({
+    (set, get) => {
+      /** Record a library edit for the server — only when someone is signed in. */
+      const queueChange = (change: LibraryChange) => {
+        if (!get().libraryOwner) return;
+        const pending = get().pendingChanges;
+        // Settings are sent as a whole, so one queued save is enough.
+        if (change.type === "saveSettings" && pending.some((c) => c.type === "saveSettings")) return;
+        set({ pendingChanges: [...pending, change] });
+      };
+      const settingsChanged = () => queueChange({ type: "saveSettings" });
+
+      return {
       queue: [],
       history: [],
       index: 0,
@@ -194,6 +293,10 @@ export const usePlayer = create<PlayerState>()(
       equalizerPreset: "Flat",
 
       hydrated: false,
+      libraryOwner: null,
+      pendingChanges: [],
+      resumeAt: 0,
+
       current: () => {
         const s = get();
         return s.queue[s.index] ?? null;
@@ -307,37 +410,40 @@ export const usePlayer = create<PlayerState>()(
         const i = order.indexOf(get().repeat);
         set({ repeat: order[(i + 1) % order.length] ?? "off" });
       },
-      toggleAutoplay: () => set({ autoplay: !get().autoplay }),
-      setAutoplay: (v: boolean) => set({ autoplay: v }),
-      toggleVolumeNormalization: () => set({ volumeNormalization: !get().volumeNormalization }),
+      toggleAutoplay: () => {
+        set({ autoplay: !get().autoplay });
+        settingsChanged();
+      },
+      setAutoplay: (v: boolean) => {
+        set({ autoplay: v });
+        settingsChanged();
+      },
+      toggleVolumeNormalization: () => {
+        set({ volumeNormalization: !get().volumeNormalization });
+        settingsChanged();
+      },
       toggleLike: (track) => {
         triggerHaptic("medium");
-        const cleanTrack = sanitizeTrack(track);
-        const liked = get().likedIds.includes(cleanTrack.id);
+        const clean = sanitizeTrack(track);
+        const liked = !get().likedIds.includes(clean.id);
+        const playlists = get().playlists;
+        const likes = playlists.find((p) => p.id === LIKED_PLAYLIST_ID) ?? {
+          id: LIKED_PLAYLIST_ID,
+          name: "Liked songs",
+          tracks: [],
+          createdAt: Date.now(),
+        };
+        const likesTracks = liked
+          ? [clean, ...likes.tracks.filter((t) => t.id !== clean.id)]
+          : likes.tracks.filter((t) => t.id !== clean.id);
+
         set({
-          likedIds: liked
-            ? get().likedIds.filter((id) => id !== cleanTrack.id)
-            : [cleanTrack.id, ...get().likedIds],
+          likedIds: liked ? [clean.id, ...get().likedIds] : get().likedIds.filter((id) => id !== clean.id),
+          playlists: [{ ...likes, tracks: likesTracks }, ...playlists.filter((p) => p.id !== LIKED_PLAYLIST_ID)],
         });
-        if (!liked) {
-          const likes = get().playlists.find((p) => p.id === "likes");
-          if (!likes) {
-            set({
-              playlists: [
-                { id: "likes", name: "Liked songs", tracks: [cleanTrack], createdAt: Date.now() },
-                ...get().playlists,
-              ],
-            });
-          } else {
-            get().addToPlaylist("likes", cleanTrack);
-          }
-        } else {
-          get().removeFromPlaylist("likes", cleanTrack.id);
-        }
-        void import("./library-service").then(({ toggleUserFavoriteServerFn }) => {
-          void toggleUserFavoriteServerFn({ data: { track: cleanTrack } }).catch(() => {});
-        });
+        queueChange({ type: "setLiked", track: clean, liked });
       },
+      likedTracks: () => get().playlists.find((p) => p.id === LIKED_PLAYLIST_ID)?.tracks ?? [],
       addToQueue: (track) => {
         const s = get();
         if (!s.queue.length) {
@@ -395,59 +501,58 @@ export const usePlayer = create<PlayerState>()(
       setSleepTimer: (minutes) => {
         set({ sleepTimer: minutes ? Date.now() + minutes * 60 * 1000 : null });
       },
-      setPlaybackRate: (rate) => set({ playbackRate: Math.max(0.5, Math.min(3, rate)) }),
+      setPlaybackRate: (rate) => {
+        set({ playbackRate: Math.max(0.5, Math.min(3, rate)) });
+        settingsChanged();
+      },
       createPlaylist: (name, tracks = []) => {
-        const id =
-          typeof crypto !== "undefined" && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `pl_${Date.now()}`;
+        const id = newPlaylistId();
+        const cleanName = name.trim() || "New playlist";
         const cleanTracks = tracks.map(sanitizeTrack);
+        const likes = get().playlists.filter((p) => p.id === LIKED_PLAYLIST_ID);
+        const others = get().playlists.filter((p) => p.id !== LIKED_PLAYLIST_ID);
         set({
-          playlists: [
-            { id, name: name.trim() || "New playlist", tracks: cleanTracks, createdAt: Date.now() },
-            ...get().playlists,
-          ],
+          playlists: [...likes, { id, name: cleanName, tracks: cleanTracks, createdAt: Date.now() }, ...others],
         });
-        void import("./library-service").then(({ createUserPlaylistServerFn, addTrackToPlaylistServerFn }) => {
-          void createUserPlaylistServerFn({ data: { name: name.trim() || "New playlist" } }).then((res) => {
-            if (res?.id && cleanTracks.length) {
-              for (const t of cleanTracks) {
-                void addTrackToPlaylistServerFn({ data: { playlistId: res.id, track: t } }).catch(() => {});
-              }
-            }
-          }).catch(() => {});
-        });
+        queueChange({ type: "createPlaylist", id, name: cleanName, tracks: cleanTracks });
         return id;
       },
+      renamePlaylist: (id, name) => {
+        const cleanName = name.trim();
+        if (!cleanName || id === LIKED_PLAYLIST_ID) return;
+        set({ playlists: get().playlists.map((p) => (p.id === id ? { ...p, name: cleanName } : p)) });
+        queueChange({ type: "renamePlaylist", id, name: cleanName });
+      },
       addToPlaylist: (id, track) => {
-        const cleanTrack = sanitizeTrack(track);
+        if (id === LIKED_PLAYLIST_ID) {
+          if (!get().likedIds.includes(track.id)) get().toggleLike(track);
+          return;
+        }
+        const clean = sanitizeTrack(track);
+        const playlist = get().playlists.find((p) => p.id === id);
+        if (!playlist || playlist.tracks.some((t) => t.id === clean.id)) return;
         set({
-          playlists: get().playlists.map((p) =>
-            p.id === id && !p.tracks.some((t) => t.id === cleanTrack.id)
-              ? { ...p, tracks: [cleanTrack, ...p.tracks] }
-              : p,
-          ),
+          playlists: get().playlists.map((p) => (p.id === id ? { ...p, tracks: [...p.tracks, clean] } : p)),
         });
-        void import("./library-service").then(({ addTrackToPlaylistServerFn }) => {
-          void addTrackToPlaylistServerFn({ data: { playlistId: id, track: cleanTrack } }).catch(() => {});
-        });
+        queueChange({ type: "addTrack", playlistId: id, track: clean });
       },
       removeFromPlaylist: (id, trackId) => {
+        if (id === LIKED_PLAYLIST_ID) {
+          const track = get().likedTracks().find((t) => t.id === trackId);
+          if (track) get().toggleLike(track);
+          return;
+        }
         set({
           playlists: get().playlists.map((p) =>
             p.id === id ? { ...p, tracks: p.tracks.filter((t) => t.id !== trackId) } : p,
           ),
         });
-        void import("./library-service").then(({ removeTrackFromPlaylistServerFn }) => {
-          void removeTrackFromPlaylistServerFn({ data: { playlistId: id, trackId } }).catch(() => {});
-        });
+        queueChange({ type: "removeTrack", playlistId: id, trackId });
       },
       deletePlaylist: (id) => {
-        if (id === "likes") return;
+        if (id === LIKED_PLAYLIST_ID) return;
         set({ playlists: get().playlists.filter((p) => p.id !== id) });
-        void import("./library-service").then(({ deleteUserPlaylistServerFn }) => {
-          void deleteUserPlaylistServerFn({ data: { id } }).catch(() => {});
-        });
+        queueChange({ type: "deletePlaylist", id });
       },
       removeRecentSearch: (q) => {
         set({ recentSearches: get().recentSearches.filter((s) => s !== q) });
@@ -482,7 +587,10 @@ export const usePlayer = create<PlayerState>()(
 
       setEqualizerOpen: (v) => set({ equalizerOpen: v }),
       toggleEqualizer: () => set((s) => ({ equalizerOpen: !s.equalizerOpen })),
-      setEqualizerEnabled: (v) => set({ equalizerEnabled: v }),
+      setEqualizerEnabled: (v) => {
+        set({ equalizerEnabled: v });
+        settingsChanged();
+      },
       setEqualizerBand: (bandIndex, gainDb) => {
         const s = get();
         const clamped = Math.max(-12, Math.min(12, gainDb));
@@ -490,11 +598,13 @@ export const usePlayer = create<PlayerState>()(
         if (bandIndex >= 0 && bandIndex < 5) {
           newBands[bandIndex] = clamped;
           set({ equalizerBands: newBands, equalizerPreset: "Custom", equalizerEnabled: true });
+          settingsChanged();
         }
       },
       setBassBoost: (gainDb) => {
         const clamped = Math.max(0, Math.min(10, gainDb));
         set({ bassBoost: clamped, equalizerPreset: "Custom", equalizerEnabled: true });
+        settingsChanged();
       },
       applyEqualizerPreset: (preset) => {
         const found = EQUALIZER_PRESETS[preset];
@@ -505,76 +615,114 @@ export const usePlayer = create<PlayerState>()(
             bassBoost: found.bassBoost,
             equalizerEnabled: true,
           });
+          settingsChanged();
         }
       },
 
       setHydrated: () => set({ hydrated: true }),
 
-      syncFromDatabase: async () => {
-        try {
-          const { getUserPlaylistsServerFn, getUserFavoritesServerFn } = await import("./library-service");
-          const [dbPlaylists, dbFavorites] = await Promise.all([
-            getUserPlaylistsServerFn().catch(() => [] as Playlist[]),
-            getUserFavoritesServerFn().catch(() => [] as Track[]),
-          ]);
-          if (dbFavorites.length) {
-            const favIds = dbFavorites.map((t) => t.id);
-            set((s) => ({ likedIds: Array.from(new Set([...favIds, ...s.likedIds])) }));
-          }
-          if (dbPlaylists.length) {
-            const mapped: UserPlaylist[] = dbPlaylists.map((p) => ({
-              id: p.id,
-              name: p.name,
-              tracks: (p.tracks || []).map(sanitizeTrack),
-              createdAt: Date.now(),
-            }));
-            set((s) => {
-              const existingIds = new Set(s.playlists.map((p) => p.id));
-              const newOnes = mapped.filter((p) => !existingIds.has(p.id));
-              return { playlists: [...newOnes, ...s.playlists] };
-            });
-          }
-        } catch {
-          // ignore
-        }
+      settingsSnapshot: () => {
+        const s = get();
+        return {
+          autoplay: s.autoplay,
+          volumeNormalization: s.volumeNormalization,
+          equalizerEnabled: s.equalizerEnabled,
+          equalizerBands: s.equalizerBands,
+          bassBoost: s.bassBoost,
+          equalizerPreset: s.equalizerPreset,
+          playbackRate: s.playbackRate,
+        };
       },
-    }),
+
+      loadLibrary: (ownerId, data) => {
+        const liked = data.likedTracks.map(sanitizeTrack);
+        const likesPlaylist: UserPlaylist = {
+          id: LIKED_PLAYLIST_ID,
+          name: "Liked songs",
+          tracks: liked,
+          createdAt: 0,
+        };
+        const sameOwner = get().libraryOwner === ownerId;
+        // Keep this device's own recent plays on top when it's the same person.
+        const recents = sameOwner
+          ? [...get().recents, ...data.recentlyPlayed.filter((t) => !get().recents.some((r) => r.id === t.id))]
+          : data.recentlyPlayed;
+
+        set({
+          libraryOwner: ownerId,
+          likedIds: liked.map((t) => t.id),
+          playlists: [likesPlaylist, ...data.playlists.map((p) => ({ ...p, tracks: p.tracks.map(sanitizeTrack) }))],
+          recents: recents.map(sanitizeTrack).slice(0, MAX_RECENTS),
+          ...(data.settings ?? {}),
+        });
+      },
+
+      clearLibrary: () =>
+        set({
+          libraryOwner: null,
+          pendingChanges: [],
+          likedIds: [],
+          playlists: [],
+          recents: [],
+          recentSearches: [],
+          queue: [],
+          index: 0,
+          history: [],
+          isPlaying: false,
+          currentTime: 0,
+          resumeAt: 0,
+          expanded: false,
+        }),
+
+      dropPendingChanges: (count) => set({ pendingChanges: get().pendingChanges.slice(count) }),
+      };
+    },
     {
       name: "sonara-v1",
       storage: createJSONStorage(() =>
         typeof window === "undefined"
-          ? {
-              getItem: () => null,
-              setItem: () => {},
-              removeItem: () => {},
-            }
-          : localStorage,
+          ? { getItem: () => null, setItem: () => {}, removeItem: () => {} }
+          : throttledLocalStorage(),
       ),
-      partialize: (s) => ({
-        likedIds: s.likedIds,
-        recents: s.recents,
-        playlists: s.playlists,
-        recentSearches: s.recentSearches,
-        autoplay: s.autoplay,
-        volumeNormalization: s.volumeNormalization,
-        equalizerEnabled: s.equalizerEnabled,
-        equalizerBands: s.equalizerBands,
-        bassBoost: s.bassBoost,
-        equalizerPreset: s.equalizerPreset,
-
-        volume: s.volume,
-      }),
+      partialize: (s) => {
+        // Save a window of the queue around the current song so it can resume.
+        // Live radio can't resume from a position, so it isn't saved.
+        const onRadio = s.queue[s.index]?.kind === "radio";
+        const start = Math.max(0, s.index - 20);
+        return {
+          libraryOwner: s.libraryOwner,
+          pendingChanges: s.pendingChanges,
+          likedIds: s.likedIds,
+          recents: s.recents,
+          playlists: s.playlists,
+          recentSearches: s.recentSearches,
+          autoplay: s.autoplay,
+          volumeNormalization: s.volumeNormalization,
+          equalizerEnabled: s.equalizerEnabled,
+          equalizerBands: s.equalizerBands,
+          bassBoost: s.bassBoost,
+          equalizerPreset: s.equalizerPreset,
+          playbackRate: s.playbackRate,
+          volume: s.volume,
+          shuffle: s.shuffle,
+          repeat: s.repeat,
+          queue: onRadio ? [] : s.queue.slice(start, start + MAX_SAVED_QUEUE),
+          index: onRadio ? 0 : s.index - start,
+          resumeAt: onRadio ? 0 : Math.floor(s.currentTime),
+        };
+      },
       onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.recents = (state.recents || []).map(sanitizeTrack);
-          state.queue = (state.queue || []).map(sanitizeTrack);
-          state.setHydrated();
+        if (!state) return;
+        state.recents = (state.recents || []).map(sanitizeTrack);
+        state.queue = (state.queue || []).map(sanitizeTrack);
+        if (state.index >= state.queue.length) state.index = 0;
+        // Reopen paused, at the spot where the listener left off.
+        if (state.queue.length && state.resumeAt > 0) {
+          state.currentTime = state.resumeAt;
+          state.pendingSeek = state.resumeAt;
         }
+        state.setHydrated();
       },
     },
   ),
 );
-
-if (typeof window !== "undefined") {
-  (window as unknown as { usePlayer: typeof usePlayer }).usePlayer = usePlayer;
-}
