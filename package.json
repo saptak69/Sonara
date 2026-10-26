@@ -21,7 +21,7 @@
     "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/recommendation-engine.test.ts src/lib/originality-filter.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "android:sync": "npx cap sync android"
+    "android:sync": "node scripts/prepare-android-web.mjs && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

@@ -4,7 +4,7 @@
  * Allows access to downloaded offline songs without requiring an active internet connection.
  */
 
-const SHELL_CACHE_NAME = "sonara-app-shell-v2";
+const SHELL_CACHE_NAME = "sonara-app-shell-v3";
 
 // Core static assets to precache immediately on install
 const PRECACHE_URLS = [
@@ -85,9 +85,8 @@ self.addEventListener("fetch", (event) => {
 
           if (networkResponse && networkResponse.ok) {
             const cache = await caches.open(SHELL_CACHE_NAME);
-            // Cache both the exact route and the root fallback
+            // Keep each page under its own URL, so "/" always holds the home page.
             cache.put(request, networkResponse.clone()).catch(() => {});
-            cache.put("/", networkResponse.clone()).catch(() => {});
             return networkResponse;
           }
         } catch {
