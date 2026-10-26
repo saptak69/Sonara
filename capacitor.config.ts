@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://sonara-murex.vercel.app',
     errorPath: 'error.html',
-    cleartext: true,
+    cleartext: false,
     allowNavigation: [
       "accounts.google.com",
       "*.google.com",

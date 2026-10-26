@@ -33,7 +33,7 @@ function Home() {
   const trending = useQuery({ queryKey: ["trending"], queryFn: () => fetchTrending(18) });
   const playlists = useQuery({ queryKey: ["playlists"], queryFn: () => fetchTrendingPlaylists(12) });
 
-  const topTracks = trending.data ?? [];
+  const topTracks = useMemo(() => trending.data ?? [], [trending.data]);
   const picks = topTracks.slice(0, 6);
   const fresh = topTracks.slice(6);
   const artists = useMemo(() => uniqueArtists(topTracks), [topTracks]);

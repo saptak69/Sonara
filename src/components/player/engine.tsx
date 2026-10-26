@@ -302,7 +302,9 @@ export function PlayerEngine() {
             if (a) a.currentTime = details.seekTime;
           }
         });
-      } catch {}
+      } catch {
+        // 'seekto' is not supported on every browser; ignore.
+      }
     }
   }, [current?.id, current?.title, current?.artist, current?.album, current?.artwork, current?.artworkLg, isPlaying, next, prev, setPlaying]);
 

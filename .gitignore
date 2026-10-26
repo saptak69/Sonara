@@ -20,3 +20,7 @@ replay_pid*.log
 .grok/
 .gemini/
 .claude/
+android/keystore.properties
+android/*.keystore
+android/*.jks
+!android/app/debug.keystore

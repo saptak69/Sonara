@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Capacitor: keep plugin classes and the annotations the bridge reads at runtime
+-keep class com.getcapacitor.** { *; }
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keepclassmembers class * { @com.getcapacitor.PluginMethod public *; }
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
+-keep class ee.forgr.** { *; }
+-keep class com.sonara.app.** { *; }
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
+-keepattributes SourceFile, LineNumberTable
+-renamesourcefileattribute SourceFile
+-dontwarn com.google.android.gms.**

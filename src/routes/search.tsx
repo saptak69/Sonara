@@ -13,7 +13,6 @@ import type { Artist, Playlist, Track } from "@/lib/types";
 import { Cover } from "@/components/cover";
 import { cn } from "@/lib/utils";
 import { Play, Pause, Search as SearchIcon, X } from "lucide-react";
-import { motion } from "framer-motion";
 import { SearchSuggestions } from "@/components/search-suggestions";
 
 type Search = { q: string };
