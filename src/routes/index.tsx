@@ -65,7 +65,7 @@ function Home() {
         ))}
       </Rail>
 
-      <Rail title="Made for you" subtitle="Mixes that learn from what you play" to="/explore" loading={playlists.isLoading}>
+      <Rail title="Made for you" subtitle="Mixes that learn from what you play" to="/playlists" loading={playlists.isLoading}>
         <DiscoveryStationCard />
         <Link to="/weekly-mix" className="tv-card group w-36 shrink-0 rounded-xl sm:w-44">
           <div className="relative overflow-hidden rounded-xl border border-border bg-surface">

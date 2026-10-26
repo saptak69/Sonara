@@ -3,7 +3,7 @@ import { Children, useCallback, useEffect, useRef, useState, type ReactNode } fr
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-type RailLink = "/explore" | "/radio" | "/library";
+type RailLink = "/explore" | "/playlists" | "/radio" | "/library";
 
 export function SectionHeader({ title, subtitle, to }: { title: string; subtitle?: string; to?: RailLink }) {
   const heading = (

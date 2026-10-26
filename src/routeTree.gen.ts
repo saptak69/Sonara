@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlaylistsRouteImport } from './routes/playlists'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RadioRouteImport } from './routes/radio'
 import { Route as SearchRouteImport } from './routes/search'
@@ -53,6 +54,11 @@ const LibraryRoute = LibraryRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaylistsRoute = PlaylistsRouteImport.update({
+  id: '/playlists',
+  path: '/playlists',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/playlists': typeof PlaylistsRoute
   '/privacy': typeof PrivacyRoute
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/playlists': typeof PlaylistsRoute
   '/privacy': typeof PrivacyRoute
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/library': typeof LibraryRoute
   '/login': typeof LoginRoute
+  '/playlists': typeof PlaylistsRoute
   '/privacy': typeof PrivacyRoute
   '/radio': typeof RadioRoute
   '/search': typeof SearchRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/library'
     | '/login'
+    | '/playlists'
     | '/privacy'
     | '/radio'
     | '/search'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/library'
     | '/login'
+    | '/playlists'
     | '/privacy'
     | '/radio'
     | '/search'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/explore'
     | '/library'
     | '/login'
+    | '/playlists'
     | '/privacy'
     | '/radio'
     | '/search'
@@ -273,6 +285,7 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   LibraryRoute: typeof LibraryRoute
   LoginRoute: typeof LoginRoute
+  PlaylistsRoute: typeof PlaylistsRoute
   PrivacyRoute: typeof PrivacyRoute
   RadioRoute: typeof RadioRoute
   SearchRoute: typeof SearchRoute
@@ -325,6 +338,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playlists': {
+      id: '/playlists'
+      path: '/playlists'
+      fullPath: '/playlists'
+      preLoaderRoute: typeof PlaylistsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -441,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   LibraryRoute: LibraryRoute,
   LoginRoute: LoginRoute,
+  PlaylistsRoute: PlaylistsRoute,
   PrivacyRoute: PrivacyRoute,
   RadioRoute: RadioRoute,
   SearchRoute: SearchRoute,

@@ -8,8 +8,7 @@ import { Rail } from "@/components/rail";
 import { TrackRow } from "@/components/track-row";
 import { GENRES } from "@/lib/genres";
 import { fetchFeaturedAlbums, fetchRadioStations, fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
-import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
-import type { Track } from "@/lib/types";
+import { loadCommunityTracks } from "@/lib/community-tracks";
 
 export const Route = createFileRoute("/explore")({ component: Explore });
 
@@ -23,34 +22,7 @@ function Heading({ title, subtitle }: { title: string; subtitle?: string }) {
 }
 
 function Explore() {
-  const community = useQuery({
-    queryKey: ["community-explore"],
-    queryFn: async () => {
-      try {
-        const rows = await getCommunityReleasesServerFn({ data: { limit: 16 } });
-        return rows.map(
-          (r): Track => ({
-            id: r.id,
-            title: r.title,
-            artist: r.artistName || "Independent Artist",
-            artistId: r.artistId,
-            artwork: r.coverArtUrl,
-            artworkLg: r.coverArtUrl,
-            duration: r.duration,
-            streamUrl: r.audioUrl,
-            genre: r.genre || undefined,
-            mood: r.mood || undefined,
-            description: r.description || undefined,
-            lyrics: r.lyrics || undefined,
-            playCount: r.playCount,
-            kind: "track",
-          }),
-        );
-      } catch {
-        return [];
-      }
-    },
-  });
+  const community = useQuery({ queryKey: ["community-explore"], queryFn: () => loadCommunityTracks(16) });
 
   const charts = useQuery({ queryKey: ["charts"], queryFn: () => fetchTrending(16) });
   const playlists = useQuery({ queryKey: ["playlists-explore"], queryFn: () => fetchTrendingPlaylists(12) });
