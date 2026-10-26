@@ -110,10 +110,19 @@ async function nativeGoogleSignIn() {
     const result = response.result as { idToken?: string | null } | undefined;
     idToken = result?.idToken ?? undefined;
   } catch (err) {
-    const message = err instanceof Error ? err.message.toLowerCase() : String(err);
-    // 12501 / 16 are Google Play Services' "user closed the picker" codes.
-    if (/cancel|12501|\b16\b/.test(message)) throw new SignInCancelled();
-    throw new Error("Google sign-in isn't available on this device. Use email instead.");
+    const raw = err instanceof Error ? err.message : typeof err === "string" ? err : JSON.stringify(err);
+    const message = raw.toLowerCase();
+    console.warn("[auth] native Google sign-in failed:", raw);
+    // Only a real dismissal counts as "cancelled". Google's error 16 means the account
+    // check failed (usually the app's signing key doesn't match its OAuth client), so say so.
+    if (/cancel|12501|dismiss/.test(message)) throw new SignInCancelled();
+    if (/reauth|\[16\]|\b16\b/.test(message)) {
+      throw new Error("Google rejected this app build (error 16). Sign in with email, or check the app's signing key in Google Cloud.");
+    }
+    if (/no credential|no account|not available/.test(message)) {
+      throw new Error("No Google account found on this device. Add one in Settings, or sign in with email.");
+    }
+    throw new Error(`Google sign-in failed: ${raw.replace(/^Google Sign-In failed:\s*/i, "").slice(0, 120)}`);
   }
   if (!idToken) throw new Error("Google didn't return an account. Try again.");
 

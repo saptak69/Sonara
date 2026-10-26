@@ -31,3 +31,12 @@
 -keepattributes SourceFile, LineNumberTable
 -renamesourcefileattribute SourceFile
 -dontwarn com.google.android.gms.**
+
+# Google sign-in (Credential Manager + Google ID token + Play Services auth)
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.tasks.** { *; }
+-keep class com.google.firebase.** { *; }
+-dontwarn androidx.credentials.**
