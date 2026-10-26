@@ -1,3 +1,6 @@
+import { TvDock } from "@/components/tv/tv-dock";
+import { TvNowPlaying } from "@/components/tv/tv-now-playing";
+import { TvTopBar } from "@/components/tv/tv-top-bar";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { App as CapacitorApp } from "@capacitor/app";
@@ -48,20 +51,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         }}
       />
 
-      <Sidebar />
-      <NavRail />
+      <div className="tvd:hidden!">
+        <Sidebar />
+        <NavRail />
+      </div>
+      <TvTopBar />
 
       <main
         id="main-scroll-area"
         className={cn(
           "relative h-dvh min-w-0 overflow-x-hidden overflow-y-auto overscroll-y-contain",
-          "short:ml-(--spacing-rail) desk:ml-(--spacing-sidebar) tv:short:ml-24",
+          "short:ml-(--spacing-rail) desk:ml-(--spacing-sidebar) tv:short:ml-24 tvd:ml-0! tvd:pt-[76px] tvd:pb-40!",
           hasTrack
             ? "pb-[calc(60px+76px+env(safe-area-inset-bottom))] short:pb-20 desk:pb-32"
             : "pb-[calc(60px+24px+env(safe-area-inset-bottom))] short:pb-6 desk:pb-10",
         )}
       >
-        <TopBar scrolled={scrolled} />
+        <div className="tvd:hidden!">
+          <TopBar scrolled={scrolled} />
+        </div>
 
         {offline && (
           <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-10 flex items-center justify-center gap-2 border-b border-warn/20 bg-warn/10 px-4 py-2 text-xs font-medium text-warn backdrop-blur-md short:top-0 desk:top-16">
@@ -78,8 +86,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mini player: above the tabs in portrait, bottom-right of the rail in landscape */}
       <div
+        data-tv-zone="player"
         className={cn(
-          "pointer-events-none fixed z-40 desk:hidden",
+          "pointer-events-none fixed z-40 desk:hidden tvd:hidden!",
           "inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] px-3 pb-2",
           "short:inset-x-auto short:right-3 short:bottom-2 short:left-[calc(var(--spacing-rail)+0.75rem)] short:px-0 short:pb-0",
         )}
@@ -89,10 +98,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      <BottomNav />
-      <DesktopPlayerBar />
-
-      <FullPlayer />
+      <div className="tvd:hidden!">
+        <BottomNav />
+        <DesktopPlayerBar />
+        <FullPlayer />
+      </div>
+      <TvDock />
+      <TvNowPlaying />
       <QueuePanel />
       <LyricsDrawer />
       <EqualizerModal />

@@ -52,7 +52,7 @@ export function TopPickCard({
   const active = current?.id === track.id;
 
   return (
-    <div className="relative w-[210px] sm:w-[230px] shrink-0 snap-start">
+    <div className="relative w-[210px] sm:w-[230px] tvd:w-64 shrink-0 snap-start">
       <button
         type="button"
         onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
@@ -90,7 +90,7 @@ export function AlbumCard({
   const active = current?.id === track.id;
 
   return (
-    <div className="relative w-36 sm:w-44 shrink-0 snap-start">
+    <div className="relative w-36 sm:w-44 tvd:w-52 shrink-0 snap-start">
       <button
         type="button"
         onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
@@ -120,7 +120,7 @@ export function PlaylistCard({ playlist }: { playlist: Playlist }) {
       to="/playlist/$id"
       params={{ id: playlist.id }}
       onPointerDown={() => triggerHaptic()}
-      className="group w-36 sm:w-44 shrink-0 snap-start rounded-xl tv-card transition-all duration-200 ease-out"
+      className="group w-36 sm:w-44 tvd:w-52 shrink-0 snap-start rounded-xl tv-card transition-all duration-200 ease-out"
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface border border-border transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]">
         <Cover
@@ -152,7 +152,7 @@ export function ArtistCard({ artist }: { artist: Artist }) {
       to="/artist/$id"
       params={{ id: artist.id }}
       onPointerDown={() => triggerHaptic()}
-      className="group w-32 sm:w-36 shrink-0 snap-start text-center tv-card rounded-full transition-all duration-200 active:scale-95"
+      className="group w-32 sm:w-36 tvd:w-44 shrink-0 snap-start text-center tv-card rounded-full transition-all duration-200 active:scale-95"
     >
       <div className="relative mx-auto aspect-square w-full overflow-hidden rounded-full bg-surface border border-border shadow-sm transition-transform duration-300 ease-out lg:group-hover:scale-[1.03]">
         <Cover
@@ -182,7 +182,7 @@ export function RadioCard({ station }: { station: RadioStation }) {
   const active = current?.id === track.id;
 
   return (
-    <div className="relative w-36 sm:w-44 shrink-0 snap-start">
+    <div className="relative w-36 sm:w-44 tvd:w-52 shrink-0 snap-start">
       <button
         type="button"
         onClick={() => playTrack(track)}

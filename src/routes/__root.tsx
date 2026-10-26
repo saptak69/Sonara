@@ -13,6 +13,12 @@ const DESCRIPTION = "Stream songs, live radio and new music from independent art
 
 export const Route = createRootRoute({
   head: () => ({
+    scripts: [
+      {
+        // Android TV app only (the native shell adds "SonaraTV" to the user agent).
+        children: "try{if(/SonaraTV/.test(navigator.userAgent))document.documentElement.classList.add('tvd','tv')}catch(e){}",
+      },
+    ],
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },

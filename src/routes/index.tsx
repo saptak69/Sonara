@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AlbumCard, PlaylistCard, TopPickCard } from "@/components/cards";
 import { Cover } from "@/components/cover";
 import { Rail } from "@/components/rail";
+import { TvHero } from "@/components/tv/tv-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { firstName, useCurrentUser } from "@/lib/auth/use-current-user";
 import { fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
@@ -41,7 +42,13 @@ function Home() {
 
   return (
     <div className="stagger-in space-y-10 px-4 pt-4 pb-16 sm:px-6 md:space-y-12 short:space-y-7 short:pt-2 desk:px-10 desk:pt-6">
-      <header className="pt-2">
+      <TvHero
+        track={hydrated && recents.length > 0 ? recents[0] : picks[0]}
+        queue={hydrated && recents.length > 0 ? recents : topTracks}
+        kicker={hydrated && recents.length > 0 ? "Continue listening" : "Trending now"}
+      />
+
+      <header className="pt-2 tvd:hidden">
         <h1 className="text-[28px] leading-tight font-semibold tracking-tight sm:text-4xl short:text-2xl">
           {greeting()}
           {name ? `, ${name}` : ""}
@@ -126,7 +133,7 @@ function Home() {
         </div>
       )}
 
-      <div className="border-t border-border pt-8">
+      <div className="border-t border-border pt-8 tvd:hidden">
         <SiteFooter />
       </div>
     </div>

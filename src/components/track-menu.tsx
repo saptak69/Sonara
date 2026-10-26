@@ -222,6 +222,7 @@ export function TrackMenuButton({
       <button
         type="button"
         aria-label={`More options for ${track.title}`}
+        data-kebab
         title="More options"
         onClick={(e) => e.stopPropagation()}
         className={cn(

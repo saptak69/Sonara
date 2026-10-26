@@ -72,6 +72,8 @@
 @custom-variant desk (@media (min-width: 1024px) and (min-height: 601px));
 /* Active when a TV remote or keyboard arrows are driving the app (see lib/tv.ts) */
 @custom-variant tv (&:where(.tv, .tv *));
+/* Runs on a TV device (set from the user agent, never on phones or desktops) */
+@custom-variant tvd (&:where(.tvd, .tvd *));
 
 @layer base {
   html {
@@ -344,7 +346,7 @@
 /* When a D-pad is in use, focus has to be obvious from across the room. */
 
 html.tv {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 html.tv :focus-visible,
 html.tv [data-focused="true"] {
@@ -560,4 +562,24 @@ html.tv .hover-only {
     font-size: 0.875rem !important;
   }
 
+}
+
+
+/* ── TV top tabs and big-screen details ───────────────────────────────────── */
+html.tv .tv-tab:focus-visible {
+  outline: none;
+  box-shadow: none;
+  background: #fff;
+  color: #0a0908;
+}
+html.tvd {
+  /* keep clear of the screen edges (TV overscan) */
+  --tv-edge: 4vw;
+}
+html.tvd .tv-card:focus-visible {
+  transform: scale(1.07);
+  z-index: 5;
+}
+html.tvd ::-webkit-scrollbar {
+  display: none;
 }

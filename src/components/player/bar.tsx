@@ -1,3 +1,4 @@
+import { useProgress } from "@/components/player/use-progress";
 import { TrackMenuButton } from "@/components/track-menu";
 import { memo, useCallback, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import {
@@ -30,15 +31,6 @@ const NowPlayingBars = memo(function NowPlayingBars() {
     </span>
   );
 });
-
-function useProgress() {
-  const track = usePlayer((s) => s.queue[s.index]);
-  const currentTime = usePlayer((s) => s.currentTime);
-  const duration = usePlayer((s) => s.duration);
-  const live = track?.kind === "radio";
-  const known = !live && Number.isFinite(duration) && duration > 0;
-  return { live, known, currentTime, duration, percent: known ? Math.min(100, (currentTime / duration) * 100) : 0 };
-}
 
 // ── Mini player (phones, landscape, TV) ───────────────────────────────────────
 
@@ -124,7 +116,7 @@ export function DesktopPlayerBar() {
   const iconButton = "grid size-9 place-items-center rounded-full text-muted transition hover:bg-hover hover:text-fg active:scale-90";
 
   return (
-    <div className="fixed right-6 bottom-5 left-[calc(var(--spacing-sidebar)+1.5rem)] z-40 hidden desk:block">
+    <div data-tv-zone="player" className="fixed right-6 bottom-5 left-[calc(var(--spacing-sidebar)+1.5rem)] z-40 hidden desk:block">
       <div className="sonara-glass-strong relative mx-auto flex h-[76px] max-w-[960px] items-center gap-4 rounded-[22px] px-4">
         {known && (
           <SeekBar currentTime={currentTime} duration={duration} className="absolute inset-x-5 -top-[5px]" />

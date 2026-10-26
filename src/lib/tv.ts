@@ -71,16 +71,29 @@ function candidates(scope: ParentNode, current: Element | null): HTMLElement[] {
  * that overlap the current one on the cross axis (same row / same column) win
  * over diagonal ones, which is what people expect from a TV grid.
  */
+/** False when something else (e.g. the player dock) is drawn on top of the element's centre. */
+function isReachable(el: HTMLElement): boolean {
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+  if (cx < 0 || cy < 0 || cx > window.innerWidth || cy > window.innerHeight) return true; // off-screen: scroll to it
+  const top = document.elementFromPoint(cx, cy);
+  return !top || el.contains(top) || top.contains(el);
+}
+
 function nearest(from: DOMRect, direction: Direction, pool: HTMLElement[]): HTMLElement | null {
   const fromX = from.left + from.width / 2;
   const fromY = from.top + from.height / 2;
-  let best: HTMLElement | null = null;
-  let bestScore = Infinity;
+  const scored: Array<{ el: HTMLElement; score: number }> = [];
 
   for (const el of pool) {
     const r = el.getBoundingClientRect();
     const x = r.left + r.width / 2;
     const y = r.top + r.height / 2;
+
+    // A control drawn on top of the focused one (e.g. a card's ⋮ button) is part of it,
+    // not the next stop. It is opened with the remote's Menu key instead.
+    if (x >= from.left && x <= from.right && y >= from.top && y <= from.bottom) continue;
 
     let gap: number;
     let cross: number;
@@ -95,21 +108,26 @@ function nearest(from: DOMRect, direction: Direction, pool: HTMLElement[]): HTML
       if (direction === "down" ? y <= fromY + 1 : y >= fromY - 1) continue;
       gap = direction === "down" ? r.top - from.bottom : from.top - r.bottom;
       cross = Math.abs(x - fromX);
-      sameLane = r.left < from.right && r.right > from.left;
+      // The player bar spans the bottom of the screen: reachable straight up/down from anywhere.
+      sameLane = (r.left < from.right && r.right > from.left) || Boolean(el.closest("[data-tv-zone=player]"));
     }
 
-    const score = Math.max(gap, 0) + (sameLane ? cross * 0.1 : 1000 + cross * 2);
-    if (score < bestScore) {
-      bestScore = score;
-      best = el;
-    }
+    scored.push({ el, score: Math.max(gap, 0) + (sameLane ? cross * 0.1 : 1000 + cross * 2) });
   }
-  return best;
+
+  scored.sort((a, b) => a.score - b.score);
+  for (const { el } of scored) {
+    if (isReachable(el)) return el;
+  }
+  return null;
 }
 
 function focusElement(el: HTMLElement) {
   el.focus({ preventScroll: true });
-  el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+  // Fixed chrome (top tabs, player dock) never needs scrolling into view. Elsewhere scroll
+  // instantly: smooth scrolling would make the next key press measure a moving page.
+  if (el.closest("[data-tv-chrome], [data-tv-zone=player]")) return;
+  el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
 }
 
 function focusFirst(scope: ParentNode) {
@@ -228,6 +246,29 @@ export function installRemoteNavigation(): () => void {
       return;
     }
 
+    // Menu / Info key: open the ⋮ menu of the focused song, station or player.
+    if (event.key === "ContextMenu" || event.key === "Menu" || event.key === "Info") {
+      const active = document.activeElement as HTMLElement | null;
+      const holder = active?.closest("[data-tv-zone], .snap-start, li, [role=row]") ?? active?.parentElement;
+      const kebab =
+        holder?.querySelector<HTMLElement>("[data-kebab]") ??
+        document.querySelector<HTMLElement>("[data-tv-zone=player] [data-kebab]");
+      if (kebab) {
+        event.preventDefault();
+        setRemoteMode(true);
+        kebab.focus();
+        kebab.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+        return;
+      }
+    }
+
+    // Space with nothing selected: play / pause.
+    if (event.key === " " && (!document.activeElement || document.activeElement === document.body)) {
+      event.preventDefault();
+      usePlayer.getState().toggle();
+      return;
+    }
+
     const direction = ARROWS[event.key];
     if (!direction) return;
 
@@ -241,11 +282,23 @@ export function installRemoteNavigation(): () => void {
 
     if (!hasFocus) {
       focusFirst(scope);
+      event.stopPropagation();
       return;
     }
 
-    const target = nearest(active.getBoundingClientRect(), direction, candidates(scope, active));
+    // The player dock is its own row: Left/Right stay inside it, and Left/Right from the page never enter it.
+    const zone = active.closest("[data-tv-zone]");
+    let pool = candidates(scope, active);
+    if (zone) {
+      if (direction === "left" || direction === "right") pool = pool.filter((el) => el.closest("[data-tv-zone]") === zone);
+      else if (direction === "down") pool = [];
+    } else if (direction === "left" || direction === "right") {
+      pool = pool.filter((el) => !el.closest("[data-tv-zone]"));
+    }
+    const target = nearest(active.getBoundingClientRect(), direction, pool);
     if (target) focusElement(target);
+    // We handled it: keep a focused button (e.g. a menu trigger that opens on ArrowDown) from reacting too.
+    event.stopPropagation();
   };
 
   // Enter on a custom role="button" control (not a real <button>) should press it.
@@ -278,7 +331,7 @@ export function installRemoteNavigation(): () => void {
     if (!onTv && event.pointerType !== "") setRemoteMode(false);
   };
 
-  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("keydown", onActivate);
   window.addEventListener("focusout", onFocusOut);
   window.addEventListener("pointerdown", onPointer, { passive: true });
@@ -295,7 +348,7 @@ export function installRemoteNavigation(): () => void {
     installed = false;
     window.clearTimeout(startTimer);
     window.clearTimeout(refocusTimer);
-    window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("keydown", onKeyDown, true);
     window.removeEventListener("keydown", onActivate);
     window.removeEventListener("focusout", onFocusOut);
     window.removeEventListener("pointerdown", onPointer);
