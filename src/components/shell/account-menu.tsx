@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Info, LogOut, Mic2, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Cover } from "@/components/cover";
 import {
@@ -23,7 +23,12 @@ export function AccountMenu({ variant = "full", side = "bottom" }: { variant?: "
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
 
-  if (isPending) {
+  // The server always renders the loading state, so the first client render must match it;
+  // otherwise React discards the server HTML and rebuilds the whole page.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  if (!hydrated || isPending) {
     return <div className={cn("skeleton rounded-full", variant === "compact" ? "size-9" : "h-9 w-28")} aria-hidden />;
   }
 

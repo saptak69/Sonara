@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Logo } from "@/components/logo";
@@ -12,6 +12,8 @@ import { AccountMenu } from "./account-menu";
  * search field (⌘/Ctrl + K) as well. Hidden in landscape, where the rail has both.
  */
 export function TopBar({ scrolled }: { scrolled: boolean }) {
+  // The Search page has its own big search field, so the header one steps aside there.
+  const onSearchPage = useRouterState({ select: (s) => s.location.pathname === "/search" });
   return (
     <header
       className={cn(
@@ -25,7 +27,7 @@ export function TopBar({ scrolled }: { scrolled: boolean }) {
       </div>
 
       <div className="hidden w-full items-center justify-between gap-6 desk:flex">
-        <DesktopSearch />
+        {onSearchPage ? <div className="flex-1" /> : <DesktopSearch />}
         <AccountMenu />
       </div>
     </header>

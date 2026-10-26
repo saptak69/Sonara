@@ -35,6 +35,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
             // (large focus rings, D-pad navigation) straight away.
             if (isTelevision()) {
                 settings.setUserAgentString(settings.getUserAgentString() + " SonaraTV");
+                applyTelevisionScale(webView, settings);
             }
             // Allow continuous track transitions without requiring repeated user tap gestures
             settings.setMediaPlaybackRequiresUserGesture(false);
@@ -99,6 +100,19 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
         } catch (Exception ignored) {
             networkCallback = null;
         }
+    }
+
+    /**
+     * A TV is viewed from across the room, so lay the page out as if the screen were about
+     * 1050 css px wide and scale it up to fill the real screen. Everything (text, cards,
+     * focus rings) gets proportionally bigger on 1080p and 4K sets alike.
+     */
+    private void applyTelevisionScale(WebView webView, WebSettings settings) {
+        settings.setUseWideViewPort(false);
+        settings.setSupportZoom(false);
+        int widthPx = getResources().getDisplayMetrics().widthPixels;
+        int scalePercent = Math.max(100, Math.round(widthPx / 1050f * 100f));
+        webView.setInitialScale(scalePercent);
     }
 
     private boolean isTelevision() {

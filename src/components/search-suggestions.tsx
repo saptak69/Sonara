@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, Music, User, Disc, ArrowUpRight, History } from "lucide-react";
 import {
@@ -11,31 +11,42 @@ import { fetchTrack } from "@/lib/music-api";
 import { Cover } from "@/components/cover";
 import { cn } from "@/lib/utils";
 
-function SuggestionItemButton({
+const EMPTY: SearchSuggestionResult = { queries: [], topMatches: [] };
+
+function Item({
   children,
   onSelect,
-  className,
+  selected,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   onSelect: () => void;
-  className?: string;
+  selected: boolean;
 }) {
   return (
     <button
       type="button"
+      role="option"
+      aria-selected={selected}
+      // Keep focus in the search box so the keyboard keeps working.
       onMouseDown={(e) => e.preventDefault()}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         onSelect();
       }}
-      className={className}
+      className={cn(
+        "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+        selected ? "bg-white/15 text-white" : "text-fg/90 hover:bg-white/10",
+      )}
     >
       {children}
     </button>
   );
 }
 
+const Label = ({ children }: { children: ReactNode }) => (
+  <div className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wider text-muted/80 uppercase">{children}</div>
+);
 
 export function SearchSuggestions({
   query,
@@ -54,20 +65,26 @@ export function SearchSuggestions({
 }) {
   const navigate = useNavigate();
   const playTrack = usePlayer((s) => s.playTrack);
-  const [data, setData] = useState<SearchSuggestionResult>({ queries: [], topMatches: [] });
+  const recentSearches = usePlayer((s) => s.recentSearches);
+  const [data, setData] = useState<SearchSuggestionResult>(EMPTY);
   const [loading, setLoading] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const requestId = useRef(0);
 
   const onLoadingChangeRef = useRef(onLoadingChange);
   onLoadingChangeRef.current = onLoadingChange;
 
-  // Fetch suggestions with 300ms debounce
+  const trimmed = query.trim();
+
+  // Fetch suggestions (debounced). A newer keystroke always wins over a slower older reply,
+  // and a failed request just means "no suggestions", never an error.
   useEffect(() => {
-    const trimmed = query.trim();
+    const id = ++requestId.current;
     if (trimmed.length < 2) {
-      setData({ queries: [], topMatches: [] });
+      setData(EMPTY);
       setSelectedIndex(-1);
+      setLoading(false);
       onLoadingChangeRef.current?.(false);
       return;
     }
@@ -75,210 +92,178 @@ export function SearchSuggestions({
     setLoading(true);
     onLoadingChangeRef.current?.(true);
     const timer = setTimeout(() => {
-      void fetchSearchSuggestionsServerFn({ data: { query: trimmed } })
+      fetchSearchSuggestionsServerFn({ data: { query: trimmed } })
         .then((res) => {
-          setData(res);
+          if (id !== requestId.current) return;
+          setData(res ?? EMPTY);
           setSelectedIndex(-1);
         })
+        .catch(() => {
+          if (id !== requestId.current) return;
+          setData(EMPTY);
+        })
         .finally(() => {
+          if (id !== requestId.current) return;
           setLoading(false);
           onLoadingChangeRef.current?.(false);
         });
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [trimmed]);
 
-
-  // Click outside to close
+  // Close when clicking/tapping anywhere outside the search box + its dropdown.
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    }
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    if (!isOpen) return;
+    const host = containerRef.current?.parentElement;
+    const onOutside = (e: Event) => {
+      if (host && !host.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("pointerdown", onOutside);
+    return () => document.removeEventListener("pointerdown", onOutside);
   }, [isOpen, onClose]);
 
-  const recentSearches = usePlayer((s) => s.recentSearches);
-  const showRecents = query.trim().length === 0;
-  
-  const displayQueries = showRecents ? recentSearches : data.queries;
+  const showRecents = trimmed.length === 0;
+  const displayQueries = useMemo(() => (showRecents ? recentSearches.slice(0, 6) : data.queries), [showRecents, recentSearches, data.queries]);
   const displayMatches = useMemo(() => (showRecents ? [] : data.topMatches), [showRecents, data.topMatches]);
   const totalItems = displayMatches.length + displayQueries.length;
 
-  const handleSelectMatch = useCallback((match: SuggestionMatch) => {
-    onClose();
-    if (match.type === "artist" && match.entityId) {
-      void navigate({ to: "/artist/$id", params: { id: match.entityId } });
-    } else if (match.type === "album" && match.entityId) {
-      void navigate({ to: "/playlist/$id", params: { id: match.entityId } });
-    } else if (match.entityId) {
-      // Play track directly
-      void (async () => {
-        try {
-          const track = await fetchTrack(match.entityId!);
-          if (track) {
-            playTrack(track);
-          }
-        } catch {
-          // fallback to search
-          onSelectQuery(match.title);
-        }
-      })();
-    } else {
-      onSelectQuery(match.title);
-    }
-  }, [onClose, navigate, playTrack, onSelectQuery]);
+  const handleSelectMatch = useCallback(
+    (match: SuggestionMatch) => {
+      onClose();
+      if (match.type === "artist" && match.entityId) {
+        void navigate({ to: "/artist/$id", params: { id: match.entityId } });
+      } else if (match.type === "album" && match.entityId) {
+        void navigate({ to: "/playlist/$id", params: { id: match.entityId } });
+      } else if (match.entityId) {
+        void fetchTrack(match.entityId)
+          .then((track) => (track ? playTrack(track) : onSelectQuery(match.title)))
+          .catch(() => onSelectQuery(match.title));
+      } else {
+        onSelectQuery(match.title);
+      }
+    },
+    [onClose, navigate, playTrack, onSelectQuery],
+  );
 
-  // Keyboard navigation
+  const chooseIndex = useCallback(
+    (index: number) => {
+      if (index < displayMatches.length) {
+        handleSelectMatch(displayMatches[index]);
+      } else {
+        onSelectQuery(displayQueries[index - displayMatches.length]);
+        onClose();
+      }
+    },
+    [displayMatches, displayQueries, handleSelectMatch, onSelectQuery, onClose],
+  );
+
+  // Keyboard / TV remote: only while the search box (or this list) has focus.
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (!isOpen || totalItems === 0) return;
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const host = containerRef.current?.parentElement;
+      if (!host || !host.contains(document.activeElement)) return;
+
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (totalItems === 0) return;
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev + 1) % totalItems);
+        setSelectedIndex((i) => (i + 1) % totalItems);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) => (prev - 1 + totalItems) % totalItems);
-      } else if (e.key === "Enter" && selectedIndex >= 0) {
+        setSelectedIndex((i) => (i <= 0 ? totalItems - 1 : i - 1));
+      } else if (e.key === "Enter" && selectedIndex >= 0 && selectedIndex < totalItems) {
         e.preventDefault();
-        if (selectedIndex < displayMatches.length) {
-          handleSelectMatch(displayMatches[selectedIndex]);
-        } else {
-          const queryIdx = selectedIndex - displayMatches.length;
-          onSelectQuery(displayQueries[queryIdx]);
-          onClose();
-        }
-      } else if (e.key === "Escape") {
-        onClose();
+        chooseIndex(selectedIndex);
       }
-    }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, totalItems, selectedIndex, chooseIndex, onClose]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, totalItems, selectedIndex, displayMatches, displayQueries, onSelectQuery, onClose, handleSelectMatch]);
+  // Keep the highlighted row in view.
+  useEffect(() => {
+    if (selectedIndex < 0) return;
+    containerRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
 
-  if (!isOpen || (displayQueries.length === 0 && displayMatches.length === 0 && !loading)) {
-    return null;
-  }
+  if (!isOpen) return null;
+  if (totalItems === 0 && !loading) return null;
 
   return (
     <div
       ref={containerRef}
+      role="listbox"
+      aria-label="Search suggestions"
       onMouseDown={(e) => e.stopPropagation()}
       className={cn(
-        "absolute left-0 right-0 top-full mt-2 z-50 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-bg p-2 shadow-2xl animate-in fade-in zoom-in-95 duration-150 [scrollbar-width:thin] touch-pan-y",
+        "animate-in fade-in zoom-in-95 absolute top-full right-0 left-0 z-50 mt-2 max-h-[60vh] touch-pan-y overflow-y-auto overscroll-contain rounded-2xl border border-border-strong bg-surface-2 p-2 shadow-pop duration-150 [scrollbar-width:thin] sm:max-h-[70vh]",
         className,
       )}
     >
-      {/* Top Entity Matches (Songs / Artists) */}
-      {displayMatches.length > 0 ? (
-        <div className="mb-2">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted/70">
-            Top Matches
-          </div>
-          <div className="space-y-1">
-            {displayMatches.map((match, idx) => {
-              const isSelected = selectedIndex === idx;
-              return (
-                <SuggestionItemButton
-                  key={match.id}
-                  onSelect={() => handleSelectMatch(match)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-xl px-2.5 py-3 lg:py-2 text-left transition-colors cursor-pointer",
-                    isSelected ? "bg-white/15 text-white" : "lg:hover:bg-white/10 text-fg",
-                  )}
-                >
-                  <Cover
-                    src={match.artwork}
-                    alt={match.title}
-                    title={match.title}
-                    className="size-11 lg:size-9 shrink-0 rounded-lg"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate leading-tight text-white">{match.title}</p>
-                    <p className="text-xs text-muted truncate">{match.subtitle}</p>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-1.5 text-[11px] font-medium text-accent">
-                    {match.type === "artist" ? (
-                      <>
-                        <User className="size-3.5" />
-                        <span>Artist</span>
-                      </>
-                    ) : match.type === "album" ? (
-                      <>
-                        <Disc className="size-3.5" />
-                        <span>Album</span>
-                      </>
-                    ) : (
-                      <>
-                        <Music className="size-3.5" />
-                        <span>Play</span>
-                      </>
-                    )}
-                  </div>
-                </SuggestionItemButton>
-              );
-            })}
-          </div>
+      {totalItems === 0 && loading ? (
+        <div className="space-y-2 p-2" aria-label="Searching">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="skeleton size-10 rounded-lg" />
+              <div className="flex-1 space-y-1.5">
+                <div className="skeleton h-3 w-2/3 rounded" />
+                <div className="skeleton h-3 w-1/3 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
 
-      {/* Query Suggestions */}
+      {displayMatches.length > 0 ? (
+        <div>
+          <Label>Top matches</Label>
+          {displayMatches.map((match, idx) => (
+            <Item key={match.id} selected={selectedIndex === idx} onSelect={() => handleSelectMatch(match)}>
+              <Cover
+                src={match.artwork}
+                alt=""
+                title={match.title}
+                rounded={match.type === "artist" ? "full" : "lg"}
+                className={cn("size-11 shrink-0", match.type === "artist" && "rounded-full")}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm leading-tight font-semibold text-white">{match.title}</span>
+                <span className="block truncate text-xs text-muted">{match.subtitle}</span>
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-accent">
+                {match.type === "artist" ? <User className="size-3.5" /> : match.type === "album" ? <Disc className="size-3.5" /> : <Music className="size-3.5" />}
+                {match.type === "artist" ? "Artist" : match.type === "album" ? "Album" : "Play"}
+              </span>
+            </Item>
+          ))}
+        </div>
+      ) : null}
+
       {displayQueries.length > 0 ? (
         <div>
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted/70">
-            {showRecents ? "Recent Searches" : "Search Suggestions"}
-          </div>
-          <div className="space-y-0.5">
-            {displayQueries.map((q, idx) => {
-              const globalIdx = displayMatches.length + idx;
-              const isSelected = selectedIndex === globalIdx;
-              return (
-                <SuggestionItemButton
-                  key={q}
-                  onSelect={() => {
-                    onSelectQuery(q);
-                    onClose();
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-3 lg:py-2 text-left text-base lg:text-sm transition-colors cursor-pointer",
-                    isSelected ? "bg-white/15 text-white font-medium" : "lg:hover:bg-white/10 text-fg/90",
-                  )}
-                >
-                  <div className="flex items-center gap-3 truncate">
-                    {showRecents ? <History className="size-4 shrink-0 text-muted" /> : <Search className="size-4 shrink-0 text-muted" />}
-                    <span className="truncate capitalize">{q}</span>
-                  </div>
-                  <ArrowUpRight className="size-3.5 shrink-0 text-muted/60" />
-                </SuggestionItemButton>
-              );
-            })}
-          </div>
+          <Label>{showRecents ? "Recent searches" : "Suggestions"}</Label>
+          {displayQueries.map((q, idx) => (
+            <Item
+              key={q}
+              selected={selectedIndex === displayMatches.length + idx}
+              onSelect={() => {
+                onSelectQuery(q);
+                onClose();
+              }}
+            >
+              {showRecents ? <History className="size-4 shrink-0 text-muted" /> : <Search className="size-4 shrink-0 text-muted" />}
+              <span className="min-w-0 flex-1 truncate text-sm">{q}</span>
+              <ArrowUpRight className="size-3.5 shrink-0 text-muted/60" />
+            </Item>
+          ))}
         </div>
       ) : null}
-
-      {/* Footer Navigation Hints */}
-      <div className="mt-2 hidden lg:flex items-center justify-between border-t border-white/10 px-3 pt-2 text-[10px] text-muted/70">
-        <span className="flex items-center gap-1.5">
-          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↑</kbd>
-          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↓</kbd>
-          navigate
-        </span>
-        <span className="flex items-center gap-1.5">
-          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">↵</kbd>
-          select
-        </span>
-        <span className="flex items-center gap-1.5">
-          <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[9px] text-white/80">esc</kbd>
-          close
-        </span>
-      </div>
     </div>
   );
 }
