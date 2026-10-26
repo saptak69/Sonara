@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Logo } from "@/components/logo";
@@ -20,9 +20,7 @@ export function TopBar({ scrolled }: { scrolled: boolean }) {
       )}
     >
       <div className="flex w-full items-center justify-between gap-4 desk:hidden">
-        <Link to="/" aria-label="Sonara home">
-          <Logo compact className="size-8" />
-        </Link>
+        <Logo variant="mark" size={34} />
         <AccountMenu variant="compact" />
       </div>
 

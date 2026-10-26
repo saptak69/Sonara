@@ -4,13 +4,14 @@
  * Allows access to downloaded offline songs without requiring an active internet connection.
  */
 
-const SHELL_CACHE_NAME = "sonara-app-shell-v3";
+const SHELL_CACHE_NAME = "sonara-app-shell-v4";
 
 // Core static assets to precache immediately on install
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/favicon.svg",
+  "/favicon.ico",
+  "/brand/mark.webp",
   "/error.html",
 ];
 
@@ -69,47 +70,42 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 4. HTML document navigation: Network-First with Cache Fallback
+  // 4. HTML document navigation: network first.
+  //    - Slow network: after 3.5s show this exact page from cache if we have it,
+  //      otherwise keep waiting for the network (never show a different page).
+  //    - Offline: this page from cache, then the home shell, then the offline player.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
-        try {
-          // Attempt network fetch with 3.5s timeout for flaky mobile connections
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-          const networkResponse = await fetch(request, {
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (networkResponse && networkResponse.ok) {
-            const cache = await caches.open(SHELL_CACHE_NAME);
-            // Keep each page under its own URL, so "/" always holds the home page.
-            cache.put(request, networkResponse.clone()).catch(() => {});
-            return networkResponse;
-          }
-        } catch {
-          // Offline or timeout, proceed to cache fallback
-        }
-
-        // Offline Fallback: Serve cached HTML for this route, or root "/" shell, or "/error.html"
         const cache = await caches.open(SHELL_CACHE_NAME);
-        const cachedDoc =
-          (await cache.match(request)) ||
-          (await cache.match("/")) ||
-          (await cache.match("/error.html"));
 
-        if (cachedDoc) {
-          return cachedDoc;
+        const network = fetch(request).then((response) => {
+          if (response && response.ok) {
+            // Keep each page under its own URL, so "/" always holds the home page.
+            cache.put(request, response.clone()).catch(() => {});
+          }
+          return response;
+        });
+
+        try {
+          const cachedPage = await cache.match(request);
+          if (!cachedPage) return await network;
+
+          const slow = new Promise((resolve) => setTimeout(() => resolve(cachedPage), 3500));
+          return await Promise.race([network, slow]);
+        } catch {
+          // Offline (or the request failed outright).
+          return (
+            (await cache.match(request)) ||
+            (await cache.match("/")) ||
+            (await cache.match("/error.html")) ||
+            new Response(
+              "<!DOCTYPE html><html><head><meta http-equiv='refresh' content='2;url=/error.html'></head><body>Loading Sonara Offline...</body></html>",
+              { headers: { "Content-Type": "text/html" } },
+            )
+          );
         }
-
-        // Last resort: minimal offline response
-        return new Response(
-          "<!DOCTYPE html><html><head><meta http-equiv='refresh' content='2;url=/error.html'></head><body>Loading Sonara Offline...</body></html>",
-          { headers: { "Content-Type": "text/html" } }
-        );
-      })()
+      })(),
     );
     return;
   }

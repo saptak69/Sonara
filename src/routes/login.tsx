@@ -113,7 +113,7 @@ function LoginPage() {
     <div className="grid min-h-[calc(100dvh-8rem)] place-items-center px-4 py-10 short:min-h-[calc(100dvh-2rem)] short:py-4">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center short:mb-4">
-          <Logo className="mb-5 short:hidden" />
+          <Logo variant="full" size={56} className="mb-5 short:hidden" />
           <h1 className="text-2xl font-semibold tracking-tight">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>

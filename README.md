@@ -101,3 +101,15 @@ To try it on a TV: install the APK on an Android TV / Google TV device or emulat
 | `npm test` | Unit tests |
 
 Made by Jiko.
+
+## Branding
+
+Sonara has **one logo**: the "S" mark. The master artwork is `assets/icon.png`; everything else is generated from it
+(`public/brand/*`, `public/favicon.ico`, the Android TV banner, the PWA and launcher icons). Do not redraw it.
+
+| Use | Where |
+| --- | --- |
+| **Mark only** (`<Logo variant="mark" />`) | Square or tight spots: phone header, compact side rail, favicon, app icon, loading states |
+| **Mark + "sonara" wordmark** (`<Logo variant="full" />`) | Wide brand spots: desktop sidebar, login / sign-up, footer, share card (`public/brand/og.png`), Android TV banner |
+
+The component lives in `src/components/logo.tsx`.

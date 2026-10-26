@@ -50,9 +50,7 @@ export function NavRail() {
       aria-label="Main"
       className="fixed inset-y-0 left-0 z-40 hidden w-(--spacing-rail) flex-col items-center border-r border-border bg-bg-sunken py-3 pl-[env(safe-area-inset-left)] short:flex tv:w-24"
     >
-      <Link to="/" aria-label="Sonara home" className="mb-3 rounded-xl p-1">
-        <Logo compact className="size-9" />
-      </Link>
+      <Logo variant="mark" size={36} className="mb-3 p-1" />
 
       <nav className="flex w-full flex-1 flex-col items-center justify-center gap-1 px-2">
         {PRIMARY_NAV.map((item) => {

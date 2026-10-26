@@ -21,9 +21,7 @@ export function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-(--spacing-sidebar) flex-col border-r border-border bg-bg-sunken px-3 pt-5 pb-28 select-none desk:flex">
-      <Link to="/" className="mb-6 px-3" aria-label="Sonara home">
-        <Logo />
-      </Link>
+      <Logo variant="full" size={40} className="mb-6 px-3" />
 
       <nav aria-label="Main" className="flex flex-col gap-0.5">
         {PRIMARY_NAV.filter((item) => item.to !== "/search" && item.to !== "/library").map((item) => {

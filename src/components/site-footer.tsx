@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, Heart, Music, Shield, Sparkles } from "lucide-react";
-import { SonaraIcon } from "@/components/logo";
+import { Logo } from "@/components/logo";
 
 export function SiteFooter() {
   return (
@@ -8,9 +8,8 @@ export function SiteFooter() {
       <div className="max-w-6xl mx-auto flex flex-col gap-10">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <SonaraIcon size={32} />
-            <div>
-              <span className="text-lg font-bold text-fg tracking-tight">Sonara</span>
+            <div className="flex flex-col gap-2">
+              <Logo variant="full" size={32} />
               <p className="text-xs text-muted/80">
                 An experimental music discovery and streaming platform
               </p>
