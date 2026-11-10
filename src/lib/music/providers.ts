@@ -7,9 +7,9 @@
  * SONARA_LEGACY_SOURCES=off so they can be switched off without code changes.
  */
 import type { Track } from "../types";
-import { fetchJson, ProviderError } from "./resilience.ts";
+import { fetchJson } from "./resilience.ts";
 
-export type ProviderId = "studio" | "saavn" | "audius" | "soundcloud" | "itunes" | "deezer";
+export type ProviderId = "studio" | "saavn" | "audius" | "soundcloud" | "itunes";
 
 export type TrackSearchProvider = {
   id: ProviderId;
@@ -132,64 +132,8 @@ export function legacySourcesEnabled(): boolean {
 
 type DeezerArtist = { id: number; name: string; nb_fan?: number };
 
-type DeezerTrack = {
-  id: number;
-  readable?: boolean;
-  title: string;
-  title_short?: string;
-  duration?: number;
-  rank?: number;
-  explicit_lyrics?: boolean;
-  preview?: string;
-  artist?: { id?: number; name?: string };
-  album?: { title?: string; cover_medium?: string; cover_xl?: string };
-};
-
-type DeezerPage<T> = { data?: T[]; total?: number; error?: { type?: string; message?: string; code?: number } };
-
-export function mapDeezerTrack(t: DeezerTrack): Track | null {
-  if (!t.id || !t.title || !t.preview || t.readable === false) return null;
-  return {
-    id: `deezer_${t.id}`,
-    title: t.title,
-    artist: t.artist?.name ?? "Unknown artist",
-    album: t.album?.title,
-    artwork: t.album?.cover_medium ?? null,
-    artworkLg: t.album?.cover_xl ?? t.album?.cover_medium ?? null,
-    duration: t.duration ?? 0,
-    streamUrl: t.preview,
-    playCount: t.rank,
-    kind: "track",
-    source: "deezer",
-    preview: true,
-    explicit: t.explicit_lyrics,
-  };
-}
-
-/**
- * Deezer answers "found N songs" with an empty list when it hides its catalogue from a
- * region (it does for India). That is reported as an error, not as "no results", so the
- * circuit breaker skips it and the status page shows why.
- */
-export function checkDeezerPage<T>(page: DeezerPage<T>): T[] {
-  if (page.error) {
-    const quota = page.error.code === 4 || page.error.type === "Exception";
-    throw new ProviderError("deezer", quota ? "rate-limited" : "upstream", page.error.message ?? "Deezer error");
-  }
-  const rows = page.data ?? [];
-  if (!rows.length && (page.total ?? 0) > 0) {
-    throw new ProviderError("deezer", "unavailable", "catalogue hidden for this server's region");
-  }
-  return rows;
-}
-
-/** Deezer: used for artist relationships ("fans also like"). No key needed. */
+/** Deezer: used only for artist relationships ("fans also like") in song radio. No key needed. */
 export const deezer = {
-  async searchTracks(query: string, limit: number, signal: AbortSignal): Promise<Track[]> {
-    const url = `https://api.deezer.com/search/track?q=${encodeURIComponent(query)}&limit=${limit}`;
-    const rows = checkDeezerPage(await fetchJson<DeezerPage<DeezerTrack>>("deezer", url, signal));
-    return rows.map(mapDeezerTrack).filter((t): t is Track => t !== null);
-  },
   async findArtist(name: string, signal: AbortSignal): Promise<DeezerArtist | null> {
     const url = `https://api.deezer.com/search/artist?q=${encodeURIComponent(name)}&limit=5`;
     const json = await fetchJson<{ data?: DeezerArtist[] }>("deezer", url, signal);

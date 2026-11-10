@@ -44,7 +44,6 @@ async function searchProviders(): Promise<TrackSearchProvider[]> {
     },
     { id: "audius", priority: 2, timeoutMs: 3500, searchTracks: audius.search },
     { id: "itunes", priority: 4, timeoutMs: 3000, searchTracks: itunes.search },
-    { id: "deezer", priority: 5, timeoutMs: 3000, searchTracks: deezer.searchTracks },
   ];
   if (legacySourcesEnabled()) {
     const { searchSaavnTracksServerFn } = await import("../saavn-api");

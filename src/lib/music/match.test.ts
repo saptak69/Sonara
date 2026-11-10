@@ -98,26 +98,3 @@ test("timeouts reject and abort the call", async () => {
   );
   assert.equal(aborted, true);
 });
-
-test("deezer: a hidden catalogue is an error, a real empty answer is not", async () => {
-  const { checkDeezerPage, mapDeezerTrack } = await import("./providers.ts");
-  assert.deepEqual(checkDeezerPage({ data: [], total: 0 }), []);
-  assert.throws(() => checkDeezerPage({ data: [], total: 246 }), /hidden for this server's region/);
-  assert.throws(() => checkDeezerPage({ error: { type: "Exception", message: "Quota limit exceeded", code: 4 } }), /Quota/);
-  const rows = [{ id: 1 }];
-  assert.equal(checkDeezerPage({ data: rows, total: 1 }), rows);
-
-  const mapped = mapDeezerTrack({
-    id: 7,
-    title: "Halo",
-    duration: 261,
-    preview: "https://cdn.example/p.mp3",
-    artist: { name: "Beyoncé" },
-    album: { title: "I Am...", cover_medium: "m.jpg", cover_xl: "xl.jpg" },
-  });
-  assert.equal(mapped?.id, "deezer_7");
-  assert.equal(mapped?.preview, true);
-  assert.equal(mapped?.artworkLg, "xl.jpg");
-  assert.equal(mapDeezerTrack({ id: 8, title: "Hidden", preview: "x", readable: false }), null);
-  assert.equal(mapDeezerTrack({ id: 9, title: "No clip" }), null);
-});

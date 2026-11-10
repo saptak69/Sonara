@@ -194,7 +194,7 @@ The client renders tracks first, then albums and artists, so results appear as t
 | --- | --- | --- |
 | 3a | Proxy lockdown, recovery state, single autoplay path, shuffle by id, lyrics by duration, Blob uploads | done |
 | 3b | Music core in `src/lib/music/` (match, resilience, providers, catalog), legacy switch `SONARA_LEGACY_SOURCES` | done |
-| 3c | Audius + iTunes + Deezer + Studio adapters; merged, ranked search; Audius trending rail; no fake fallbacks; `/api/providers` status page | done (MusicBrainz next) |
+| 3c | Audius + iTunes + Studio adapters (Deezer is used only for related artists in song radio); merged, ranked search; Audius trending rail; no fake fallbacks; `/api/providers` status page | done (MusicBrainz next) |
 | 3d | Audio engine split into `components/player/engine/*` hooks | done (candidate resolver and crossfade next) |
 | 4  | Migration 0006, saved albums and artists, radio sessions, artist and album pages, listening timeline | |
 | 5  | Visual pass, starting with the player | |
