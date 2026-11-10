@@ -18,7 +18,7 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/recommendation-engine.test.ts src/lib/originality-filter.test.ts src/lib/playback-recovery.test.ts src/lib/stream-guard.test.ts src/lib/lyrics-match.test.ts src/lib/studio-upload.test.ts src/lib/music/match.test.ts src/lib/music/radio.test.ts src/components/player/engine/playable-url.test.ts",
+    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/recommendation-engine.test.ts src/lib/originality-filter.test.ts src/lib/playback-recovery.test.ts src/lib/stream-guard.test.ts src/lib/lyrics-match.test.ts src/lib/studio-upload.test.ts src/lib/music/match.test.ts src/lib/music/radio.test.ts src/components/player/engine/playable-url.test.ts src/lib/artwork.test.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "android:sync": "node scripts/prepare-android-web.mjs && npx cap sync android"

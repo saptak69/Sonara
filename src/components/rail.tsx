@@ -23,6 +23,24 @@ export function SectionHeader({ title, subtitle, to }: { title: string; subtitle
   );
 }
 
+/** What a section shows when its data didn't load: say so, and offer a retry. */
+export function ShelfEmpty({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border-strong px-4 py-5">
+      <p className="text-sm text-muted tvd:text-lg">{message}</p>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="tv-card rounded-full border border-border-strong px-4 py-1.5 text-sm font-medium text-fg transition hover:border-accent hover:text-accent tvd:px-6 tvd:py-3 tvd:text-lg"
+        >
+          Try again
+        </button>
+      )}
+    </div>
+  );
+}
+
 /**
  * A titled, horizontally scrolling shelf of cards.
  * Shows placeholders while `loading`, and renders nothing when it has no cards.
@@ -76,18 +94,7 @@ export function Rail({
     return (
       <section className="space-y-3">
         <SectionHeader title={title} subtitle={subtitle} to={to} />
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border-strong px-4 py-5">
-          <p className="text-sm text-muted">{empty.message}</p>
-          {empty.onRetry && (
-            <button
-              type="button"
-              onClick={empty.onRetry}
-              className="rounded-full border border-border-strong px-4 py-1.5 text-sm font-medium text-fg transition hover:border-accent hover:text-accent"
-            >
-              Try again
-            </button>
-          )}
-        </div>
+        <ShelfEmpty message={empty.message} onRetry={empty.onRetry} />
       </section>
     );
   }

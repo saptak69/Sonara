@@ -9,7 +9,7 @@ import { tapFeedback as triggerHaptic } from "@/lib/haptics";
 import { TrackMenuButton } from "@/components/track-menu";
 
 // Round play button shown over artwork on hover / focus
-function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean }) {
+export function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean }) {
   return (
     <span
       className={cn(
@@ -20,59 +20,19 @@ function PlayBadge({ active, playing }: { active?: boolean; playing?: boolean })
       )}
     >
       <div className={cn(
-        "grid size-full place-items-center rounded-full bg-white text-black shadow-[0_4px_16px_rgba(0,0,0,0.5)] transition-transform duration-150 active:scale-95"
+        "grid size-full place-items-center rounded-full bg-accent text-accent-fg shadow-[0_4px_16px_rgba(0,0,0,0.5)] transition-transform duration-150 active:scale-95"
       )}>
         {active && playing ? (
           <span className="flex items-center gap-[2px]">
-            <div className="w-[2.5px] bg-black rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite] h-2" />
-            <div className="w-[2.5px] bg-black rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite] h-3" style={{ animationDelay: '0.2s' }} />
-            <div className="w-[2.5px] bg-black rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite] h-2" style={{ animationDelay: '0.4s' }} />
+            <div className="w-[2.5px] bg-accent-fg rounded-t-sm animate-[equalizer_0.8s_ease-in-out_infinite] h-2" />
+            <div className="w-[2.5px] bg-accent-fg rounded-t-sm animate-[equalizer_1.2s_ease-in-out_infinite] h-3" style={{ animationDelay: '0.2s' }} />
+            <div className="w-[2.5px] bg-accent-fg rounded-t-sm animate-[equalizer_0.9s_ease-in-out_infinite] h-2" style={{ animationDelay: '0.4s' }} />
           </span>
         ) : (
-          <Play className="size-4 fill-black text-black ml-0.5" />
+          <Play className="size-4 fill-current ml-0.5" />
         )}
       </div>
     </span>
-  );
-}
-
-// Large square card for the top of the home page
-export function TopPickCard({
-  track,
-  queue,
-  label = "Made for You",
-}: {
-  track: Track;
-  queue?: Track[];
-  label?: string;
-}) {
-  const playTracks = usePlayer((s) => s.playTracks);
-  const current = usePlayer((s) => s.queue[s.index]);
-  const isPlaying = usePlayer((s) => s.isPlaying);
-  const active = current?.id === track.id;
-
-  return (
-    <div className="relative w-[210px] sm:w-[230px] tvd:w-64 shrink-0 snap-start">
-      <button
-        type="button"
-        onClick={() => playTracks(queue?.length ? queue : [track], queue?.findIndex((t) => t.id === track.id) ?? 0)}
-        onPointerDown={() => triggerHaptic()}
-        className="group block w-full text-left rounded-xl tv-card transition-all duration-200 ease-out"
-      >
-        <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface border border-border transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]">
-          <Cover src={track.artworkLg || track.artwork} alt={track.title} title={track.title} className="size-full object-cover" />
-          <PlayBadge active={active} playing={isPlaying} />
-        </div>
-        <div className="mt-3 flex flex-col px-0.5 pr-9">
-          <span className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-subtle">{label}</span>
-          <span className={cn("line-clamp-2 text-[15px] font-medium leading-snug transition-colors", active ? "text-accent" : "text-fg")}>
-            {track.title}
-          </span>
-          <span className="mt-0.5 truncate text-[13px] font-normal text-muted">{track.artist}</span>
-        </div>
-      </button>
-      <TrackMenuButton track={track} className="absolute right-0 bottom-0 size-8" />
-    </div>
   );
 }
 
@@ -98,7 +58,7 @@ export function AlbumCard({
         className="group block w-full text-left rounded-xl tv-card transition-all duration-200 ease-out"
       >
         <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-surface border border-border transition-transform duration-300 ease-out lg:group-hover:scale-[1.02]">
-          <Cover src={track.artworkLg || track.artwork} alt={track.title} title={track.title} className="size-full object-cover" />
+          <Cover src={track.artworkLg || track.artwork} alt={track.title} title={track.title} px={360} className="size-full object-cover" />
           <PlayBadge active={active} playing={isPlaying} />
         </div>
         <div className="mt-2.5 px-0.5 pr-8">

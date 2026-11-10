@@ -300,6 +300,24 @@
   scroll-snap-align: start;
 }
 
+/* ── Home ─────────────────────────────────────────────────────────────────── */
+
+/* Sections below the fold skip layout and paint until they are near the screen.
+   Not on TVs or while a remote is driving: d-pad navigation needs real positions. */
+html:not(.tv):not(.tvd) .defer-paint {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+/* Generated cover for mixes and stations: rings around a glowing centre. */
+.mix-art {
+  --hue: 16;
+  background:
+    radial-gradient(circle at 26% 74%, hsl(var(--hue) 100% 56% / 0.85), transparent 58%),
+    repeating-radial-gradient(circle at 26% 74%, transparent 0 13px, hsl(var(--hue) 100% 70% / 0.3) 13px 14px),
+    linear-gradient(150deg, hsl(var(--hue) 70% 24%), hsl(var(--hue) 55% 8%));
+}
+
 /* ── Keyframes ────────────────────────────────────────────────────────────── */
 
 @keyframes equalizer {

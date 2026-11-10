@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { artworkAt } from "@/lib/artwork";
 import { cn, hashHue } from "@/lib/utils";
 
 export function Cover({
@@ -7,12 +8,18 @@ export function Cover({
   title,
   className,
   rounded = "md",
+  px,
+  priority = false,
 }: {
   src?: string | null;
   alt: string;
   title?: string;
   className?: string;
   rounded?: "md" | "lg" | "full" | "sm";
+  /** Width wanted in device pixels; sources with several sizes then send a smaller file. */
+  px?: number;
+  /** Above-the-fold image: load now instead of lazily. */
+  priority?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
 
@@ -28,6 +35,7 @@ export function Cover({
           ? "rounded-sm"
           : "rounded-md";
   const showImg = src && !failed;
+  const url = px ? artworkAt(src, px) : src;
 
   return (
     <div
@@ -46,10 +54,12 @@ export function Cover({
     >
       {showImg ? (
         <img
-          src={src}
+          src={url ?? undefined}
           alt={alt}
           className="h-full w-full object-cover"
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
+          decoding="async"
           onError={() => setFailed(true)}
         />
       ) : (
