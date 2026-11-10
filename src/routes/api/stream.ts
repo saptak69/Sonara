@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { fetchPublic } from "../../lib/safe-url.server.ts";
+import { checkRequestOrigin, clientKey, createRateLimiter } from "../../lib/stream-guard.ts";
 
 /**
  * Audio proxy for sources that block cross-origin playback or don't support
@@ -7,11 +8,20 @@ import { fetchPublic } from "../../lib/safe-url.server.ts";
  * hosts, and only passes audio through (it is not a general web proxy).
  */
 
+// Seeking issues several range requests, so the cap is generous for one listener.
+const allowRequest = createRateLimiter({ limit: 240, windowMs: 60_000 });
+
 const AUDIO_TYPES = /^(audio\/|video\/mp4|application\/(ogg|octet-stream)|binary\/octet-stream)/i;
 export const Route = createFileRoute("/api/stream")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        const guard = checkRequestOrigin(request.url, request.headers);
+        if (!guard.ok) return new Response(guard.reason, { status: guard.status });
+        if (!allowRequest(clientKey(request.headers))) {
+          return new Response("Too many requests", { status: 429, headers: { "Retry-After": "60" } });
+        }
+
         const reqUrl = new URL(request.url);
         const targetUrl = reqUrl.searchParams.get("url");
 
@@ -91,13 +101,8 @@ export const Route = createFileRoute("/api/stream")({
 
           const responseHeaders = new Headers();
           responseHeaders.set("Accept-Ranges", "bytes");
-          responseHeaders.set("Access-Control-Allow-Origin", "*");
-          responseHeaders.set("Access-Control-Allow-Headers", "Range, Content-Type, Accept");
-          responseHeaders.set(
-            "Access-Control-Expose-Headers",
-            "Content-Range, Content-Length, Accept-Ranges",
-          );
-          responseHeaders.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+          // Same-origin only: no CORS headers, and only the listener's browser may cache it.
+          responseHeaders.set("Cache-Control", "private, max-age=3600");
 
           const contentType = upstream.headers.get("content-type") || "audio/mp4";
           responseHeaders.set("Content-Type", contentType);
@@ -142,10 +147,7 @@ export const Route = createFileRoute("/api/stream")({
               if (start >= totalLength) {
                 return new Response("Requested range not satisfiable", {
                   status: 416,
-                  headers: {
-                    "Content-Range": `bytes */${totalLength}`,
-                    "Access-Control-Allow-Origin": "*",
-                  },
+                  headers: { "Content-Range": `bytes */${totalLength}` },
                 });
               }
 

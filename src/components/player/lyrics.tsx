@@ -15,7 +15,8 @@ export function LyricsPanel() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["lyrics", track?.id],
-    queryFn: () => fetchLyrics(track!.title, track!.artist),
+    queryFn: () => fetchLyrics(track!.title, track!.artist, track!.duration),
+    staleTime: Infinity,
     enabled: open && Boolean(track) && track?.kind !== "radio",
   });
 

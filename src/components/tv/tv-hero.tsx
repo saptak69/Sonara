@@ -37,7 +37,7 @@ export function TvHero({ track, queue, kicker }: { track: Track | undefined; que
               <Play className="size-6 fill-current" strokeWidth={0} />
               Play
             </button>
-            <TrackMenuButton track={track} rest={queue} className="tv-card size-16 border border-white/10 bg-white/[0.07]" />
+            <TrackMenuButton track={track} className="tv-card size-16 border border-white/10 bg-white/[0.07]" />
           </div>
         </div>
 

@@ -22,6 +22,7 @@ import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WeeklyMixRouteImport } from './routes/weekly-mix'
 import { Route as YouRouteImport } from './routes/you'
+import { Route as ApiProvidersRouteImport } from './routes/api/providers'
 import { Route as ApiStreamRouteImport } from './routes/api/stream'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ArtistIdRouteImport } from './routes/artist.$id'
@@ -96,6 +97,11 @@ const YouRoute = YouRouteImport.update({
   path: '/you',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProvidersRoute = ApiProvidersRouteImport.update({
+  id: '/api/providers',
+  path: '/api/providers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStreamRoute = ApiStreamRouteImport.update({
   id: '/api/stream',
   path: '/api/stream',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/providers': typeof ApiProvidersRoute
   '/api/stream': typeof ApiStreamRoute
   '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/providers': typeof ApiProvidersRoute
   '/api/stream': typeof ApiStreamRoute
   '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/weekly-mix': typeof WeeklyMixRoute
   '/you': typeof YouRoute
+  '/api/providers': typeof ApiProvidersRoute
   '/api/stream': typeof ApiStreamRoute
   '/api/version': typeof ApiVersionRoute
   '/artist/$id': typeof ArtistIdRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/weekly-mix'
     | '/you'
+    | '/api/providers'
     | '/api/stream'
     | '/api/version'
     | '/artist/$id'
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/weekly-mix'
     | '/you'
+    | '/api/providers'
     | '/api/stream'
     | '/api/version'
     | '/artist/$id'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/weekly-mix'
     | '/you'
+    | '/api/providers'
     | '/api/stream'
     | '/api/version'
     | '/artist/$id'
@@ -293,6 +305,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WeeklyMixRoute: typeof WeeklyMixRoute
   YouRoute: typeof YouRoute
+  ApiProvidersRoute: typeof ApiProvidersRoute
   ApiStreamRoute: typeof ApiStreamRoute
   ApiVersionRoute: typeof ApiVersionRoute
   ArtistIdRoute: typeof ArtistIdRoute
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YouRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/providers': {
+      id: '/api/providers'
+      path: '/api/providers'
+      fullPath: '/api/providers'
+      preLoaderRoute: typeof ApiProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stream': {
       id: '/api/stream'
       path: '/api/stream'
@@ -469,6 +489,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WeeklyMixRoute: WeeklyMixRoute,
   YouRoute: YouRoute,
+  ApiProvidersRoute: ApiProvidersRoute,
   ApiStreamRoute: ApiStreamRoute,
   ApiVersionRoute: ApiVersionRoute,
   ArtistIdRoute: ArtistIdRoute,

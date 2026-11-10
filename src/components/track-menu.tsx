@@ -16,12 +16,10 @@ import { cn } from "@/lib/utils";
 
 export function TrackMenu({
   track,
-  rest,
   playlistId,
   children,
 }: {
   track: Track;
-  rest?: Track[];
   /** Set when shown inside one of the user's playlists, to offer "Remove". */
   playlistId?: string;
   children: ReactNode;
@@ -32,7 +30,7 @@ export function TrackMenu({
   const toggleLike = usePlayer((s) => s.toggleLike);
   const likedIds = usePlayer((s) => s.likedIds);
   const isLiked = likedIds.includes(track.id);
-  const playTracks = usePlayer((s) => s.playTracks);
+  const startSongRadio = usePlayer((s) => s.startSongRadio);
   const playlists = usePlayer((s) => s.playlists);
   const addToPlaylist = usePlayer((s) => s.addToPlaylist);
   const createPlaylist = usePlayer((s) => s.createPlaylist);
@@ -147,29 +145,14 @@ export function TrackMenu({
 
         {/* Group 3: Discovery & Share */}
         <DropdownMenuItem
-          onSelect={async () => {
-            toast.loading(`Tuning into "${track.title}" Radio...`, { id: "track-radio" });
-            try {
-              const { getTrackRadioServerFn } = await import("@/lib/recommendation-engine");
-              const radioTracks = await getTrackRadioServerFn({ data: { seedTrackId: track.id, limit: 25 } });
-              if (radioTracks?.length) {
-                playTracks(radioTracks, 0);
-                toast.success(`Started "${track.title}" Radio`, {
-                  id: "track-radio",
-                  description: `${radioTracks.length} cohesive songs loaded`,
-                });
-              } else {
-                playTracks(rest?.length ? [track, ...rest] : [track], 0);
-                toast.dismiss("track-radio");
-              }
-            } catch {
-              playTracks(rest?.length ? [track, ...rest] : [track], 0);
-              toast.dismiss("track-radio");
-            }
+          onSelect={() => {
+            // Plays the song now; similar songs and more from the artist follow as they arrive.
+            startSongRadio(track);
+            toast.success(`Playing "${track.title}" radio`, { id: "track-radio" });
           }}
         >
           <Radio className="size-4 text-muted" />
-          <span>Start Track Radio</span>
+          <span>Start song radio</span>
         </DropdownMenuItem>
         {track.artistId ? (
           <DropdownMenuItem
@@ -208,17 +191,15 @@ export function TrackMenu({
 /** The standard "more" button: opens the song menu (queue, like, playlists, download, share...). */
 export function TrackMenuButton({
   track,
-  rest,
   playlistId,
   className,
 }: {
   track: Track;
-  rest?: Track[];
   playlistId?: string;
   className?: string;
 }) {
   return (
-    <TrackMenu track={track} rest={rest} playlistId={playlistId}>
+    <TrackMenu track={track} playlistId={playlistId}>
       <button
         type="button"
         aria-label={`More options for ${track.title}`}

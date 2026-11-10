@@ -10,16 +10,13 @@ import {
   getSaavnArtistServerFn,
   getSaavnArtistTracksServerFn,
   getSaavnArtistAlbumsServerFn,
-  getSimilarSongsServerFn,
   getSaavnTrendingServerFn,
   getSaavnTopPlaylistsServerFn,
 } from "./saavn-api";
-import {
-  searchSoundCloudTracksServerFn,
-  getSoundCloudTrackServerFn,
-} from "./soundcloud-api";
+import { getSoundCloudTrackServerFn } from "./soundcloud-api";
 import { getDatabaseTrendingServerFn } from "./library-service";
 import { createServerFn } from "@tanstack/react-start";
+import { getCatalogTrackServerFn, getIndependentTrendingServerFn, searchCatalogTracksServerFn } from "./music/catalog";
 
 
 const RADIO_NODES = [
@@ -28,10 +25,12 @@ const RADIO_NODES = [
 ];
 
 import { isCoverOrDerivative } from "./music-filter";
+import { cleanTitleForLyrics, pickLyricsEntry, primaryArtist, type LrclibEntry } from "./lyrics-match";
 export { isCoverOrDerivative };
 
 
-// High-fidelity fallback music catalog curated for Sonara by Jiko
+// Songs from Sonara's first release. Never shown as fallback content any more: kept only so
+// ids that listeners already saved ("curated_*") still open and play.
 export const CURATED_TRACKS: Track[] = [
   {
     id: "curated_espresso",
@@ -312,160 +311,56 @@ export async function fetchTrending(limit = 24, genre?: string): Promise<Track[]
   } catch {
     // fallback
   }
-  return CURATED_TRACKS.slice(0, limit);
+  return [];
 }
 
-export async function fetchUnderground(limit = 16): Promise<Track[]> {
-  try {
-    const raw = await searchSaavnTracksServerFn({ data: { query: "Indie India Originals", limit } });
-    const clean = raw.filter((t) => !isCoverOrDerivative(t.title, t.artist));
-    if (clean.length >= 4) return clean.slice(0, limit);
-  } catch {
-    // fallback
-  }
-  return [...CURATED_TRACKS].reverse().slice(0, limit);
+/** Independent artists trending on Audius this week (full-length, free to stream). */
+export async function fetchUnderground(limit = 16, genre?: string): Promise<Track[]> {
+  return getIndependentTrendingServerFn({ data: { limit, genre } }).catch(() => [] as Track[]);
 }
 
 export async function fetchTrendingPlaylists(limit = 16): Promise<Playlist[]> {
   try {
     const topPlaylists = await getSaavnTopPlaylistsServerFn({ data: { limit } });
-    if (topPlaylists.length > 0) {
-      return topPlaylists;
-    }
-
-    const saavnPlaylists = await searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Hollywood Hits", limit: 8 } }).catch(() => [] as Playlist[]);
-
-    const curatedPlaylists: Playlist[] = [
-      {
-        id: "curated_pl_bollywood_new",
-        name: "Bollywood New Releases",
-        description: "The latest chartbusters, romantic hits, and dance anthems from Bollywood.",
-        artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
-        artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
-        trackCount: 50,
-        isAlbum: false,
-        owner: "Sonara Curators",
-      },
-      {
-        id: "curated_pl_pop",
-        name: "Today's Top Pop Hits",
-        description: "Taylor Swift, Sabrina Carpenter, The Weeknd & the biggest global singles.",
-        artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
-        artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
-        trackCount: 45,
-        isAlbum: false,
-        owner: "Sonara Pop",
-      },
-      {
-        id: "curated_pl_chill",
-        name: "Jiko's Chill & Lo-Fi Lounge",
-        description: "Atmospheric beats, late night lo-fi and deep melodic chill.",
-        artwork: CURATED_TRACKS[1].artwork,
-        artworkLg: CURATED_TRACKS[1].artworkLg,
-        trackCount: CURATED_TRACKS.length,
-        isAlbum: false,
-        owner: "Jiko",
-        tracks: CURATED_TRACKS,
-      },
-      {
-        id: "curated_pl_synth",
-        name: "Cyber & Synthwave Anthems",
-        description: "High octane synth and retrofuturistic night rhythms.",
-        artwork: CURATED_TRACKS[0].artwork,
-        artworkLg: CURATED_TRACKS[0].artworkLg,
-        trackCount: CURATED_TRACKS.length,
-        isAlbum: false,
-        owner: "Jiko",
-        tracks: CURATED_TRACKS,
-      },
-    ];
-
-    const merged = [...curatedPlaylists, ...saavnPlaylists];
-    if (merged.length) return merged.slice(0, limit);
+    if (topPlaylists.length > 0) return topPlaylists;
+    const found = await searchSaavnPlaylistsServerFn({ data: { query: "Bollywood Hollywood Hits", limit } });
+    return found.slice(0, limit);
   } catch {
-    // fallback
+    // Providers unavailable: the page shows its empty state rather than invented playlists.
+    return [];
   }
-  return [
-    {
-      id: "curated_pl_bollywood_new",
-      name: "Bollywood New Releases",
-      description: "The latest chartbusters, romantic hits, and dance anthems from Bollywood.",
-      artwork: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=480&h=480&fit=crop&q=80",
-      artworkLg: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1000&h=1000&fit=crop&q=85",
-      trackCount: 50,
-      isAlbum: false,
-      owner: "Sonara Curators",
-    },
-    {
-      id: "curated_pl_pop",
-      name: "Today's Top Pop Hits",
-      description: "Taylor Swift, Sabrina Carpenter, The Weeknd & the biggest global singles.",
-      artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
-      artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
-      trackCount: 45,
-      isAlbum: false,
-      owner: "Sonara Pop",
-    },
-  ];
 }
 
+/** Search across every enabled provider, merged and ranked on the server. */
 export async function searchTracks(query: string, limit = 24): Promise<Track[]> {
-  const cleanQ = query.trim();
-  if (!cleanQ) return [];
-
-  // 1. Primary Sovereign Source: JioSaavn verified original studio recordings
-  const saavnTracks = await searchSaavnTracksServerFn({
-    data: { query: cleanQ, limit: Math.min(30, limit * 2) },
-  }).catch(() => [] as Track[]);
-
-  // Filter out any amateur covers, karaoke, or bootleg derivatives
-  const originalSaavn = saavnTracks.filter((t) => !isCoverOrDerivative(t.title, t.artist, cleanQ));
-
-  // If JioSaavn has high-confidence authentic studio releases, return them directly!
-  // This guarantees 100% original master quality and prevents feed dilution.
-  if (originalSaavn.length > 0) {
-    const qLower = cleanQ.toLowerCase();
-    const hasStrongMatch = originalSaavn.some(
-      (t) => t.title.toLowerCase().includes(qLower) || t.artist.toLowerCase().includes(qLower),
-    );
-    if (hasStrongMatch || originalSaavn.length >= 3) {
-      return originalSaavn.slice(0, limit);
-    }
-  }
-
-  // 2. Secondary fallback: SoundCloud with STRICT anti-cover filter
-  const soundcloudTracks = await searchSoundCloudTracksServerFn({
-    data: { query: cleanQ, limit: Math.min(10, limit) },
-  }).catch(() => [] as Track[]);
-
-  const originalSoundCloud = soundcloudTracks.filter((t) => !isCoverOrDerivative(t.title, t.artist, cleanQ));
-
-  // Merge: Original studio recordings first, then clean verified SoundCloud tracks
-  const combined = [...originalSaavn, ...originalSoundCloud];
-
-  if (combined.length) {
-    const seen = new Set<string>();
-    return combined
-      .filter((t) => {
-        const key = `${t.title.toLowerCase().trim()}_${t.artist.toLowerCase().trim()}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, limit);
-  }
-
-  // 3. Fallback: curated catalog
-  const q = cleanQ.toLowerCase();
-  return CURATED_TRACKS.filter(
-    (t) =>
-      t.title.toLowerCase().includes(q) ||
-      t.artist.toLowerCase().includes(q) ||
-      (t.genre && t.genre.toLowerCase().includes(q)),
-  ).slice(0, limit);
+  const q = query.trim();
+  if (!q) return [];
+  return searchCatalogTracksServerFn({ data: { query: q, limit } });
 }
+
+type MixSeed = Pick<Track, "id" | "title" | "artist" | "genre">;
+
+/**
+ * Builds the weekly mix on the server: one request from the browser instead of a
+ * dozen provider calls over a phone connection.
+ */
+export const generateWeeklyMixServerFn = createServerFn({ method: "POST" })
+  .validator((d: { recents: MixSeed[] }) => ({
+    recents: (Array.isArray(d?.recents) ? d.recents : []).slice(0, 40).map((t) => ({
+      id: String(t.id ?? "").slice(0, 120),
+      title: String(t.title ?? "").slice(0, 200),
+      artist: String(t.artist ?? "").slice(0, 200),
+      genre: t.genre ? String(t.genre).slice(0, 60) : undefined,
+    })),
+  }))
+  .handler(({ data }) => buildWeeklyMix(data.recents as Track[]));
 
 export async function generateWeeklyMix(recents: Track[]): Promise<Track[]> {
+  const seeds: MixSeed[] = recents.map(({ id, title, artist, genre }) => ({ id, title, artist, genre }));
+  return generateWeeklyMixServerFn({ data: { recents: seeds } });
+}
+
+async function buildWeeklyMix(recents: Track[]): Promise<Track[]> {
   try {
     if (!recents || recents.length === 0) {
       return fetchTrending(20);
@@ -559,84 +454,13 @@ export async function generateWeeklyMix(recents: Track[]): Promise<Track[]> {
 }
 
 
-export async function fetchRelatedQueue(track: Track, limit = 15, _recents: Track[] = []): Promise<Track[]> {
-  try {
-    const results: Track[] = [];
-    const seen = new Set<string>([track.id]);
-    const artistCounts = new Map<string, number>();
-
-    const addTrack = (t: Track) => {
-      if (!t.artist || (t.duration && t.duration < 45)) return false;
-      const key = t.title.toLowerCase().trim() + '_' + t.artist.toLowerCase().trim();
-      const aName = t.artist.toLowerCase().trim();
-      const count = artistCounts.get(aName) || 0;
-      if (count < 3 && !seen.has(key) && !seen.has(t.id)) {
-        artistCounts.set(aName, count + 1);
-        seen.add(key);
-        seen.add(t.id);
-        results.push(t);
-        return true;
-      }
-      return false;
-    };
-
-    if (track.id.startsWith('saavn_')) {
-      const similar = await getSimilarSongsServerFn({ data: { id: track.id, limit: limit * 2 } });
-      if (similar && similar.length > 0) {
-        for (const t of similar) {
-          if (results.length >= limit) break;
-          addTrack(t);
-        }
-        if (results.length >= limit) return results;
-      }
-    }
-
-    if (track.artist && results.length < limit) {
-      const artistQuery = track.artist.split(',')[0].trim();
-      const artistTracks = await searchSaavnTracksServerFn({ data: { query: artistQuery + ' songs', limit: 15 } });
-      for (const t of artistTracks) {
-        if (results.length >= limit) break;
-        if (t.artist?.toLowerCase().includes(artistQuery.toLowerCase())) {
-          addTrack(t);
-        }
-      }
-    }
-
-    if (results.length < limit) {
-      const langGenre = ((track.genre || '') + ' ' + (track.artist ? track.artist.split(',')[0].trim() : '')).trim();
-      if (langGenre) {
-        const genreTracks = await searchSaavnTracksServerFn({ data: { query: langGenre + ' popular', limit: 15 } });
-        for (const t of genreTracks) {
-          if (results.length >= limit) break;
-          addTrack(t);
-        }
-      }
-    }
-
-    if (results.length < limit) {
-      const trending = await fetchTrending(limit);
-      for (const t of trending) {
-        if (results.length >= limit) break;
-        addTrack(t);
-      }
-    }
-
-    return results;
-  } catch (error) {
-    console.error('fetchRelatedQueue error', error);
-    return CURATED_TRACKS.filter((t) => t.id !== track.id).slice(0, limit);
-  }
-}
-
-
 export async function searchPlaylists(query: string, limit = 12): Promise<Playlist[]> {
   try {
     const saavnPlaylists = await searchSaavnPlaylistsServerFn({ data: { query, limit } });
-    if (saavnPlaylists && saavnPlaylists.length) return saavnPlaylists.slice(0, limit);
+    return (saavnPlaylists ?? []).slice(0, limit);
   } catch {
-    // fallback
+    return [];
   }
-  return fetchTrendingPlaylists(limit);
 }
 
 export const FEATURED_ALBUMS: Playlist[] = [
@@ -828,39 +652,13 @@ export async function searchAlbums(query: string, limit = 16): Promise<Playlist[
 export async function searchArtists(query: string, limit = 12): Promise<Artist[]> {
   try {
     const saavnArtists = await searchSaavnArtistsServerFn({ data: { query, limit } });
-    if (saavnArtists && saavnArtists.length) return saavnArtists.slice(0, limit);
+    return (saavnArtists ?? []).slice(0, limit);
   } catch {
-    // fallback
+    return [];
   }
-  return [
-    {
-      id: "curated_artist_jiko",
-      name: "Jiko",
-      handle: "jiko",
-      bio: "Creator and sound curator of Sonara Music Player.",
-      artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
-      artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
-      followerCount: 9940,
-      trackCount: CURATED_TRACKS.length,
-    },
-    {
-      id: "curated_artist_neon",
-      name: "Neon Skyline",
-      handle: "neonskyline",
-      bio: "Retro-synth and atmospheric electronic artist.",
-      artwork: CURATED_TRACKS[0].artwork,
-      artworkLg: CURATED_TRACKS[0].artworkLg,
-      followerCount: 54200,
-      trackCount: 12,
-    },
-  ];
 }
 
 export async function fetchPlaylist(id: string): Promise<Playlist | null> {
-  if (id.startsWith("curated_pl_")) {
-    const playlists = await fetchTrendingPlaylists(10);
-    return playlists.find((p) => p.id === id) || playlists[0] || null;
-  }
   if (id.startsWith("saavn_album_")) {
     return getSaavnAlbumServerFn({ data: { id } });
   }
@@ -880,18 +678,6 @@ export async function fetchArtistAlbums(id: string, limit = 20): Promise<Playlis
 }
 
 export async function fetchArtist(id: string): Promise<Artist | null> {
-  if (id === "curated_artist_jiko" || id === "curated_artist_saptak") {
-    return {
-      id: "curated_artist_jiko",
-      name: "Jiko",
-      handle: "jiko",
-      bio: "Creator and sound curator of Sonara Music Player.",
-      artwork: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=480&h=480&fit=crop&q=80",
-      artworkLg: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1000&h=1000&fit=crop&q=85",
-      followerCount: 9940,
-      trackCount: CURATED_TRACKS.length,
-    };
-  }
   if (id.startsWith("saavn_artist_")) {
     return getSaavnArtistServerFn({ data: { id } });
   }
@@ -899,13 +685,10 @@ export async function fetchArtist(id: string): Promise<Artist | null> {
 }
 
 export async function fetchArtistTracks(id: string, limit = 40): Promise<Track[]> {
-  if (id.startsWith("curated_")) {
-    return CURATED_TRACKS;
-  }
   if (id.startsWith("saavn_artist_")) {
     return getSaavnArtistTracksServerFn({ data: { id, limit } });
   }
-  return CURATED_TRACKS.slice(0, limit);
+  return [];
 }
 
 export async function fetchTrack(id: string): Promise<Track | null> {
@@ -914,6 +697,10 @@ export async function fetchTrack(id: string): Promise<Track | null> {
 
   if (id.startsWith("saavn_")) {
     return getSaavnTrackServerFn({ data: { id } });
+  }
+
+  if (id.startsWith("audius_") || id.startsWith("itunes_")) {
+    return getCatalogTrackServerFn({ data: { id } });
   }
 
   if (id.startsWith("soundcloud_")) {
@@ -1118,44 +905,63 @@ function parseSynced(raw: string | null | undefined): { time: number; text: stri
   return lines.length ? lines : null;
 }
 
+const LRCLIB_HEADERS = { "User-Agent": "Sonara (https://sonara-murex.vercel.app)" };
+
+async function lrclib<T>(path: string, params: Record<string, string>): Promise<T | null> {
+  const url = new URL(`https://lrclib.net/api/${path}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  try {
+    const res = await fetch(url, { headers: LRCLIB_HEADERS, signal: AbortSignal.timeout(4000) });
+    return res.ok ? ((await res.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function toLyrics(entry: LrclibEntry): Lyrics {
+  return {
+    plain: entry.plainLyrics || "",
+    synced: parseSynced(entry.syncedLyrics),
+    instrumental: Boolean(entry.instrumental),
+  };
+}
+
 export const fetchLyricsServerFn = createServerFn({ method: "GET" })
-  .validator((d: { title: string; artist: string }) => d)
+  .validator((d: { title: string; artist: string; duration?: number }) => d)
   .handler(async ({ data }) => {
     const { title, artist } = data;
-    try {
-      const url = new URL("https://lrclib.net/api/search");
-      url.searchParams.set("q", `${title} ${artist.replace(/^@/, "")}`);
-      
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 4000);
-      try {
-        const res = await fetch(url.toString(), {
-          signal: controller.signal,
-          headers: {
-            "User-Agent": "SonaraMusic/1.0.0 (https://github.com/sonara)",
-          },
-        });
-        if (res.ok) {
-          const resData = await res.json();
-          // Prioritize tracks with synced lyrics
-          let hit = (resData ?? []).find((d: any) => d.syncedLyrics);
-          if (!hit) {
-            hit = (resData ?? []).find((d: any) => d.plainLyrics || d.instrumental);
-          }
-          if (hit) {
-            return {
-              plain: hit.plainLyrics || "",
-              synced: parseSynced(hit.syncedLyrics),
-              instrumental: Boolean(hit.instrumental),
-            };
-          }
+    const duration = data.duration && data.duration > 0 ? Math.round(data.duration) : undefined;
+    const trackName = cleanTitleForLyrics(title) || title;
+    const artistName = primaryArtist(artist) || artist;
+    const { serverCache } = await import("./cache.server");
+
+    const found = await serverCache.getOrFetch(
+      `lyrics:${trackName}|${artistName}|${duration ?? ""}`.toLowerCase(),
+      60 * 60 * 24,
+      async () => {
+        // 1. Exact lookup: LRCLIB matches the length within a couple of seconds.
+        if (duration) {
+          const exact = await lrclib<LrclibEntry>("get", {
+            track_name: trackName,
+            artist_name: artistName,
+            duration: String(duration),
+          });
+          if (exact && (exact.syncedLyrics || exact.plainLyrics || exact.instrumental)) return toLyrics(exact);
         }
-      } finally {
-        clearTimeout(timer);
-      }
-    } catch {
-      // Ignore and fallback
-    }
+        // 2. Structured search, then free text; pick the entry whose length fits.
+        for (const params of <Record<string, string>[]>[
+          { track_name: trackName, artist_name: artistName },
+          { q: `${trackName} ${artistName}` },
+        ]) {
+          const results = await lrclib<LrclibEntry[]>("search", params);
+          const hit = pickLyricsEntry(results ?? [], duration);
+          if (hit) return toLyrics(hit);
+        }
+        // Cache misses too (as false), so a song without lyrics isn't looked up on every open.
+        return false as const;
+      },
+    );
+    if (found) return found;
 
     // Fallback to lyrics.ovh
     try {
@@ -1184,6 +990,6 @@ export const fetchLyricsServerFn = createServerFn({ method: "GET" })
     return null;
   });
 
-export async function fetchLyrics(title: string, artist: string): Promise<Lyrics | null> {
-  return fetchLyricsServerFn({ data: { title, artist } });
+export async function fetchLyrics(title: string, artist: string, duration?: number): Promise<Lyrics | null> {
+  return fetchLyricsServerFn({ data: { title, artist, duration } });
 }

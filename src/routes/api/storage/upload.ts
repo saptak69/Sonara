@@ -2,28 +2,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { checkUpload, UPLOAD_LIMITS, type UploadCategory } from "@/lib/studio-upload";
 
-const ALLOWED_AUDIO = new Set([
-  "audio/mpeg",
-  "audio/mp3",
-  "audio/wav",
-  "audio/x-wav",
-  "audio/aac",
-  "audio/mp4",
-  "audio/x-m4a",
-  "audio/ogg",
-  "audio/flac",
-]);
+/**
+ * Studio uploads, in two steps (see src/lib/studio-upload.ts):
+ * 1. JSON request -> a Vercel Blob client token when BLOB_READ_WRITE_TOKEN is set,
+ *    otherwise { mode: "server" }.
+ * 2. Without Blob, a multipart POST that writes the file to public/uploads (local
+ *    development). Read-only hosting gets a clear error instead of a broken upload.
+ */
 
-const ALLOWED_IMAGE = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-]);
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+}
 
-const MAX_AUDIO_SIZE = 60 * 1024 * 1024; // 60MB
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+function asCategory(value: unknown): UploadCategory {
+  return value === "artwork" ? "artwork" : "audio";
+}
 
 export const Route = createFileRoute("/api/storage/upload")({
   server: {
@@ -32,106 +27,65 @@ export const Route = createFileRoute("/api/storage/upload")({
         // Only signed-in artists can upload (cookie on the web, bearer token in the app).
         const { auth } = await import("@/lib/auth/server");
         const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
-        if (!session?.user) {
-          return new Response(JSON.stringify({ error: "Sign in to upload music." }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
+        if (!session?.user) return json({ error: "Sign in to upload music." }, 401);
+
+        const isJson = (request.headers.get("content-type") ?? "").includes("application/json");
+
+        if (isJson) {
+          const body = (await request.json().catch(() => null)) as { category?: string; name?: string; size?: number } | null;
+          const category = asCategory(body?.category);
+          const check = checkUpload(category, String(body?.name ?? ""), Number(body?.size));
+          if (!check.ok) return json({ error: check.error }, 400);
+
+          const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+          if (!blobToken) return json({ mode: "server" });
+
+          const { generateClientTokenFromReadWriteToken } = await import("@vercel/blob/client");
+          const pathname = `${category}/${session.user.id}/${randomUUID()}.${check.ext}`;
+          const clientToken = await generateClientTokenFromReadWriteToken({
+            token: blobToken,
+            pathname,
+            allowedContentTypes: [check.mimeType],
+            maximumSizeInBytes: UPLOAD_LIMITS[category].bytes,
+            validUntil: Date.now() + 10 * 60 * 1000,
+            addRandomSuffix: false,
           });
+          return json({ mode: "blob", clientToken, pathname, mimeType: check.mimeType });
         }
 
         try {
           const formData = await request.formData();
-          const file = formData.get("file") as File | null;
-          const category = (formData.get("category") as string) || "audio";
+          const file = formData.get("file");
+          const category = asCategory(formData.get("category"));
+          if (!file || typeof file === "string") return json({ error: "No file provided" }, 400);
 
-          if (!file || typeof file === "string") {
-            return new Response(JSON.stringify({ error: "No file provided" }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
+          const check = checkUpload(category, file.name, file.size);
+          if (!check.ok) return json({ error: check.error }, 400);
 
-          const mimeType = file.type || (category === "audio" ? "audio/mpeg" : "image/jpeg");
-          const fileSize = file.size;
-
-          if (category === "audio") {
-            if (!ALLOWED_AUDIO.has(mimeType) && !file.name.match(/\.(mp3|wav|aac|m4a|ogg|flac)$/i)) {
-              return new Response(
-                JSON.stringify({ error: "Invalid audio format. Allowed: MP3, WAV, AAC, M4A, OGG, FLAC." }),
-                {
-                  status: 400,
-                  headers: { "Content-Type": "application/json" },
-                },
-              );
-            }
-            if (fileSize > MAX_AUDIO_SIZE) {
-              return new Response(JSON.stringify({ error: "Audio file too large. Maximum size is 60MB." }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-              });
-            }
-          } else {
-            if (!ALLOWED_IMAGE.has(mimeType) && !file.name.match(/\.(jpe?g|png|webp|avif)$/i)) {
-              return new Response(JSON.stringify({ error: "Invalid image format. Allowed: JPG, PNG, WebP." }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-              });
-            }
-            if (fileSize > MAX_IMAGE_SIZE) {
-              return new Response(JSON.stringify({ error: "Artwork file too large. Maximum size is 10MB." }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-              });
-            }
-          }
-
-          const ext = (file.name.split(".").pop()?.toLowerCase() || "").replace(/[^a-z0-9]/g, "") || (category === "audio" ? "mp3" : "jpg");
-          const id = randomUUID();
-          const filename = `${id}.${ext}`;
           const subDir = category === "audio" ? "audio" : "artwork";
+          const filename = `${randomUUID()}.${check.ext}`;
           const storageKey = `${subDir}/${filename}`;
-          const buffer = Buffer.from(await file.arrayBuffer());
 
-          let publicUrl = `/uploads/${subDir}/${filename}`;
-          let writtenToDisk = false;
-
-          // Attempt local file write (Node.js dev & standalone servers)
           try {
             const targetDir = join(process.cwd(), "public", "uploads", subDir);
             await mkdir(targetDir, { recursive: true });
-            const filePath = join(targetDir, filename);
-            await writeFile(filePath, buffer);
-            writtenToDisk = true;
+            await writeFile(join(targetDir, filename), Buffer.from(await file.arrayBuffer()));
           } catch {
-            // Filesystem is read-only or container is serverless (e.g. Vercel)
-            writtenToDisk = false;
+            return json(
+              { error: "Uploads aren't set up on this server yet. Connect a Vercel Blob store to enable them." },
+              503,
+            );
           }
 
-          // If disk is unavailable, generate persistent Data URL so playback & artwork never 404
-          if (!writtenToDisk) {
-            publicUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
-          }
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              url: publicUrl,
-              storageKey,
-              mimeType,
-              fileSize,
-              name: file.name,
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "Upload failed";
-          return new Response(JSON.stringify({ error: message }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
+          return json({
+            url: `/uploads/${storageKey}`,
+            storageKey,
+            mimeType: check.mimeType,
+            fileSize: file.size,
+            name: file.name,
           });
+        } catch (err: unknown) {
+          return json({ error: err instanceof Error ? err.message : "Upload failed" }, 500);
         }
       },
     },

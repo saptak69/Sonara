@@ -29,8 +29,19 @@ function getTrackAudioFormat(track: Track | undefined): { label: string; format:
   if (track.kind === "radio" || track.streamUrl?.includes(".m3u8") || track.streamUrl?.includes("/listen") || track.streamUrl?.includes("zeno.fm")) {
     return { label: "Live Broadcast", format: "Stream" };
   }
+  if (track.preview) {
+    return { label: "Preview", format: "30-second clip" };
+  }
   if (track.id?.startsWith("saavn_") || track.streamUrl?.includes("saavncdn.com")) {
-    return { label: "High Quality", format: "320 kbps AAC" };
+    // Read the bitrate from the file name rather than assuming the best one.
+    const kbps = Number(track.streamUrl?.match(/_(\d{2,3})\.(?:mp4|m4a)/)?.[1] ?? 0);
+    return kbps >= 320 ? { label: "High Quality", format: "320 kbps AAC" } : { label: "Standard Audio", format: kbps ? `${kbps} kbps AAC` : "AAC" };
+  }
+  if (track.source === "audius" || track.streamUrl?.includes("audius.co")) {
+    return { label: "Full Track", format: "Audius · MP3" };
+  }
+  if (track.source === "studio") {
+    return { label: "Artist Upload", format: "Original file" };
   }
   if (track.id?.startsWith("sc_") || track.streamUrl?.includes("sndcdn.com") || track.streamUrl?.includes("soundcloud.com")) {
     return { label: "Standard Audio", format: "128 kbps MP3" };

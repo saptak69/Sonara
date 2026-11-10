@@ -402,6 +402,38 @@ export const getCommunityReleasesServerFn = createServerFn({ method: "GET" })
     return rows;
   });
 
+// 7b. Search published releases by title, artist, genre or mood (used by the merged catalogue search)
+export const searchCommunityReleasesServerFn = createServerFn({ method: "GET" })
+  .validator((data: unknown) =>
+    z.object({ query: z.string().min(1).max(200), limit: z.number().min(1).max(50).default(20) }).parse(data),
+  )
+  .handler(async ({ data }): Promise<UploadedTrack[]> => {
+    const sql = await getSql();
+    // Escape LIKE wildcards so a search for "100%" matches literally (backslash is Postgres's default escape).
+    const pattern = `%${data.query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    return sql<UploadedTrack>`
+      select
+        t.id,
+        t.artist_id as "artistId",
+        t.title,
+        t.genre,
+        t.mood,
+        t.description,
+        t.lyrics,
+        t.cover_art_url as "coverArtUrl",
+        t.audio_url as "audioUrl",
+        t.duration,
+        t.play_count as "playCount",
+        a.display_name as "artistName"
+      from "uploaded_tracks" t
+      join "artist_profile" a on t.artist_id = a.id
+      where t.status = 'published'
+        and (t.title ilike ${pattern} or a.display_name ilike ${pattern} or t.genre ilike ${pattern} or t.mood ilike ${pattern})
+      order by t.play_count desc, t.created_at desc
+      limit ${data.limit}
+    `;
+  });
+
 // 8. Get Public Artist Profile by ID or Handle
 export const getPublicArtistProfileServerFn = createServerFn({ method: "GET" })
   .validator((data: unknown) => {

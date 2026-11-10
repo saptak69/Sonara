@@ -9,7 +9,7 @@ import { Rail } from "@/components/rail";
 import { TvHero } from "@/components/tv/tv-hero";
 import { SiteFooter } from "@/components/site-footer";
 import { firstName, useCurrentUser } from "@/lib/auth/use-current-user";
-import { fetchTrending, fetchTrendingPlaylists } from "@/lib/music-api";
+import { fetchTrending, fetchTrendingPlaylists, fetchUnderground } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
 import type { Track } from "@/lib/types";
 
@@ -33,6 +33,7 @@ function Home() {
 
   const trending = useQuery({ queryKey: ["trending"], queryFn: () => fetchTrending(18) });
   const playlists = useQuery({ queryKey: ["playlists"], queryFn: () => fetchTrendingPlaylists(12) });
+  const independent = useQuery({ queryKey: ["independent-trending"], queryFn: () => fetchUnderground(16), staleTime: 15 * 60_000 });
 
   const topTracks = useMemo(() => trending.data ?? [], [trending.data]);
   const picks = topTracks.slice(0, 6);
@@ -66,7 +67,15 @@ function Home() {
         </Rail>
       )}
 
-      <Rail title="Top picks for you" loading={trending.isLoading} placeholder="large">
+      <Rail
+        title="Top picks for you"
+        loading={trending.isLoading}
+        placeholder="large"
+        empty={{
+          message: "Today's picks didn't load. Your library and downloads still work.",
+          onRetry: () => void trending.refetch(),
+        }}
+      >
         {picks.map((track, i) => (
           <TopPickCard key={track.id} track={track} queue={topTracks} label={PICK_LABELS[i] ?? "For you"} />
         ))}
@@ -94,6 +103,16 @@ function Home() {
         ))}
       </Rail>
 
+      <Rail
+        title="Rising independent artists"
+        subtitle="Trending on Audius this week · full songs, free"
+        loading={independent.isLoading}
+      >
+        {(independent.data ?? []).map((track) => (
+          <AlbumCard key={track.id} track={track} queue={independent.data} />
+        ))}
+      </Rail>
+
       <Rail title="Artists you might like" loading={trending.isLoading} placeholder="round">
         {artists.map((track) => (
           <Link
@@ -115,23 +134,6 @@ function Home() {
           </Link>
         ))}
       </Rail>
-
-      {trending.isError && playlists.isError && (
-        <div className="rounded-2xl border border-border bg-surface p-6 text-center">
-          <p className="font-medium">We couldn't load music right now.</p>
-          <p className="mt-1 text-sm text-muted">Check your connection — your library and downloads still work.</p>
-          <button
-            type="button"
-            onClick={() => {
-              void trending.refetch();
-              void playlists.refetch();
-            }}
-            className="mt-4 h-10 rounded-full bg-surface-2 px-5 text-sm font-medium transition hover:bg-surface-3"
-          >
-            Try again
-          </button>
-        </div>
-      )}
 
       <div className="border-t border-border pt-8 tvd:hidden">
         <SiteFooter />

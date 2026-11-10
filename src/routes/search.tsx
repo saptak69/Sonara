@@ -10,7 +10,6 @@ import { Rail } from "@/components/rail";
 import { SearchField } from "@/components/search-field";
 import { TrackMenuButton } from "@/components/track-menu";
 import { TrackRow } from "@/components/track-row";
-import { getCommunityReleasesServerFn } from "@/lib/artist-studio";
 import { GENRES } from "@/lib/genres";
 import { fetchFeaturedAlbums, searchAlbums, searchArtists, searchPlaylists, searchRadio, searchTracks } from "@/lib/music-api";
 import { usePlayer } from "@/lib/player-store";
@@ -53,10 +52,10 @@ function getTopResult(query: string, tracks: Track[] = [], artists: Artist[] = [
 }
 
 /** The big "best match" card: soft colour wash from the artwork, one clear action. */
-function TopResultCard({ result, queue }: { result: TopResult; queue: Track[] }) {
+function TopResultCard({ result }: { result: TopResult }) {
   const isPlaying = usePlayer((s) => s.isPlaying);
   const current = usePlayer((s) => s.queue[s.index]);
-  const playTrack = usePlayer((s) => s.playTrack);
+  const startSongRadio = usePlayer((s) => s.startSongRadio);
   const toggle = usePlayer((s) => s.toggle);
 
   const shell =
@@ -127,7 +126,8 @@ function TopResultCard({ result, queue }: { result: TopResult; queue: Track[] })
 
   const track = result.item;
   const isCurrent = current?.id === track.id;
-  const activate = () => (isCurrent ? toggle() : playTrack(track, queue.length ? queue : [track]));
+  // Plays the song, then a radio built from it, never the other search results.
+  const activate = () => (isCurrent ? toggle() : startSongRadio(track));
 
   return (
     <div className={cn(shell, "relative")}>
@@ -146,7 +146,7 @@ function TopResultCard({ result, queue }: { result: TopResult; queue: Track[] })
         </span>
         <PlayDot playing={isCurrent && isPlaying} />
       </button>
-      <TrackMenuButton track={track} rest={queue} className="size-10 lg:absolute lg:top-4 lg:right-4" />
+      <TrackMenuButton track={track} className="size-10 lg:absolute lg:top-4 lg:right-4" />
     </div>
   );
 }
@@ -206,40 +206,9 @@ function SearchPage() {
 
   const tracks = useQuery({
     queryKey: ["search-tracks", q],
-    queryFn: async () => {
-      const remote = await searchTracks(q, 24);
-      try {
-        const communityRows = await getCommunityReleasesServerFn({ data: { limit: 50 } });
-        const term = q.toLowerCase();
-        const matchedCommunity: Track[] = communityRows
-          .filter(
-            (c) =>
-              c.title.toLowerCase().includes(term) ||
-              (c.artistName && c.artistName.toLowerCase().includes(term)) ||
-              (c.genre && c.genre.toLowerCase().includes(term)) ||
-              (c.mood && c.mood.toLowerCase().includes(term)),
-          )
-          .map((c): Track => ({
-            id: c.id,
-            title: c.title,
-            artist: c.artistName || "Independent Artist",
-            artistId: c.artistId,
-            artwork: c.coverArtUrl,
-            artworkLg: c.coverArtUrl,
-            duration: c.duration,
-            streamUrl: c.audioUrl,
-            genre: c.genre || undefined,
-            mood: c.mood || undefined,
-            description: c.description || undefined,
-            lyrics: c.lyrics || undefined,
-            playCount: c.playCount,
-            kind: "track",
-          }));
-        return [...remote, ...matchedCommunity];
-      } catch {
-        return remote;
-      }
-    },
+    // Studio uploads are searched on the server and ranked together with every other source.
+    queryFn: () => searchTracks(q, 30),
+    staleTime: 5 * 60_000,
     enabled: Boolean(q),
   });
 
@@ -399,7 +368,7 @@ function SearchPage() {
                   {topResult ? (
                     <div className={cn("space-y-3", songs.length > 0 ? "lg:col-span-5" : "lg:col-span-12")}>
                       <SectionTitle>Top result</SectionTitle>
-                      <TopResultCard result={topResult} queue={songs} />
+                      <TopResultCard result={topResult} />
                     </div>
                   ) : null}
 
@@ -419,7 +388,7 @@ function SearchPage() {
                       </div>
                       <div>
                         {(showAllSongs ? songs : songs.slice(0, 5)).map((t, i) => (
-                          <TrackRow key={t.id} track={t} index={i} queue={songs} showPlays />
+                          <TrackRow key={t.id} track={t} index={i} queue={songs} showPlays playAs="radio" />
                         ))}
                       </div>
                     </div>
@@ -466,7 +435,7 @@ function SearchPage() {
               <SectionTitle aside={`${songs.length} results`}>Songs</SectionTitle>
               <div>
                 {songs.map((t, i) => (
-                  <TrackRow key={t.id} track={t} index={i} queue={songs} showPlays />
+                  <TrackRow key={t.id} track={t} index={i} queue={songs} showPlays playAs="radio" />
                 ))}
               </div>
             </section>

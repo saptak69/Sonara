@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { RepeatMode, Track, UserPlaylist } from "./types";
 import { CURATED_TRACKS } from "./music-api";
+import { identityKey } from "./music/match";
+import type { RadioSeed } from "./music/radio";
 import { tapFeedback } from "./haptics";
 
 /** A library edit waiting to be sent to the server (kept across reloads while offline). */
@@ -57,7 +59,8 @@ export const EQUALIZER_PRESETS: Record<EqualizerPresetName, { bands: [number, nu
 
 type PlayerState = {
   queue: Track[];
-  history: number[];
+  /** Track ids played before the current one, oldest first (ids survive queue edits; positions don't). */
+  history: string[];
   index: number;
   isPlaying: boolean;
   currentTime: number;
@@ -78,6 +81,9 @@ type PlayerState = {
   recentSearches: string[];
   autoplay: boolean;
   volumeNormalization: boolean;
+  /** Set while the queue is a song radio started from one song; cleared by any other play. */
+  radio: { seed: RadioSeed } | null;
+  radioLoading: boolean;
 
   equalizerOpen: boolean;
   equalizerEnabled: boolean;
@@ -96,6 +102,12 @@ type PlayerState = {
   isLiked: (id: string) => boolean;
   playTracks: (tracks: Track[], startIndex?: number) => void;
   playTrack: (track: Track, rest?: Track[]) => void;
+  /** Play one song, then similar songs and more from its artist (never the same title again). */
+  startSongRadio: (track: Track) => void;
+  /** Add more songs to the running song radio. */
+  extendSongRadio: () => void;
+  /** Keep the queue as it is, but stop adding radio songs to it. */
+  stopSongRadio: () => void;
   toggle: () => void;
   setPlaying: (v: boolean) => void;
   next: () => void;
@@ -166,7 +178,10 @@ export function sanitizeTrack(t: Track): Track {
 
 function remember(list: Track[], track: Track): Track[] {
   const cleanTrack = sanitizeTrack(track);
-  return [cleanTrack, ...list.filter((t) => t.id !== cleanTrack.id).map(sanitizeTrack)].slice(0, MAX_RECENTS);
+  // The same song often comes back under several ids (album, single, another provider).
+  const key = identityKey(cleanTrack);
+  const rest = list.filter((t) => t.id !== cleanTrack.id && identityKey(t) !== key);
+  return [cleanTrack, ...rest.map(sanitizeTrack)].slice(0, MAX_RECENTS);
 }
 
 function triggerHaptic(style: "light" | "medium" = "light") {
@@ -178,8 +193,10 @@ export function getNextIndex(state: PlayerState): number | null {
   if (queue.length === 0) return null;
   if (repeat === "one") return index;
   if (shuffle && queue.length > 1) {
+    const played = new Set(history);
+    const currentId = queue[index]?.id;
     const unplayed = Array.from({ length: queue.length }, (_, i) => i).filter(
-      (i) => i !== index && !history.includes(i)
+      (i) => i !== index && queue[i].id !== currentId && !played.has(queue[i].id)
     );
 
     if (unplayed.length === 0) {
@@ -284,6 +301,8 @@ export const usePlayer = create<PlayerState>()(
       playlists: [],
       recentSearches: [],
       autoplay: true,
+      radio: null,
+      radioLoading: false,
       volumeNormalization: false,
 
       equalizerOpen: false,
@@ -314,24 +333,52 @@ export const usePlayer = create<PlayerState>()(
           index: i,
           isPlaying: true,
           currentTime: 0,
+          radio: null,
+          radioLoading: false,
           recents: remember(get().recents, start),
         });
+      },
+      startSongRadio: (track) => {
+        const seedTrack = sanitizeTrack(track);
+        get().playTracks([seedTrack], 0);
+        const seed = {
+          id: seedTrack.id,
+          title: seedTrack.title,
+          artist: seedTrack.artist,
+          genre: seedTrack.genre,
+          duration: seedTrack.duration,
+          source: seedTrack.source,
+        };
+        set({ radio: { seed }, radioLoading: false });
+        get().extendSongRadio();
+      },
+      stopSongRadio: () => set({ radio: null, radioLoading: false }),
+      extendSongRadio: () => {
+        const s = get();
+        const radio = s.radio;
+        if (!radio || s.radioLoading) return;
+        set({ radioLoading: true });
+        const exclude = s.queue.slice(-300).map(({ id, title, artist }) => ({ id, title, artist }));
+        void import("./music/catalog")
+          .then(({ getSongRadioServerFn }) => getSongRadioServerFn({ data: { seed: radio.seed, exclude, limit: 20 } }))
+          .then((tracks) => {
+            // Ignore the answer if the listener has started something else meanwhile.
+            if (get().radio?.seed.id !== radio.seed.id) return;
+            if (tracks.length) get().appendQueue(tracks);
+            // Nothing left to suggest: hand over to normal autoplay.
+            else set({ radio: null, radioLoading: false });
+          })
+          .catch(() => {})
+          .finally(() => {
+            if (get().radio?.seed.id === radio.seed.id) set({ radioLoading: false });
+          });
       },
       playTrack: (track, rest = []) => {
         const cleanTrack = sanitizeTrack(track);
         const queue = [cleanTrack, ...rest.filter((t) => t.id !== cleanTrack.id).map(sanitizeTrack)];
+        // Songs that follow a short queue come from the engine's autoplay (one path, and it
+        // respects the Autoplay setting).
         get().playTracks(queue, 0);
-        // If queue is standalone (1-2 tracks), automatically fetch matching genre/artist songs
-        if (queue.length <= 2) {
-          void import("./music-api").then(({ fetchRelatedQueue }) => {
-            void fetchRelatedQueue(track, 12, get().recents).then((related) => {
-              const currentS = get();
-              if (currentS.queue[currentS.index]?.id === track.id) {
-                get().appendQueue(related);
-              }
-            });
-          });
-        }
       },
       toggle: () => {
         const s = get();
@@ -349,9 +396,10 @@ export const usePlayer = create<PlayerState>()(
           return;
         }
 
-        let newHistory = [...s.history, s.index];
+        const currentId = s.queue[s.index]?.id;
+        let newHistory = currentId ? [...s.history, currentId] : s.history;
         if (s.shuffle && newHistory.length >= s.queue.length) {
-          newHistory = [s.index];
+          newHistory = currentId ? [currentId] : [];
         }
 
         const track = s.queue[n];
@@ -372,10 +420,21 @@ export const usePlayer = create<PlayerState>()(
         }
 
         if (s.shuffle) {
-          const lastIndex = s.history[s.history.length - 1];
+          // Walk back to the most recent history entry that is still in the queue.
+          let history = s.history;
+          let lastIndex = -1;
+          while (history.length && lastIndex < 0) {
+            const id = history[history.length - 1];
+            history = history.slice(0, -1);
+            lastIndex = s.queue.findIndex((t) => t.id === id);
+          }
+          if (lastIndex < 0) {
+            set({ history: [], currentTime: 0 });
+            return;
+          }
           const track = s.queue[lastIndex];
           set({
-            history: s.history.slice(0, -1),
+            history,
             index: lastIndex,
             currentTime: 0,
             isPlaying: true,
@@ -388,7 +447,7 @@ export const usePlayer = create<PlayerState>()(
           const n = s.index - 1;
           const track = s.queue[n];
           set({
-            history: [...s.history, s.index],
+            history: [...s.history, s.queue[s.index].id],
             index: n,
             currentTime: 0,
             isPlaying: true,
@@ -477,7 +536,13 @@ export const usePlayer = create<PlayerState>()(
         let index = s.index;
         if (i < s.index) index -= 1;
         if (i === s.index) index = Math.min(index, Math.max(0, queue.length - 1));
-        set({ queue, index, history: [], isPlaying: queue.length ? s.isPlaying : false });
+        const removedId = s.queue[i].id;
+        set({
+          queue,
+          index,
+          history: s.history.filter((id) => id !== removedId),
+          isPlaying: queue.length ? s.isPlaying : false,
+        });
       },
       clearUpcoming: () => {
         const s = get();
@@ -487,8 +552,9 @@ export const usePlayer = create<PlayerState>()(
         const s = get();
         const track = s.queue[i];
         if (!track) return;
+        const currentId = s.queue[s.index]?.id;
         set({
-          history: [...s.history, s.index],
+          history: currentId ? [...s.history, currentId] : s.history,
           index: i,
           currentTime: 0,
           isPlaying: true,
@@ -697,6 +763,7 @@ export const usePlayer = create<PlayerState>()(
           playlists: s.playlists,
           recentSearches: s.recentSearches,
           autoplay: s.autoplay,
+          radio: s.radio,
           volumeNormalization: s.volumeNormalization,
           equalizerEnabled: s.equalizerEnabled,
           equalizerBands: s.equalizerBands,

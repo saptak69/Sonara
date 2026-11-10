@@ -33,6 +33,7 @@ export function Rail({
   to,
   loading = false,
   placeholder = "square",
+  empty,
   children,
 }: {
   title: string;
@@ -40,6 +41,8 @@ export function Rail({
   to?: RailLink;
   loading?: boolean;
   placeholder?: "square" | "large" | "round";
+  /** Shown instead of hiding the rail when it ends up with no cards (for rails that should never be empty). */
+  empty?: { message: string; onRetry?: () => void };
   children?: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -68,7 +71,26 @@ export function Rail({
     };
   }, [measure, count]);
 
-  if (!loading && count === 0) return null;
+  if (!loading && count === 0) {
+    if (!empty) return null;
+    return (
+      <section className="space-y-3">
+        <SectionHeader title={title} subtitle={subtitle} to={to} />
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border-strong px-4 py-5">
+          <p className="text-sm text-muted">{empty.message}</p>
+          {empty.onRetry && (
+            <button
+              type="button"
+              onClick={empty.onRetry}
+              className="rounded-full border border-border-strong px-4 py-1.5 text-sm font-medium text-fg transition hover:border-accent hover:text-accent"
+            >
+              Try again
+            </button>
+          )}
+        </div>
+      </section>
+    );
+  }
 
   const scrollBy = (direction: 1 | -1) => {
     const el = ref.current;

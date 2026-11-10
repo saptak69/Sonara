@@ -16,17 +16,25 @@ export function TrackRow({
   queue,
   showPlays,
   playlistId,
+  playAs = "list",
 }: {
   track: Track;
   index?: number;
   queue: Track[];
   showPlays?: boolean;
   playlistId?: string;
+  /**
+   * "list" plays the rows that follow, in order (albums, playlists, charts).
+   * "radio" plays this song, then similar songs and more from its artist. Use it
+   * where the rows aren't a listening order, such as search results.
+   */
+  playAs?: "list" | "radio";
 }) {
   const current = usePlayer((s) => s.queue[s.index]);
   const isPlaying = usePlayer((s) => s.isPlaying);
   const playTracks = usePlayer((s) => s.playTracks);
   const playTrack = usePlayer((s) => s.playTrack);
+  const startSongRadio = usePlayer((s) => s.startSongRadio);
   const toggle = usePlayer((s) => s.toggle);
   const likedIds = usePlayer((s) => s.likedIds);
   const toggleLike = usePlayer((s) => s.toggleLike);
@@ -40,6 +48,8 @@ export function TrackRow({
   const handlePlayToggle = () => {
     if (active) {
       toggle();
+    } else if (playAs === "radio") {
+      startSongRadio(track);
     } else if (queue.length === 0) {
       playTrack(track, []);
     } else {
@@ -138,6 +148,14 @@ export function TrackRow({
               <Radio className="size-2.5" /> Live
             </span>
           )}
+          {track.preview && (
+            <span
+              title="Only a 30-second preview is available for this song"
+              className="rounded border border-border-strong px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted uppercase"
+            >
+              Preview
+            </span>
+          )}
           {track.artistId ? (
             <Link
               to="/artist/$id"
@@ -194,7 +212,7 @@ export function TrackRow({
         </span>
 
         {/* Three dots context menu */}
-        <TrackMenu track={track} rest={queue} playlistId={playlistId}>
+        <TrackMenu track={track} playlistId={playlistId}>
           <button
             type="button"
             aria-label={`Options for ${track.title}`}

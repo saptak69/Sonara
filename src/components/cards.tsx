@@ -71,7 +71,7 @@ export function TopPickCard({
           <span className="mt-0.5 truncate text-[13px] font-normal text-muted">{track.artist}</span>
         </div>
       </button>
-      <TrackMenuButton track={track} rest={queue} className="absolute right-0 bottom-0 size-8" />
+      <TrackMenuButton track={track} className="absolute right-0 bottom-0 size-8" />
     </div>
   );
 }
@@ -108,7 +108,7 @@ export function AlbumCard({
           <span className="mt-0.5 block truncate text-[13px] font-normal leading-snug text-muted">{track.artist}</span>
         </div>
       </button>
-      <TrackMenuButton track={track} rest={queue} className="absolute right-[-6px] bottom-[-2px] size-8" />
+      <TrackMenuButton track={track} className="absolute right-[-6px] bottom-[-2px] size-8" />
     </div>
   );
 }

@@ -16,6 +16,13 @@ export type Track = {
   lyrics?: string;
   playCount?: number;
   kind: TrackKind;
+  /** Provider that supplied the stream ("saavn", "audius", "itunes", ...). */
+  source?: string;
+  /** International Standard Recording Code, when the provider exposes it. */
+  isrc?: string;
+  /** True when only a short preview clip can be played. */
+  preview?: boolean;
+  explicit?: boolean;
 };
 
 export type Playlist = {

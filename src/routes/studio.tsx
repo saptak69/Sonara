@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { uploadStudioFile } from "@/lib/studio-upload";
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import {
@@ -144,21 +145,7 @@ function ArtistStudioPage() {
     };
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("category", "audio");
-
-      const res = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-        headers: authHeaders(),
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Upload failed");
-      }
+      const data = await uploadStudioFile(file, "audio", authHeaders());
 
       setAudioUrl(data.url);
       setAudioStorageKey(data.storageKey);
@@ -190,21 +177,7 @@ function ArtistStudioPage() {
 
     setUploadingArt(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("category", "artwork");
-
-      const res = await fetch("/api/storage/upload", {
-        method: "POST",
-        body: formData,
-        headers: authHeaders(),
-        credentials: "include",
-      });
-
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Upload failed");
-      }
+      const data = await uploadStudioFile(file, "artwork", authHeaders());
 
       setCoverArtUrl(data.url);
       toast.success("Artwork uploaded successfully!");

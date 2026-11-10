@@ -195,9 +195,9 @@ export const getDiscoveryStationTracksServerFn = createServerFn({ method: "GET" 
       .slice(0, 5)
       .map(([a]) => a);
 
-    // Step 3: Candidate Generation (Trending, Curated, and Saavn)
-    const { CURATED_TRACKS } = await import("./music-api");
-    const rawCandidates: Track[] = [...CURATED_TRACKS];
+    // Step 3: Candidate Generation (independent trending on Audius, plus chart trending)
+    const { audiusTrending } = await import("./music/catalog");
+    const rawCandidates: Track[] = await audiusTrending(30).catch(() => [] as Track[]);
 
     try {
       const { getSaavnTrendingServerFn } = await import("./saavn-api");
@@ -401,13 +401,11 @@ export const getNextAutoplayTracksServerFn = createServerFn({ method: "POST" })
       // ignore network failure
     }
 
-    // Step 2: Fallback with curated / trending matching genre
+    // Step 2: Top up with independent trending tracks in a compatible genre
     if (candidates.length < limit) {
-      const { CURATED_TRACKS } = await import("./music-api");
-      const matchingGenre = CURATED_TRACKS.filter(
-        (t) => getGenreCompatibility(t.genre, lastTrack.genre) >= 0.7,
-      );
-      candidates.push(...matchingGenre);
+      const { audiusTrending } = await import("./music/catalog");
+      const trending = await audiusTrending(40).catch(() => [] as Track[]);
+      candidates.push(...trending.filter((t) => getGenreCompatibility(t.genre, lastTrack.genre) >= 0.7));
     }
 
     const history: Track[] = sessionHistory.map((t) => ({
@@ -425,9 +423,18 @@ export const getNextAutoplayTracksServerFn = createServerFn({ method: "POST" })
       kind: t.kind,
     }));
 
-    // Exclude tracks already in session history
+    // Exclude tracks already in session history, and other songs sharing a title with one
+    // (search often returns several unrelated songs with the same name).
+    const { titleKey } = await import("./music/radio.ts");
     const historyIds = new Set(sessionHistory.map((t) => t.id));
-    const unplayedCandidates = candidates.filter((t) => !historyIds.has(t.id));
+    const historyTitles = new Set(sessionHistory.map((t) => titleKey(t.title)));
+    const unplayedCandidates = candidates.filter((t) => {
+      if (historyIds.has(t.id)) return false;
+      const key = titleKey(t.title);
+      if (historyTitles.has(key)) return false;
+      historyTitles.add(key);
+      return true;
+    });
 
     // Step 3: Apply Contextual Continuity Ordering
     return orderAutoplayCandidates(unplayedCandidates, history, limit);
@@ -508,49 +515,3 @@ export function buildTrackRadio(seed: Track, candidatePool: Track[], limit: numb
 
   return result;
 }
-
-/**
- * Server Function: Get Track Radio
- */
-export const getTrackRadioServerFn = createServerFn({ method: "GET" })
-  .validator((data: { seedTrackId: string; limit?: number }) =>
-    z.object({ seedTrackId: z.string().min(1), limit: z.number().optional().default(25) }).parse(data)
-  )
-  .handler(async ({ data }): Promise<Track[]> => {
-    const { seedTrackId, limit = 25 } = data;
-
-    // 1. Resolve seed track
-    const { CURATED_TRACKS, fetchTrack } = await import("./music-api");
-    let seedTrack = CURATED_TRACKS.find((t) => t.id === seedTrackId) || null;
-    if (!seedTrack) {
-      try {
-        seedTrack = await fetchTrack(seedTrackId);
-      } catch {
-        // ignore
-      }
-    }
-    if (!seedTrack) {
-      // Fallback to first curated track
-      seedTrack = CURATED_TRACKS[0];
-    }
-
-    // 2. Fetch candidates from similar songs API and genre recommendations
-    const candidatePool: Track[] = [];
-    try {
-      const { getSimilarSongsServerFn } = await import("./saavn-api");
-      const similar = await getSimilarSongsServerFn({
-        data: { id: seedTrack.id, limit: 30 },
-      });
-      if (similar?.length) {
-        candidatePool.push(...similar);
-      }
-    } catch {
-      // ignore
-    }
-
-    // Add matching curated tracks for depth
-    candidatePool.push(...CURATED_TRACKS.filter((t) => t.id !== seedTrack!.id));
-
-    // 3. Build cohesive, clump-free track radio
-    return buildTrackRadio(seedTrack, candidatePool, limit);
-  });

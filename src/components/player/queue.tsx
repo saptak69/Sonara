@@ -1,4 +1,4 @@
-import { X, Infinity as InfinityIcon, ChevronUp, ChevronDown } from "lucide-react";
+import { X, Infinity as InfinityIcon, ChevronUp, ChevronDown, Radio } from "lucide-react";
 import { TrackRow } from "@/components/track-row";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +10,8 @@ export function QueueList({ className }: { className?: string }) {
   const index = usePlayer((s) => s.index);
   const autoplay = usePlayer((s) => s.autoplay);
   const toggleAutoplay = usePlayer((s) => s.toggleAutoplay);
+  const radio = usePlayer((s) => s.radio);
+  const stopSongRadio = usePlayer((s) => s.stopSongRadio);
   const moveUpcoming = usePlayer((s) => s.moveUpcoming);
 
   const current = queue[index];
@@ -21,7 +23,24 @@ export function QueueList({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex-1 overflow-y-auto [scrollbar-width:none] px-4 md:px-8 pb-32", className)}>
-      {/* Minimal Autoplay Control */}
+      {radio ? (
+        // A running song radio replaces the autoplay switch: say what it's built from, and let it be stopped.
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.06] px-3.5 py-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Radio className="size-3.5 shrink-0 text-accent" />
+            <span className="min-w-0 truncate text-xs text-white/80">
+              <span className="font-medium text-white">Song radio</span> · based on {radio.seed.title} by {radio.seed.artist}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={stopSongRadio}
+            className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-xs font-medium text-white/80 transition hover:border-accent hover:text-accent"
+          >
+            Stop radio
+          </button>
+        </div>
+      ) : (
       <div className="flex items-center justify-between px-3.5 py-2 mb-5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1] transition-colors">
         <div className="flex items-center gap-2.5">
           <InfinityIcon className={cn("size-3.5 transition-colors", autoplay ? "text-accent" : "text-white/40")} />
@@ -33,6 +52,7 @@ export function QueueList({ className }: { className?: string }) {
           aria-label="Toggle Autoplay similar tracks"
         />
       </div>
+      )}
 
       <div className="space-y-10">
         {/* Queue (Upcoming) with Reordering */}
@@ -41,7 +61,7 @@ export function QueueList({ className }: { className?: string }) {
             <div className="flex items-end justify-between mb-4 px-2">
               <div className="flex flex-col">
                 <h2 className="text-xl font-bold text-white">Queue ({upcoming.length})</h2>
-                <span className="text-xs text-white/50">Hover to reorder upcoming tracks</span>
+                <span className="text-xs text-white/50">Use the arrows to reorder</span>
               </div>
               <button
                 type="button"
